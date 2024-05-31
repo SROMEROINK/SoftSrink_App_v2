@@ -1,0 +1,31 @@
+/* public\vendor\adminlte\dist\css\UserIndex.css */
+
+/* Estilos personalizados para SweetAlert2 */
+.swal2-actions .swal2-confirm.custom-confirm-button,
+.swal2-actions .swal2-cancel.custom-cancel-button {
+    margin: 0 10px; /* Añade un margen izquierdo y derecho */
+}
+
+/* Otros estilos generales pueden ir aquí si es necesario, pero asegúrate de que no afecten la tabla o la estructura general */
+
+.table {
+    width: 100%;
+}
+
+.table th {
+    text-align: center;
+    font-weight: bold;
+    font-size: 20px;
+    color: #000;
+    background-color: #f2f2f2;
+    padding: 10px;
+}
+
+.table td {
+    text-align: center; /* Centra el contenido de las celdas */
+    vertical-align: middle; /* Alinea el contenido verticalmente en el centro */
+}
+
+.table td .btn {
+    margin: 0 5px; /* Espaciado entre los botones */
+}

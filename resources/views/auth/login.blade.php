@@ -1,6 +1,15 @@
 <x-guest-layout>
+    {{-- resources\views\auth\login.blade.php --}}
     <!-- Session Status -->
     <x-auth-session-status class="mb-4" :status="session('status')" />
+
+    <style>
+        body {
+            background-image: url('/build/assets/Softsrink.png');
+            background-size: cover;
+            background-position: center;
+        }
+    </style>
 
     <form method="POST" action="{{ route('login') }}">
         @csrf

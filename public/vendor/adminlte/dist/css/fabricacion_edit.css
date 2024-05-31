@@ -1,0 +1,12 @@
+/* public\vendor\adminlte\dist\css\fabricacion_edit.css */
+.form-control {
+    position: relative;
+    border: 1px solid #ddd;
+    transition: border-color 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+}
+
+.form-control:focus {
+    border-color: #2196F3; /* Color azul */
+    box-shadow: 0 0 10px rgba(33, 150, 243, 0.5); /* Brillo azul de neón */
+    outline: none;
+}

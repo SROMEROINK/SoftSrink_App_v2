@@ -1,0 +1,86 @@
+/* Estilos generales */
+.text-center {
+    text-align: center;
+}
+
+.mb-4 {
+    margin-bottom: 1.5rem;
+}
+
+.container-fluid {
+    display: flex;
+    justify-content: center;
+}
+
+.table {
+    margin: auto;
+    width: 90%;
+}
+
+#registro_de_fabricacion th, #registro_de_fabricacion td {
+    text-align: center; /* Centra el contenido de las celdas */
+    vertical-align: middle; /* Alinea el contenido verticalmente en el centro */
+    white-space: nowrap; /* Evita que el contenido se desborde */
+    padding: 8px 10px; /* Ajusta el relleno para reducir el ancho de las filas */
+}
+
+/* Estilo para el título */
+.content-header h1 {
+    margin-bottom: 0.5rem; /* Reduce el margen inferior */
+    font-size: 2rem; /* Ajusta el tamaño de fuente si es necesario */
+    text-align: center; /* Centra el título */
+}
+
+/* Estilo para cantidad de piezas fabricadas */
+.total-numero {
+    font-weight: bold;
+    color: white; /* Cambia el color del texto a blanco */
+    background-color: #32CD32; /* Cambia el color de fondo a verde claro */
+    padding: 3px 10px; /* Añade más relleno */
+    border-radius: 3px; /* Añade bordes redondeados */
+}
+
+/* Estilo para los textos primarios */
+.text-primary {
+    color: #007bff; /* Asegúrate de usar el mismo color que el texto "Ir a carga de producción" */
+    font-weight: bold;
+}
+
+.d-flex.justify-content-between.align-items-center.mb-4 h1 {
+    margin-bottom: 0; /* Elimina el margen inferior del h1 */
+}
+
+.d-flex.justify-content-between.align-items-center.mb-4 .d-flex.align-items-center h3 {
+    margin-bottom: 0; /* Elimina el margen inferior del h3 */
+    display: flex;
+    align-items: center; /* Alinea los elementos del h3 verticalmente al centro */
+}
+
+#Carga {
+    cursor: pointer; /* Añade un cursor pointer para indicar que es interactivo */
+}
+
+.d-flex.flex-column.align-items-end.mb-4 {
+    align-items: flex-end; /* Alinea los elementos al final del contenedor */
+}
+
+.d-flex.justify-content-end.align-items-center.mt-2 {
+    margin-top: 10px; /* Añade un margen superior */
+}
+
+.btn-sm {
+    margin-right: 2px; /* Añade un pequeño margen derecho */
+    margin-bottom: 2px; /* Añade un pequeño margen inferior */
+}
+
+@media (max-width: 575.98px) {
+    .btn-sm {
+        margin-top: 5px; /* Añade un margen superior */
+        width: 100%; /* Establece el ancho al 100% */
+    }
+}
+
+.swal2-actions .swal2-confirm.custom-confirm-button,
+.swal2-actions .swal2-cancel.custom-cancel-button {
+    margin: 0 10px; /* Añade un margen izquierdo y derecho */
+}
