@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
-Use App\Models\User;
+use App\Models\User;
 
 class RolePermissionController extends Controller
 {
@@ -44,16 +44,21 @@ class RolePermissionController extends Controller
     public function update(Request $request, Role $role)
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255|unique:roles,name,' . $role->id,
-            'permissions' => 'array|nullable' // Permitir que 'permissions' sea null
+            'name' => 'required|string|max:255',
+            'permissions' => 'array|exists:permissions,name',
         ]);
-    
-        // Actualizar el nombre del rol
+
         $role->update(['name' => $validated['name']]);
-    
-        // Sincronizar permisos del rol
-        $role->syncPermissions($validated['permissions'] ?? []); // Usa un array vacío si no se proporcionan permisos
-    
+
+        $permissions = Permission::whereIn('name', $validated['permissions'])->get();
+        $role->syncPermissions($permissions);
+
+        // Actualizar permisos de los usuarios que tienen este rol
+        $users = User::role($role->name)->get();
+        foreach ($users as $user) {
+            $user->syncPermissions($user->getPermissionsViaRoles());
+        }
+
         return redirect()->route('roles.index')->with('success', 'Rol actualizado con éxito.');
     }
 

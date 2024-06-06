@@ -296,6 +296,8 @@
         */
 
         'menu' => [
+
+            
             // Navbar items:
             [
                 'type' => 'navbar-search',

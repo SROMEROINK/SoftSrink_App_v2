@@ -66,8 +66,7 @@ class UserController extends Controller
     public function edit(User $user)
     {
         $roles = Role::all();
-        $permissions = Permission::all();
-        return view('users.edit', compact('user', 'roles', 'permissions'));
+        return view('users.edit', compact('user', 'roles'));
     }
 
     public function update(Request $request, User $user)
@@ -78,7 +77,6 @@ class UserController extends Controller
         'password' => 'nullable|string|min:8|confirmed',
         'photo' => 'nullable|image|max:10240',
         'role' => 'required|integer|exists:roles,id',
-        'permissions' => 'array|exists:permissions,name'
     ]);
 
     $changes = false;
@@ -114,16 +112,9 @@ class UserController extends Controller
     $roleName = Role::findById($validated['role'])->name;
     $user->syncRoles([$roleName]);
 
-    if (!empty($validated['permissions'])) {
-        $user->syncPermissions($validated['permissions']);
-    } else {
-        $user->permissions()->detach();
-    }
-
     return redirect()->route('users.index')->with('success', 'Usuario actualizado con éxito.');
 }
-    
-    
+
 
     
     public function destroy(string $id)

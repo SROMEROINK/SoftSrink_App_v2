@@ -1,7 +1,7 @@
 @extends('adminlte::page')
 
 @section('title', 'Editar Rol')
-{{-- resources\views\roles\edit.blade.php --}}
+
 @section('content_header')
     <h1>Editar Rol</h1>
 @stop

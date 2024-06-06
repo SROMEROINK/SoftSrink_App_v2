@@ -18,6 +18,7 @@
                         <p><strong>Nombre:</strong> {{ $user->name }}</p>
                         <p><strong>Email:</strong> {{ $user->email }}</p>
                         <p><strong>Roles:</strong> {{ $user->roles->pluck('name')->implode(', ') }}</p>
+                        <p><strong>Permisos:</strong> {{ $user->permissions->pluck('name')->implode(', ') }}</p>
                         @if ($user->photo)
                             <p><strong>Foto:</strong></p>
                             <img src="{{ asset('storage/' . $user->photo) }}" alt="Foto de {{ $user->name }}" width="150">

@@ -1,7 +1,7 @@
 <?php
 
 namespace App\Http\Controllers;
-
+// app\Http\Controllers\PermissionController.php
 use Illuminate\Http\Request;
 use Spatie\Permission\Models\Permission;
 

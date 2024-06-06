@@ -1,4 +1,3 @@
-{{-- resources/views/users/edit.blade.php --}}
 @extends('adminlte::page')
 
 @section('title', 'Editar Usuario')
@@ -40,10 +39,10 @@
             </div>
             <div class="form-group">
                 <label for="permissions">Permisos</label>
-                @foreach ($permissions as $permission)
+                @foreach ($user->getPermissionsViaRoles() as $permission)
                     <div class="form-check">
                         <input type="checkbox" name="permissions[]" value="{{ $permission->name }}" class="form-check-input"
-                            {{ $user->permissions->pluck('name')->contains($permission->name) ? 'checked' : '' }}>
+                            checked disabled>
                         <label class="form-check-label">{{ $permission->name }}</label>
                     </div>
                 @endforeach
