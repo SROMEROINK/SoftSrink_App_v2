@@ -7,6 +7,16 @@ use App\Models\RegistroDeFabricacion;
 
 class RegistroDeFabricacionController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('permission:ver produccion')->only('index');
+        $this->middleware('permission:ver produccion')->only('show');
+        $this->middleware('permission:editar produccion')->only(['create', 'store']);
+        $this->middleware('permission:editar produccion')->only(['edit', 'update']);
+        $this->middleware('permission:editar produccion')->only('destroy');
+    }
+
+
     /**
      * Muestra la página principal de registros con un filtro opcional.
      */

@@ -56,7 +56,7 @@ class User extends Authenticatable
 
     public function adminlte_profile_url()
     {
-        return route('profile.show');
+        return route('profile.show', ['profile' => $this->id]);
     }
     
 }

@@ -41,7 +41,7 @@
                 <thead>
                     <tr>
                         <th>Nombre del Permiso</th>
-                        <th class="text-center">Acciones</th>
+                        <th colspan="2" class="text-center">Acciones</th>
                     </tr>
                 </thead>
                 <tbody>

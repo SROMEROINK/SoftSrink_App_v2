@@ -330,7 +330,7 @@
             [
                 'text' => 'Permisos',
                 'route' => 'permissions.index',
-                'icon' => 'fas fa-users fa-fw',
+                'icon' => 'fas fa-key fa-fw',
                 'label_color' => 'success',
                 'can' => 'administrar usuarios', // Asegúrate de tener el permiso correspondiente
             ],
@@ -338,7 +338,7 @@
             [
                 'text' => 'Roles y Permisos',
                 'route' => 'roles.index',
-                'icon' => 'fas fa-users fa-fw',
+                'icon' => 'fas fa-users-cog fa-fw',
                 'label_color' => 'success',
                 'can' => 'administrar usuarios', // Asegúrate de tener el permiso correspondiente
             ],

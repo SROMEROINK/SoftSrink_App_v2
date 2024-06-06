@@ -9,6 +9,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Models\Role;
+use Spatie\Permission\Models\Permission;
 
 class UserController extends Controller
 {
@@ -64,52 +65,67 @@ class UserController extends Controller
 
     public function edit(User $user)
     {
-        return view('users.edit', compact('user'));
+        $roles = Role::all();
+        $permissions = Permission::all();
+        return view('users.edit', compact('user', 'roles', 'permissions'));
     }
 
     public function update(Request $request, User $user)
-    {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
-            'password' => 'nullable|string|min:8|confirmed',
-            'photo' => 'nullable|image|max:10240', // 10MB = 10240KB
-        ]);
+{
+    $validated = $request->validate([
+        'name' => 'required|string|max:255',
+        'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
+        'password' => 'nullable|string|min:8|confirmed',
+        'photo' => 'nullable|image|max:10240',
+        'role' => 'required|integer|exists:roles,id',
+        'permissions' => 'array|exists:permissions,name'
+    ]);
 
-        $changes = false;
+    $changes = false;
 
-        if ($user->name !== $validated['name']) {
-            $user->name = $validated['name'];
-            $changes = true;
-        }
-
-        if ($user->email !== $validated['email']) {
-            $user->email = $validated['email'];
-            $changes = true;
-        }
-
-        if (!empty($validated['password'])) {
-            $user->password = Hash::make($validated['password']);
-            $changes = true;
-        }
-
-        if ($request->has('remove_photo') && $request->boolean('remove_photo')) {
-            $user->photo = null;
-            $changes = true;
-        } elseif ($request->hasFile('photo')) {
-            $path = $request->file('photo')->store('photos', 'public');
-            $user->photo = $path;
-            $changes = true;
-        }
-
-        if ($changes) {
-            $user->save();
-            return redirect()->route('users.index')->with('success', 'Usuario actualizado con éxito.');
-        } else {
-            return redirect()->route('users.index')->with('info', 'No se realizaron cambios.');
-        }
+    if ($user->name !== $validated['name']) {
+        $user->name = $validated['name'];
+        $changes = true;
     }
 
+    if ($user->email !== $validated['email']) {
+        $user->email = $validated['email'];
+        $changes = true;
+    }
+
+    if (!empty($validated['password'])) {
+        $user->password = Hash::make($validated['password']);
+        $changes = true;
+    }
+
+    if ($request->has('remove_photo') && $request->boolean('remove_photo')) {
+        $user->photo = null;
+        $changes = true;
+    } elseif ($request->hasFile('photo')) {
+        $path = $request->file('photo')->store('photos', 'public');
+        $user->photo = $path;
+        $changes = true;
+    }
+
+    if ($changes) {
+        $user->save();
+    }
+
+    $roleName = Role::findById($validated['role'])->name;
+    $user->syncRoles([$roleName]);
+
+    if (!empty($validated['permissions'])) {
+        $user->syncPermissions($validated['permissions']);
+    } else {
+        $user->permissions()->detach();
+    }
+
+    return redirect()->route('users.index')->with('success', 'Usuario actualizado con éxito.');
+}
+    
+    
+
+    
     public function destroy(string $id)
     {
         $user = User::findOrFail($id);

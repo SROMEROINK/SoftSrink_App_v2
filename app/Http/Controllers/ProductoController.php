@@ -7,10 +7,22 @@ use App\Models\Producto;
 
 class ProductoController extends Controller
 {
+    // public function __construct()
+    // {
+    //     $this->middleware('permission:productos.index')->only('index');
+    //     $this->middleware('permission:productos.show')->only('show');
+    //     $this->middleware('permission:productos.create')->only(['create', 'store']);
+    //     $this->middleware('permission:productos.edit')->only(['edit', 'update']);
+    //     $this->middleware('permission:productos.destroy')->only('destroy');
+    // }
+
     public function __construct()
     {
-        $this->middleware('permission:ver produccion')->only(['index', 'show']);
-        $this->middleware('permission:editar produccion')->only(['create', 'store', 'edit', 'update', 'destroy']);
+        $this->middleware('permission:ver produccion')->only('index');
+        $this->middleware('permission:ver produccion')->only('show');
+        $this->middleware('permission:editar produccion')->only(['create', 'store']);
+        $this->middleware('permission:editar produccion')->only(['edit', 'update']);
+        $this->middleware('permission:editar produccion')->only('destroy');
     }
 
     /**

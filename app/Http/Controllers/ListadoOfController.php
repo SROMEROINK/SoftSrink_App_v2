@@ -7,6 +7,15 @@ use App\Models\Listado_OF;
 
 class ListadoOfController extends Controller
 {
+
+        public function __construct()
+    {
+        $this->middleware('permission:ver produccion')->only('index');
+        $this->middleware('permission:ver produccion')->only('show');
+        $this->middleware('permission:editar produccion')->only(['create', 'store']);
+        $this->middleware('permission:editar produccion')->only(['edit', 'update']);
+        $this->middleware('permission:editar produccion')->only('destroy');
+    }
     /**
      * Display a listing of the resource.
      */

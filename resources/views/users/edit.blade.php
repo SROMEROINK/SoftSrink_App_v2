@@ -27,6 +27,28 @@
                 @enderror
             </div>
             <div class="form-group">
+                <label for="role">Rol</label>
+                <select name="role" class="form-control" required>
+                    <option value="">Seleccione un rol</option>
+                    @foreach ($roles as $role)
+                        <option value="{{ $role->id }}" {{ old('role', $user->roles->pluck('id')->contains($role->id) ? 'selected' : '') }}>{{ $role->name }}</option>
+                    @endforeach
+                </select>
+                @error('role')
+                    <div class="alert alert-danger">{{ $message }}</div>
+                @enderror
+            </div>
+            <div class="form-group">
+                <label for="permissions">Permisos</label>
+                @foreach ($permissions as $permission)
+                    <div class="form-check">
+                        <input type="checkbox" name="permissions[]" value="{{ $permission->name }}" class="form-check-input"
+                            {{ $user->permissions->pluck('name')->contains($permission->name) ? 'checked' : '' }}>
+                        <label class="form-check-label">{{ $permission->name }}</label>
+                    </div>
+                @endforeach
+            </div>
+            <div class="form-group">
                 <label for="password">Password <small>(dejar en blanco para mantener la actual)</small></label>
                 <input type="password" name="password" class="form-control">
                 @error('password')

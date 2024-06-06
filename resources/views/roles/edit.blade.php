@@ -28,6 +28,9 @@
                     </div>
                 @endforeach
             </div>
+            @error('permissions')
+                <div class="alert alert-danger">{{ $message }}</div>
+            @enderror
             <button type="submit" class="btn btn-primary">Actualizar Rol</button>
         </form>
     </div>

@@ -1,6 +1,7 @@
 <?php
+
 namespace Database\Seeders;
-// database\seeders\RolesAndPermissionsSeeder.php
+
 use Illuminate\Database\Seeder;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
@@ -9,36 +10,50 @@ class RolesAndPermissionsSeeder extends Seeder
 {
     public function run()
     {
-        // Reset cached roles and permissions
-        app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
-
-        // Create roles if they don't exist
-        $roleAdmin = Role::firstOrCreate(['name' => 'Administrador', 'guard_name' => 'web']);
-        $roleProduccion = Role::firstOrCreate(['name' => 'Producción', 'guard_name' => 'web']);
-        $roleCalidad = Role::firstOrCreate(['name' => 'Control de Calidad', 'guard_name' => 'web']);
-        $roleProduccionViewOnly = Role::firstOrCreate(['name' => 'Producción View Only', 'guard_name' => 'web']);
-
-        // Create permissions if they don't exist
+        // Crear permisos
         $permissions = [
-            'view produccion',
-            'edit produccion',
-            'view calidad',
-            'edit calidad',
-            'manage users',
-            'view purchases',
-            'view materia_prima',
-            'view herramental',
-            'see admin only'
+            'ver produccion',
+            'editar produccion',
+            'ver calidad',
+            'editar calidad',
+            'administrar usuarios',
+            'ver compras',
+            'ver materia prima',
+            'ver herramental',
+            'ver solo administrador',
+            'editar compras'
         ];
 
         foreach ($permissions as $permission) {
-            Permission::firstOrCreate(['name' => $permission, 'guard_name' => 'web']);
+            Permission::firstOrCreate(['name' => $permission]);
         }
 
-        // Assign permissions to roles
-        $roleAdmin->syncPermissions(Permission::all());
-        $roleProduccion->syncPermissions(['view produccion', 'edit produccion']);
-        $roleCalidad->syncPermissions(['view calidad', 'edit calidad']);
-        $roleProduccionViewOnly->syncPermissions(['view produccion']);
+        // Crear roles y asignar permisos
+        $adminRole = Role::firstOrCreate(['name' => 'Administrador']);
+        $adminRole->syncPermissions(Permission::all());
+
+        $productionRole = Role::firstOrCreate(['name' => 'Producción']);
+        $productionRole->syncPermissions([
+            'ver produccion',
+            'editar produccion',
+            'ver compras',
+            'ver materia prima',
+            'ver herramental'
+        ]);
+
+        $qualityRole = Role::firstOrCreate(['name' => 'Control de Calidad']);
+        $qualityRole->syncPermissions([
+            'ver produccion',
+            'ver calidad',
+            'editar calidad',
+            'ver compras',
+            'ver materia prima'
+        ]);
+
+        $viewOnlyRole = Role::firstOrCreate(['name' => 'Producción View Only']);
+        $viewOnlyRole->syncPermissions([
+            'ver produccion',
+            'ver calidad'
+        ]);
     }
 }

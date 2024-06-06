@@ -21,9 +21,9 @@ class ProfileController extends Controller
         ]);
     }
 
-    public function show()
+    public function show($id)
     {
-        $user = Auth::user();
+        $user = User::findOrFail($id);
         return view('profile.show', compact('user'));
     }
 

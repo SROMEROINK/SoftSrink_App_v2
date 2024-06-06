@@ -1,7 +1,7 @@
 @extends('adminlte::page')
 
 @section('title', 'Roles y Permisos')
-{{-- resources\views\roles\index.blade.php --}}
+
 @section('content_header')
     <h1>Roles y Permisos</h1>
 @stop
@@ -40,6 +40,7 @@
             <table class="table table-striped">
                 <thead>
                     <tr>
+                        <th>Usuario</th>
                         <th>Nombre del Rol</th>
                         <th>Permisos</th>
                         <th class="text-center">Acciones</th>
@@ -48,11 +49,14 @@
                 <tbody>
                     @foreach ($roles as $role)
                         <tr>
+                            <td>{{ $role->users->pluck('name')->implode(', ') }}</td>
                             <td>{{ $role->name }}</td>
                             <td>{{ $role->permissions->pluck('name')->implode(', ') }}</td>
                             <td class="text-center">
-                                <a class="btn btn-primary" href="{{ route('roles.edit', $role->id) }}">Editar</a>
-                                <button class="btn btn-danger trigger-delete" data-id="{{ $role->id }}">Eliminar</button>
+                                <div class="button-group">
+                                    <a class="btn btn-primary" href="{{ route('roles.edit', $role->id) }}">Editar</a>
+                                    <button class="btn btn-danger trigger-delete" data-id="{{ $role->id }}">Eliminar</button>
+                                </div>
                             </td>
                         </tr>
                     @endforeach
@@ -66,7 +70,7 @@
 @stop
 
 @section('css')
-<link rel="stylesheet" href="{{ asset('vendor/adminlte/dist/css/RoleIndex.css') }}">
+    <link rel="stylesheet" href="{{ asset('vendor/adminlte/dist/css/RoleIndex.css') }}">
 @stop
 
 @section('js')
