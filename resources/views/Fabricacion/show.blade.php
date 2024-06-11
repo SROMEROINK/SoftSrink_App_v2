@@ -38,6 +38,8 @@
                     <th>Nombre_Operario</th>
                     <th>Turno</th>
                     <th>Cant_Horas_Extras</th>
+                    <th>Creado el</th> <!-- Nueva columna -->
+                    <th>Actualizado el</th> <!-- Nueva columna -->
                     <th width="150px">Acciones</th>        
                 </tr>
             </thead>
@@ -57,9 +59,15 @@
                         <td>{{$registro->Nombre_Operario}}</td>
                         <td>{{$registro->Turno}}</td>
                         <td>{{$registro->Cant_Horas_Extras}}</td>
+                        <td>{{$registro->created_at}}</td>
+                        <td>{{$registro->updated_at}}</td>
+                        
+
                         <td>
                             @can('editar produccion')
                             <a href="{{ route('fabricacion.edit', $registro->Id_OF) }}" class="btn btn-info btn-sm mb-1">Editar</a>
+                            @endcan
+                            @can('eliminar registros')
                             <button type="button" class="btn btn-danger btn-sm trigger-delete" data-id="{{ $registro->Id_OF }}">Eliminar</button>
                             @endcan
                         </td>

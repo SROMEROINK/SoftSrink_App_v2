@@ -1,0 +1,24 @@
+.custom-swal-popup {
+    background: #dff0d8; /* Fondo verde claro */
+    color: #3c763d; /* Texto verde oscuro */
+}
+
+.custom-swal-title {
+    color: #3c763d; /* Título en verde oscuro */
+}
+
+.custom-swal-content {
+    color: #3c763d; /* Contenido en verde oscuro */
+}
+
+.custom-swal-button {
+    background-color: #5cb85c !important; /* Botón verde */
+    color: #fff !important; /* Texto del botón en blanco */
+    border: none !important;
+    border-radius: 5px !important;
+    padding: 5px 15px !important;
+}
+
+.custom-swal-button:hover {
+    background-color: #4cae4c !important; /* Botón verde más oscuro al pasar el mouse */
+}

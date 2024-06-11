@@ -27,17 +27,26 @@ namespace App\Models;
             "Turno",
             "Cant_Horas_Extras",
             "Ultima_Carga",
-            "Status_OF"
+            "Status_OF",
+            "created_by",
+            "updated_by",
+            "deleted_by"
         ];
 
-        public $timestamps = false;
+        public $timestamps = true; // Habilitar timestamps
 
         public function listado_of()
         {
-            // La clave foránea en Listado_OF: 'Producto_Id'
-            // La clave primaria en producto: 'Id_Producto'
-            return $this->belongsTo(Listado_OF::class, 'Nro_OF','Id_OF'); // Cambia el nombre del modelo a Producto y especifica correctamente el namespace
+            return $this->belongsTo(Listado_OF::class, 'Nro_OF', 'Id_OF');
         }
-
-
+    
+        public function creator()
+        {
+            return $this->belongsTo(User::class, 'created_by');
         }
+    
+        public function updater()
+        {
+            return $this->belongsTo(User::class, 'updated_by');
+        }
+    }

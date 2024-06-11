@@ -9,7 +9,7 @@ class PermissionController extends Controller
 {
     public function index()
     {
-        $permissions = Permission::paginate(10);
+        $permissions = Permission::all();
         return view('permissions.index', compact('permissions'));
     }
 
@@ -19,16 +19,15 @@ class PermissionController extends Controller
     }
 
     public function store(Request $request)
-    {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255|unique:permissions'
-        ]);
+{
+    $validated = $request->validate([
+        'name' => 'required|string|max:255|unique:permissions'
+    ]);
 
-        Permission::create(['name' => $validated['name']]);
+    Permission::create(['name' => $validated['name']]);
 
-        return response()->json(['success' => true, 'message' => 'Permiso creado con éxito.']);
-    }
-
+    return redirect()->route('permissions.index')->with('success', 'Permiso creado con éxito.');
+}
     public function edit(Permission $permission)
     {
         return view('permissions.edit', compact('permission'));

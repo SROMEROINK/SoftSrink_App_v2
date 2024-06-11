@@ -4,16 +4,18 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\RegistroDeFabricacion;
+use Illuminate\Support\Facades\Auth;
+
 
 class RegistroDeFabricacionController extends Controller
 {
     public function __construct()
     {
-        $this->middleware('permission:ver produccion')->only('index');
+        $this->middleware('permission:ver produccion')->only('index','showByNroOF');
         $this->middleware('permission:ver produccion')->only('show');
         $this->middleware('permission:editar produccion')->only(['create', 'store']);
         $this->middleware('permission:editar produccion')->only(['edit', 'update']);
-        $this->middleware('permission:editar produccion')->only('destroy');
+        $this->middleware('permission:eliminar registros')->only('destroy');
     }
 
 
@@ -73,7 +75,6 @@ class RegistroDeFabricacionController extends Controller
             'cant_horas.*' => 'required|numeric',
         ], $messages);
 
-        // Añadir log para depurar datos recibidos
         \Log::info('Nombre Operario:', $request->operario);
 
         if (!empty($request->nro_of)) {
@@ -91,12 +92,13 @@ class RegistroDeFabricacionController extends Controller
                     $registro->Horario = $request->horario[$index];
                     $registro->Turno = $request->turno[$index];
                     $registro->Cant_Horas_Extras = $request->cant_horas[$index];
+                    $registro->created_by = Auth::id(); // Registrar el usuario que crea el registro
+                    $registro->updated_by = Auth::id(); // Registrar el usuario que crea el registro
 
-                    // Aquí se establece el campo operario basado en la condición del horario
                     if ($request->horario[$index] === 'H.Normales') {
-                        $registro->Nombre_Operario = ''; // Asigna 'N/A' si el horario es 'H.Normales'
+                        $registro->Nombre_Operario = ''; 
                     } else {
-                        $registro->Nombre_Operario = $request->operario[$index] ?? null; // Utiliza el operario enviado o null si no se envía nada
+                        $registro->Nombre_Operario = $request->operario[$index] ?? null;
                     }
 
                     $registro->save();
@@ -126,8 +128,7 @@ class RegistroDeFabricacionController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit($id)
-    {
+    public function edit($id) {
         $registro_fabricacion = RegistroDeFabricacion::findOrFail($id);
         return view('Fabricacion.edit', compact('registro_fabricacion'));
     }
@@ -135,7 +136,7 @@ class RegistroDeFabricacionController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $Id_OF) // Actualizar un registro de fabricación
+    public function update(Request $request, string $Id_OF)
     {
         $registro_fabricacion = RegistroDeFabricacion::find($Id_OF);
         if (!$registro_fabricacion) {
@@ -151,10 +152,10 @@ class RegistroDeFabricacionController extends Controller
         $registro_fabricacion->Nombre_Operario = $request->Nombre_Operario;
         $registro_fabricacion->Turno = $request->Turno;
         $registro_fabricacion->Cant_Horas_Extras = $request->Cant_Horas_Extras;
+        $registro_fabricacion->updated_by = Auth::id(); // Registrar el usuario que actualiza el registro
 
         $registro_fabricacion->save();
         
-        // Redirección a la vista de detalles del registro actualizado con un mensaje de éxito
         return response()->json(['status' => 'success', 'message' => 'Registro actualizado correctamente.']);
     }
 

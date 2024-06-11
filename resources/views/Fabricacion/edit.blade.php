@@ -5,9 +5,8 @@
 @section('title', 'Editar Registro')
 
 @section('content_header')
-<div style="display: flex; justify-content: center; align-items: center;">
-    <h1 style="margin-right: 20px;">Actualizar OF {{ $registro_fabricacion->Nro_OF }}</h1>
-    <a href="{{ route('fabricacion.create') }}" class="btn btn-success">Ir a Carga de Producción</a>
+<div class="title-container title-container-small" style="display: flex; justify-content: center; align-items: center;">
+    <h1 class="page-title">Editar OF: {{ $registro_fabricacion->Nro_OF }}</h1>
 </div>
 @stop
 
@@ -66,6 +65,7 @@
         </div>
         <button type="submit" class="btn btn-primary">Actualizar</button>
         <input type="hidden" name="id" value="{{ $registro_fabricacion->Id_OF }}">
+        <a href="{{ route('fabricacion.showByNroOF', ['nroOF' => $registro_fabricacion->Nro_OF]) }}" class="btn btn-danger">Volver</a>
     </form>
 @stop
 

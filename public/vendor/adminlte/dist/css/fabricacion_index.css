@@ -1,7 +1,7 @@
 /* Estilos personalizados para el título */
 .titulo-cantidad {
     font-weight: bold;
-    color: blue; /* Cambia el color del texto a azul */
+    
 }
 
 /* Estilos personalizados para el número */
@@ -18,74 +18,5 @@
     text-align: center; /* Centra el contenido de las celdas */
 }
 
-/* Establece el ancho de las columnas */
-#registro_de_fabricacion th:nth-child(1),
-#registro_de_fabricacion td:nth-child(1) {
-    width: 50px; /* Ancho deseado para la primera columna */
-}
 
-#registro_de_fabricacion th:nth-child(2),
-#registro_de_fabricacion td:nth-child(2) {
-    width: 100px; /* Ancho deseado para la segunda columna */
-}
 
-/* Ajustar el ancho de las demás columnas según sea necesario */
-#registro_de_fabricacion th:nth-child(3),
-#registro_de_fabricacion td:nth-child(3) {
-    width: 150px; /* Ancho deseado para la tercera columna */
-}
-
-#registro_de_fabricacion th:nth-child(4),
-#registro_de_fabricacion td:nth-child(4) {
-    width: 200px; /* Ancho deseado para la cuarta columna */
-}
-
-#registro_de_fabricacion th:nth-child(5),
-#registro_de_fabricacion td:nth-child(5) {
-    width: 150px; /* Ancho deseado para la quinta columna */
-}
-
-#registro_de_fabricacion th:nth-child(6),
-#registro_de_fabricacion td:nth-child(6) {
-    width: 100px; /* Ancho deseado para la sexta columna */
-}
-
-#registro_de_fabricacion th:nth-child(7),
-#registro_de_fabricacion td:nth-child(7) {
-    width: 150px; /* Ancho deseado para la séptima columna */
-}
-
-#registro_de_fabricacion th:nth-child(8),
-#registro_de_fabricacion td:nth-child(8) {
-    width: 150px; /* Ancho deseado para la octava columna */
-}
-
-#registro_de_fabricacion th:nth-child(9),
-#registro_de_fabricacion td:nth-child(9) {
-    width: 100px; /* Ancho deseado para la novena columna */
-}
-
-#registro_de_fabricacion th:nth-child(10),
-#registro_de_fabricacion td:nth-child(10) {
-    width: 100px; /* Ancho deseado para la décima columna */
-}
-
-#registro_de_fabricacion th:nth-child(11),
-#registro_de_fabricacion td:nth-child(11) {
-    width: 100px; /* Ancho deseado para la undécima columna */
-}
-
-#registro_de_fabricacion th:nth-child(12),
-#registro_de_fabricacion td:nth-child(12) {
-    width: 150px; /* Ancho deseado para la duodécima columna */
-}
-
-#registro_de_fabricacion th:nth-child(13),
-#registro_de_fabricacion td:nth-child(13) {
-    width: 100px; /* Ancho deseado para la decimotercera columna */
-}
-
-#registro_de_fabricacion th:nth-child(14),
-#registro_de_fabricacion td:nth-child(14) {
-    width: 100px; /* Ancho deseado para la decimocuarta columna */
-}

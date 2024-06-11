@@ -17,8 +17,6 @@
                         text: "{{ session('success') }}",
                         showConfirmButton: false,
                         timer: 3000
-                    }).then(function() {
-                        window.location.href = "{{ route('permissions.index') }}";
                     });
                 </script>
             @endif
@@ -31,8 +29,6 @@
                         text: "{{ session('info') }}",
                         showConfirmButton: false,
                         timer: 3000
-                    }).then(function() {
-                        window.location.href = "{{ route('permissions.index') }}";
                     });
                 </script>
             @endif
@@ -41,14 +37,14 @@
                 <thead>
                     <tr>
                         <th>Nombre del Permiso</th>
-                        <th colspan="2" class="text-center">Acciones</th>
+                        <th class="text-center acciones">Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach ($permissions as $permission)
                         <tr>
                             <td>{{ $permission->name }}</td>
-                            <td class="text-center">
+                            <td class="text-right">
                                 <a class="btn btn-primary" href="{{ route('permissions.edit', $permission->id) }}">Editar</a>
                                 <button class="btn btn-danger trigger-delete" data-id="{{ $permission->id }}">Eliminar</button>
                             </td>
@@ -56,7 +52,7 @@
                     @endforeach
                 </tbody>
             </table>
-            <div class="card-footer">
+            <div class="card-footer text-left">
                 <a href="{{ route('permissions.create') }}" class="btn btn-primary">Crear Permiso</a>
             </div>
         </div>

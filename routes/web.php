@@ -54,6 +54,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/listado-of/get-id-producto/{nroOf}', [ListadoOfController::class, 'getIdProductoPorNroOf']);
 });
 
+// Rutas para fabricación showByNroOF
+Route::get('fabricacion/show/{nroOF}', [RegistroDeFabricacionController::class, 'showByNroOF'])->name('fabricacion.showByNroOF');
+
+
+
 // Rutas protegidas por roles específicos
 Route::middleware(['role:Administrador'])->group(function () {
     Route::resource('users', UserController::class);

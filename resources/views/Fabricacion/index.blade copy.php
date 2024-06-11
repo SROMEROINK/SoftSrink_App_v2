@@ -3,25 +3,23 @@
 @section('title', 'Fabricación - Registro_De_Fabricación')
 
 @section('content_header')
-<div class="card">
-    
-    <h4 class="text-center">Registro de Fabricación</h4>  
-</div>
-<div class="card">
-    <div class="card-header">
-        <h3 class="card-title">Cantidad de piezas fabricadas : </h3>
+    <h2>Registro de Fabricación</h2>  
+    <h1>
+        Cantidad de piezas fabricadas: 
         <span id="totalCantPiezas" class="total-numero">0</span>
-        <a href="{{ route('fabricacion.create') }}" class="btn btn-success text-right">Ir a Carga de Producción</a>
-    </div>
-</div>
-    
+    </h1>
+    <a href="{{ route('fabricacion.create') }}" class="btn btn-success">Ir a Carga de Producción</a>
+
 
 @stop
 
 @section('content')
-    <div class="">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-16">
+
                 <!-- Tu contenido va aquí -->
-                <table id="registro_de_fabricacion" class="table table-striped" style="width:100%">
+                <table id="registro_de_fabricacion" class="display" style="width:100%">
                     <thead>
                         <tr>
                             <th>Id_OF</th>
@@ -45,52 +43,12 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr>
-                        <td>1</td>
-                        <td>2</td>
-                        <td>3</td>
-                        <td>4</td>
-                        <td>5</td>
-                        <td>6</td>
-                        <td>7</td>
-                        <td>8</td>
-                        <td>9</td>
-                        <td>10</td>
-                        <td>11</td>
-                        <td>12</td>
-                        <td>13</td>
-                        <td>14</td>
-                        <td>15</td>
-                        <td>16</td>
-                        <td>17</td>
-                        <td>18</td>
-                        </tr>
-                        <tr>
-                        <td>a</td>
-                        <td>b</td>
-                        <td>c</td>
-                        <td>d</td>
-                        <td>e</td>
-                        <td>f</td>
-                        <td>g</td>
-                        <td>h</td>
-                        <td>i</td>
-                        <td>j</td>
-                        <td>k</td>
-                        <td>m</td>
-                        <td>n</td>
-                        <td>o</td>
-                        <td>p</td>
-                        <td>r</td>
-                        <td>s</td>
-                        <td>t</td>
-                        </tr>
-                        {{-- @php
+                        @php
                             $totalCantPiezas = 0; // Inicializa la variable para almacenar la suma
                         @endphp
                         @foreach ($registros_fabricacion as $registro_fabricacion)
                             @if (!isset($filtroNroOF) || $registro_fabricacion->listado_of->Nro_OF == $filtroNroOF)
-                                
+                                <tr>
                                     <td>{{ $registro_fabricacion->Id_OF }}</td>
                                     <td>{{ $registro_fabricacion->listado_of->Nro_OF }}</td>
                                     <td>{{ $registro_fabricacion->listado_of->producto->Prod_Codigo }}</td>
@@ -114,118 +72,34 @@
                                     $totalCantPiezas += $registro_fabricacion->Cant_Piezas;
                                 @endphp
                             @endif
-                        @endforeach --}}
+                        @endforeach
                     </tbody>
                 </table>
-                <select id="mySelect">
-                    <option value="">All</option>
-                    <option value="1">1</option>
-                    <option value="2">2</option>
-                    <option value="3">3</option>
-                    <option value="4">4</option>
-                    <option value="5">5</option>
-                </select>
-                </div> 
+            </div>
+        </div>
+    </div>
 @stop
 
 @section('css')
     <link rel="stylesheet" href="{{ asset('vendor/adminlte/dist/css/fabricacion_index.css') }}">
     <!-- Agrega los estilos de DataTables aquí -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://cdn.datatables.net/2.0.8/css/dataTables.bootstrap5.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/2.0.3/css/dataTables.dataTables.css">
 @endsection
 
 @section('js')
     <!-- Scripts de DataTables aquí -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.datatables.net/2.0.8/js/dataTables.js"></script>
-    <script src="https://cdn.datatables.net/2.0.8/js/dataTables.bootstrap5.js"></script>
+    <script src="https://code.jquery.com/jquery-3.3.1.js"></script>
+    <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/fixedheader/3.1.6/js/dataTables.fixedHeader.min.js"></script>
 
     <script>
         $(document).ready(function () {
             var table = $('#registro_de_fabricacion').DataTable({
-                layout: {
-                    topEnd: function (){
-                    let btn =  document.createElement('button')
-                    btn.textContent = 'Botón de prueba';
-                    btn.classList.add('btn', 'btn-primary');
-                    btn.addEventListener('click', function () {
-                        alert('¡Hola, mundo!');
-                    });
-                    return btn;
-                    },
-        topStart: {
-                        search: {
-            placeholder: 'Buscar en la tabla',
-                        } // Puedo agregar un botón de búsqueda avanzada,
-                    },
-
-        bottomStart: { 
-        pageLength:{ 
-        menu:[10, 25, 50]}
-}, // Puedo agregar "All" para mostrar todos los registros
-
-
-
-        bottomEnd: {
-            paging: {
-               numbers: 5 // Puedo agregar "simple" para mostrar solo los botones de siguiente y anterior
-            }
-        }
-    },
-    
-
-                
-                language: {
-                "decimal": "",
-                "emptyTable": "No hay información",
-                "info": "Mostrando START a END de TOTAL Entradas",
-                "infoEmpty": "Mostrando 0 to 0 of 0 Entradas",
-                "infoFiltered": "(Filtrado de MAX total entradas)",
-                "infoPostFix": "",
-                "thousands": ",",
-                "lengthMenu": "Mostrar MENU Entradas",
-                "loadingRecords": "Cargando...",
-                "processing": "Procesando...",
-                "search": "Buscar:",
-                "zeroRecords": "Sin resultados encontrados",
-                "paginate": {
-                "first": "Primero",
-                "last": "Ultimo",
-                "next": "Siguiente",
-                "previous": "Anterior"
-                },
-                "order": [[0, "desc"]],
-                "paging": true,
-                "lengthChange": true,
-                "searching": true,
-                "ordering": true,
-                "info": true,
-                "autoWidth": true,
-                "responsive": true,
-                "fixedHeader": true,
-                "scrollX": true,
-                "scrollY": true,
-                "scrollCollapse": true,
-                "fixedColumns": {
-                    leftColumns: 1,
-                    rightColumns: 1
-                }
-            },  
-
-
-});
-
-table.caption('Registro de Fabricación: Tabla de datos de producción.');
-// table.ready(function () {
-//     table.search.fixed('Clase Familia', '1').draw(); // Filtra la tabla por la columna "Clase Familia" con el valor "1"
-// });
-
-$('#mySelect').on('change', function () {
-    table.search.fixed('Clase Familia', $(this).value()).draw();
-    console.log($(this).value());
-});
+                orderCellsTop: true,
+                fixedHeader: true,
+                pageLength: 50, // Mostrar solo 50 resultados por defecto
+                lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]],
+            });
 
             // Clonar la fila de encabezado y agregar filtros
             $('#registro_de_fabricacion thead tr').clone(true).prependTo('#registro_de_fabricacion thead');

@@ -1,7 +1,7 @@
 <?php
 
 namespace App\Http\Controllers;
-
+// app\Http\Controllers\RolePermissionController.php
 use Illuminate\Http\Request;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
@@ -42,25 +42,32 @@ class RolePermissionController extends Controller
     }
 
     public function update(Request $request, Role $role)
-    {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'permissions' => 'array|exists:permissions,name',
-        ]);
+{
+    $validated = $request->validate([
+        'name' => 'required|string|max:255',
+        'permissions' => 'nullable|array|exists:permissions,name',
+    ]);
 
-        $role->update(['name' => $validated['name']]);
-
-        $permissions = Permission::whereIn('name', $validated['permissions'])->get();
-        $role->syncPermissions($permissions);
-
-        // Actualizar permisos de los usuarios que tienen este rol
-        $users = User::role($role->name)->get();
-        foreach ($users as $user) {
-            $user->syncPermissions($user->getPermissionsViaRoles());
-        }
-
-        return redirect()->route('roles.index')->with('success', 'Rol actualizado con éxito.');
+    // Verificar que se haya seleccionado al menos un permiso
+    if (empty($validated['permissions'])) {
+        return redirect()->back()->withErrors(['permissions' => 'Debe seleccionar aunque sea un permiso.'])->withInput();
     }
+
+    $role->update(['name' => $validated['name']]);
+
+    $permissions = Permission::whereIn('name', $validated['permissions'])->get();
+    $role->syncPermissions($permissions);
+
+    // Actualizar permisos de los usuarios que tienen este rol
+    $users = User::role($role->name)->get();
+    foreach ($users as $user) {
+        $user->syncPermissions($user->getPermissionsViaRoles());
+    }
+
+    return redirect()->route('roles.index')->with('success', 'Rol actualizado con éxito.');
+}
+
+
 
     public function destroy(Role $role)
     {

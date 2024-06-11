@@ -12,7 +12,7 @@
             @csrf
             <div class="form-group">
                 <label for="name">Nombre del Permiso</label>
-                <input type="text" name="name" class="form-control" value="{{ old('name') }}" required>
+                <input type="text" id="name" name="name" class="form-control" value="{{ old('name') }}" required>
                 @error('name')
                     <div class="alert alert-danger">{{ $message }}</div>
                 @enderror
@@ -22,8 +22,13 @@
     </div>
 @stop
 
+@section('css')
+<link rel="stylesheet" href="{{ asset('vendor/adminlte/dist/css/PermissionCreate.css') }}">
+@stop
+
 @section('js')
 <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://code.jquery.com/jquery-3.5.1.js"></script>
 <script>
     $(document).ready(function() {
         $('#createForm').on('submit', function(e) {
@@ -31,15 +36,14 @@
             var formData = $(this).serialize();
 
             $.ajax({
-                url: '{{ route('permissions.store') }}',
+                url: $(this).attr('action'),
                 type: 'POST',
                 data: formData,
                 success: function(response) {
                     Swal.fire({
+                        position: 'center',
                         icon: 'success',
                         title: 'Permiso creado correctamente',
-                        background: '#cce5ff', // Fondo azul claro
-                        color: '#004085', // Texto azul oscuro
                         showConfirmButton: false,
                         timer: 1500
                     }).then((result) => {

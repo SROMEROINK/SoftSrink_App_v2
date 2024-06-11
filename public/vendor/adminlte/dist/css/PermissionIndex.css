@@ -1,0 +1,44 @@
+/* public\vendor\adminlte\dist\css\PermissionIndex.css */
+.table td, .table th {
+    vertical-align: middle; /* Centra verticalmente el contenido */
+}
+
+.table td.text-center, .table th.text-center {
+    text-align: right; /* Alinea el texto al centro */
+}
+
+.acciones {
+    color: black; /* Color del texto */
+    text-align: right; /* Centra el texto horizontalmente */
+    width: 150px; /* Ajusta el ancho para centrar mejor */
+}
+
+.table td.text-right {
+    display: flex;
+    justify-content: flex-end; /* Alinea los botones hacia la derecha */
+    gap: 10px; /* Añade un espacio entre los botones */
+}
+
+.table td.text-right > * {
+    margin: auto 0; /* Centra verticalmente los botones */
+}
+
+.d-flex {
+    display: flex;
+}
+
+.justify-content-between {
+    justify-content: space-between;
+}
+
+.align-items-center {
+    align-items: center;
+}
+
+.text-center {
+    text-align: center;
+}
+
+.w-100 {
+    width: 100%;
+}
