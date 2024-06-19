@@ -14,11 +14,16 @@ use App\Http\Controllers\ProductoCategoriaController;
 use App\Http\Controllers\RegistroDeFabricacionController;
 use App\Http\Controllers\ListadoEntregaProductoController;
 use App\Http\Controllers\Admin\HomeController as AdminHomeController;
+use App\Http\Controllers\AjaxController;
 
 // Ruta por defecto al iniciar la app
 Route::get('/', function () {
     return redirect()->route('login');
 })->name('default_login');
+
+// Ruta específica para DataTables
+Route::get('fabricacion/data', [RegistroDeFabricacionController::class, 'getData'])->name('fabricacion.data');
+Route::get('/fabricacion/withFiltro', [RegistroDeFabricacionController::class, 'indexWithFiltro'])->name('fabricacion.withFiltro');
 
 // Rutas de autenticación
 Route::middleware('guest')->group(function () {
@@ -68,20 +73,11 @@ Route::middleware(['role:Administrador'])->group(function () {
     // Route::resource('productos', ProductoController::class);
 });
 
-// Rutas de prueba
-Route::get('/check-user-permissions', function () {
-    $user = \App\Models\User::find(1); // Cambia el ID del usuario según sea necesario
-    return [
-        'roles' => $user->roles->pluck('name'),
-        'permissions_via_roles' => $user->getPermissionsViaRoles()->pluck('name'),
-        'all_permissions' => $user->getAllPermissions()->pluck('name'),
-    ];
-});
 
-Route::get('/assign-permission', function () {
-    $user = \App\Models\User::find(1); // Cambia el ID del usuario según sea necesario
-    $user->givePermissionTo('ver produccion');
-    return "Permiso asignado";
-});
+
+// Route::get('/fabricacion/data1', function () {
+//     $registros_fabricacion = RegistroDeFabricacion::all();
+//     return view('Fabricacion.index', compact('registros_fabricacion'));
+// });
 
 require __DIR__.'/auth.php';

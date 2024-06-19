@@ -3,8 +3,12 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\RegistroDeFabricacion;
+use Yajra\DataTables\Facades\DataTables;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
+use App\Models\RegistroDeFabricacion;
+
+
 
 
 class RegistroDeFabricacionController extends Controller
@@ -19,19 +23,67 @@ class RegistroDeFabricacionController extends Controller
     }
 
 
-    /**
-     * Muestra la página principal de registros con un filtro opcional.
-     */
-    public function index(Request $request)
+
+   public function getData(Request $request)
+{
+    try {
+        if ($request->ajax()) {
+            $registros_fabricacion = RegistroDeFabricacion::with([
+                'listado_of.producto.categoria', 
+                'creator', 
+                'updater'
+            ])->select('Id_OF', 'Nro_OF', 'Id_Producto', 'Nro_Parcial', 'Cant_Piezas', 'Fecha_Fabricacion', 'Horario', 'Nombre_Operario', 'Turno', 'Cant_Horas_Extras', 'created_at', 'updated_at', 'created_by', 'updated_by');
+
+            return DataTables::eloquent($registros_fabricacion)
+                ->addColumn('Prod_Codigo', function ($registro) {
+                    return $registro->listado_of->producto->Prod_Codigo ?? '';
+                })
+                ->addColumn('Prod_Descripcion', function ($registro) {
+                    return $registro->listado_of->producto->Prod_Descripcion ?? '';
+                })
+                ->addColumn('Nombre_Categoria', function ($registro) {
+                    return $registro->listado_of->producto->categoria->Nombre_Categoria ?? '';
+                })
+                ->addColumn('Nro_Maquina', function ($registro) {
+                    return $registro->listado_of->Nro_Maquina ?? '';
+                })
+                ->addColumn('Familia_Maquinas', function ($registro) {
+                    return $registro->listado_of->Familia_Maquinas ?? '';
+                })
+                ->addColumn('creator', function ($registro) {
+                    return $registro->creator->name ?? '';
+                })
+                ->addColumn('updater', function ($registro) {
+                    return $registro->updater->name ?? '';
+                })
+                ->editColumn('created_at', function ($registro) {
+                    return $registro->created_at ? $registro->created_at->format('Y-m-d H:i:s') : '';
+                })
+                ->editColumn('updated_at', function ($registro) {
+                    return $registro->updated_at ? $registro->updated_at->format('Y-m-d H:i:s') : '';
+                })
+                ->make(true);
+        }
+    } catch (\Exception $e) {
+        Log::error('Error in getData: ' . $e->getMessage());
+        return response()->json(['error' => 'Error fetching data'], 500);
+    }
+}
+
+    public function index()
     {
-        // Obtener el valor del filtro de la solicitud
-        $filtroNroOF = $request->query('filtroNroOF');
-        $registros_fabricacion = RegistroDeFabricacion::with('listado_of.producto')->get();
-    
-        // Pasar los registros de fabricacón paginados a la vista correspondiente
-        return view('Fabricacion.index', compact('registros_fabricacion','filtroNroOF'));
+        return view('Fabricacion.index');
     }
 
+
+    public function indexWithFiltro(Request $request)
+    {
+        $filtroNroOF = $request->query('filtroNroOF');
+        $registros_fabricacion = RegistroDeFabricacion::with('listado_of.producto')->get();
+
+        // Pasar los registros de fabricacón paginados a la vista correspondiente
+        return view('Fabricacion.index', compact('registros_fabricacion', 'filtroNroOF'));
+    }
     /**
      * Show the form for creating a new resource.
      */
@@ -159,6 +211,12 @@ class RegistroDeFabricacionController extends Controller
         return response()->json(['status' => 'success', 'message' => 'Registro actualizado correctamente.']);
     }
 
+    public function show($id)
+    {
+        $registro = RegistroDeFabricacion::findOrFail($id);
+        return view('fabricacion.show', compact('registro'));
+    }
+
     /**
      * Remove the specified resource from storage.
      */
@@ -184,3 +242,5 @@ class RegistroDeFabricacionController extends Controller
     }
 }
 }
+
+

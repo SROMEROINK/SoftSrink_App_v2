@@ -1,7 +1,7 @@
 /* Estilos personalizados para el título */
 .titulo-cantidad {
     font-weight: bold;
-    
+    color: blue; /* Cambia el color del texto a azul */
 }
 
 /* Estilos personalizados para el número */
@@ -18,5 +18,39 @@
     text-align: center; /* Centra el contenido de las celdas */
 }
 
+/* Estilos para los encabezados de los filtros */
+#registro_de_fabricacion th.filtro-header {
+    background-color: red;
+    color: white;
+}
 
+/* Estilos para los campos select y el campo de texto */
+.filtro-select,
+.filtro-texto {
+    border: 2px solid red;
+    position: relative;
+    padding-right: 24px;
+}
 
+.filtro-texto::placeholder {
+    color: black;
+}
+
+/* Quitar el botón de limpiar en IE/Edge */
+.filtro-texto::-ms-clear {
+    display: none;
+}
+
+/* Botón de limpiar personalizado */
+.filtro-texto-clear {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    display: none;
+}
+
+.filtro-texto:valid + .filtro-texto-clear {
+    display: block;
+}
