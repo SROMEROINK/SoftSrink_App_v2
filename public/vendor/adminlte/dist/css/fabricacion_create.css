@@ -1,5 +1,3 @@
-/* public\vendor\adminlte\dist\css\fabricacion_create.css */
-
 :root {
     --colorTextos: #49454567;
     --colorPrimario: #6A82FB;
@@ -51,21 +49,21 @@ form {
     white-space: nowrap;
     text-overflow: ellipsis;
     padding: 10px;
-    font-weight: bold; /* Hacer las letras más oscuras y en negrita */
+    font-weight: bold;
 }
 
 .table input,
 .table select {
     background: none;
-    color: #494545; /* Letras más oscuras */
+    color: #494545;
     font-size: 16px;
     padding: 10px 10px 10px 5px;
     width: 100%;
     border: none;
     border-bottom: 1px solid var(--colorTextos);
     transition: 0.3s ease all;
-    text-align: center; /* Centra el texto en los campos */
-    line-height: 1.2; /* Ajustar la altura de la línea */
+    text-align: center;
+    line-height: 1.2;
 }
 
 .table input:focus,
@@ -82,19 +80,19 @@ form {
     font-size: 14px;
     cursor: pointer;
     transition: background 0.3s ease;
-    margin: 0 2px; /* Reduce el espacio entre los botones */
+    margin: 0 2px;
 }
 
 .table .btn-info {
     background: var(--colorPrimario);
     color: #fff;
-    min-width: 110px; /* Aumenta el ancho mínimo del botón Editar */
+    min-width: 110px;
 }
 
 .table .btn-danger {
     background: var(--colorSecundario);
     color: #fff;
-    min-width: 110px; /* Aumenta el ancho mínimo del botón Eliminar */
+    min-width: 110px;
 }
 
 .table .btn-info:hover {
@@ -108,7 +106,7 @@ form {
 .btn-der {
     margin-top: 20px;
     display: flex;
-    justify-content: flex-start; /* Alinea los botones a la izquierda */
+    justify-content: flex-start;
     gap: 10px;
 }
 
@@ -129,5 +127,21 @@ form {
 .btn-der .btn-success:hover,
 .btn-der .btn-primary:hover {
     background: var(--colorSecundario);
-    opacity: 1; /* Asegura que no desaparezcan al pasar el cursor */
+    opacity: 1;
 }
+
+.table tbody tr.duplicated {
+    background-color: #f8d7da;
+}
+
+.table th.col-nro-fila,
+.table td.col-nro-fila {
+    width: 100px;
+    text-align: center;
+    vertical-align: middle;
+}
+
+.swal2-popup .btn-info {
+    margin-top: 10px;
+}
+

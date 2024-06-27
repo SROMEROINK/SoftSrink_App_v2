@@ -1,7 +1,7 @@
 <?php
 
 namespace App\Models;
-
+// app\Models\ListadoEntregaProducto.php
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\Producto;

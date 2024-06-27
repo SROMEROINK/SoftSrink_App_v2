@@ -44,6 +44,8 @@
     <div class="content-wrapper">
         <!-- Main content -->
         <section class="content">
+            @include('partials.navigation') <!-- Aquí incluyes la botonera personalizada -->
+
             @yield('content')
         </section>
         <!-- /.content -->

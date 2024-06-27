@@ -1,9 +1,11 @@
 <?php
-
+// app\Providers\AppServiceProvider.php
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Blade;
+use App\View\Components\HeaderCard;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -18,8 +20,9 @@ class AppServiceProvider extends ServiceProvider
     /**
      * Bootstrap any application services.
      */
-    // public function boot(): void
-    // {
-    //     DB::statement("SET time_zone = 'America/Argentina/Buenos_Aires'");
-    // }
+
+    public function boot()
+    {
+        Blade::component('header-card', HeaderCard::class);
+    }
 }

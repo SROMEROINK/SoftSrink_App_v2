@@ -3,12 +3,21 @@
 @section('title', 'Fabricación - Registro_De_Fabricación')
 
 @section('content_header')
-<x-header-card 
-    title="Registro de Fabricación" 
-    quantityTitle="Cantidad de piezas fabricadas:" 
-    buttonRoute="{{ route('fabricacion.create') }}" 
-    buttonText="Crear registro" 
-/>
+<div class="card card-title-header">
+    <h4 class="text-center">Registro de Fabricación</h4>  
+</div>
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <div class="info-section">
+            <span class="card-title titulo-cantidad">Cantidad de piezas fabricadas:</span>
+            <span id="totalCantPiezas" class="total-numero">0</span>
+        </div>
+        <a href="{{ route('fabricacion.create') }}" class="btn btn-success create-button">Crear registro</a>
+    </div>
+</div>
+
+@include('partials.navigation')
+
 @stop
 
 @section('content')

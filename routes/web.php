@@ -21,8 +21,14 @@ Route::get('/', function () {
     return redirect()->route('login');
 })->name('default_login');
 
+Route::post('/fabricacion/check-nro-of-parcial', [FabricacionController::class, 'checkNroOFParcial']);
+
+
 // Ruta específica para DataTables
+
+Route::get('productos/data', [ProductoController::class, 'getData'])->name('productos.data');
 Route::get('fabricacion/data', [RegistroDeFabricacionController::class, 'getData'])->name('fabricacion.data');
+Route::get('/entregas_productos/data', [ListadoEntregaProductoController::class, 'getData'])->name('entregas_productos.data');
 Route::get('/fabricacion/withFiltro', [RegistroDeFabricacionController::class, 'indexWithFiltro'])->name('fabricacion.withFiltro');
 
 // Rutas de autenticación
@@ -49,7 +55,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('mp_ingresos', MpIngresoController::class);
     Route::resource('categoria', ProductoCategoriaController::class);
     Route::resource('fabricacion', RegistroDeFabricacionController::class);
-    Route::resource('listado_de_entregas_productos', ListadoEntregaProductoController::class);
+    Route::resource('entregas_productos', ListadoEntregaProductoController::class);
     
     Route::get('/materia_prima_ingresos', [MpIngresoController::class, 'index'])->name('materia_prima_ingresos.index');
     Route::get('/materia_prima_salidas', [MpSalidaController::class, 'index'])->name('materia_prima_salidas.index');

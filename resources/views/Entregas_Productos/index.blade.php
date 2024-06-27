@@ -1,41 +1,22 @@
-{{-- resources/views/Materia_Prima/index.blade.php --}}
-
 @extends('adminlte::page')
 
-@section('title', 'Entrega de Productos - Listado')
+@section('title', 'Listado de Entregas de Productos')
 
 @section('content_header')
-    <h2>Listado de entregas de Productos</h2>  
-    <h1>
-        Cantidad de piezas Entregadas: 
-        <span id="totalCantPiezas" class="total-numero">0</span>
-    </h1>
-
-    <style>
-        /* Estilos personalizados para el título */
-        .titulo-cantidad {
-            font-weight: bold;
-            color: blue; /* Cambia el color del texto a azul */
-        }
-
-        /* Estilos personalizados para el número */
-        .total-numero {
-            background-color: green; /* Cambia el color de fondo a verde */
-            color: white; /* Cambia el color del texto a blanco */
-            padding: 3px 5px; /* Añade un poco de relleno */
-            border-radius: 3px; /* Agrega bordes redondeados */
-        }
-    </style>
-
+<x-header-card 
+    title="Listado de Entregas de Productos" 
+    quantityTitle="Cantidad de piezas Entregadas:" 
+    buttonRoute="{{ route('entregas_productos.create') }}" 
+    buttonText="Crear registro" 
+/>
 @stop
 
 @section('content')
-    <div class="container-fluid">
-        <div class="row">
-            <div class="col-16">
-
-                <!-- Tu contenido va aquí -->
-                <table id="entrega_productos" class="display" style="width:100%">
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="table-responsive">
+                <table id="entrega_productos" class="table table-striped table-bordered" style="width:100%">
                     <thead>
                         <tr>
                             <th>Id_OF</th>
@@ -44,7 +25,6 @@
                             <th>Descripción</th>
                             <th>Clase Familia</th>
                             <th>Nro de Máquina</th>
-                            <th>Familia de Máquinas</th>
                             <th>Nro Ingreso_MP</th>
                             <th>Código MP</th>
                             <th>Nro Certificado MP</th>
@@ -53,135 +33,166 @@
                             <th>Cant. Piezas entregadas</th>
                             <th>Nro Remito</th>
                             <th>Fecha de entrega</th>
-                            <th>Nombre Inspector-control</th>            
+                            <th>Nombre Inspector-control</th>
+                        </tr>
+                        <tr class="filter-row">
+                            <th><input type="text" id="filtro_id" placeholder="Filtrar ID" class="form-control filtro-texto" /></th>
+                            <th><input type="text" id="filtro_nro_of" placeholder="Filtrar Nro_OF" class="form-control filtro-texto" /></th>
+                            <th><input type="text" id="filtro_codigo_producto" placeholder="Filtrar Código de Producto" class="form-control filtro-texto" /></th>
+                            <th><input type="text" id="filtro_descripcion" placeholder="Filtrar Descripción" class="form-control filtro-texto" /></th>
+                            <th><select id="filtro_clase_familia" class="form-control filtro-select"><option value="">Todos</option></select></th>
+                            <th><input type="text" id="filtro_nro_maquina" placeholder="Filtrar Nro de Máquina" class="form-control filtro-texto" /></th>
+                            <th><input type="text" id="filtro_nro_ingreso_mp" placeholder="Filtrar Nro Ingreso_MP" class="form-control filtro-texto" /></th>
+                            <th><select id="filtro_codigo_mp" class="form-control filtro-select"><option value="">Todos</option></select></th>
+                            <th><input type="text" id="filtro_nro_certificado_mp" placeholder="Filtrar Nro Certificado MP" class="form-control filtro-texto" /></th>
+                            <th><select id="filtro_nombre_proveedor" class="form-control filtro-select"><option value="">Todos</option></select></th>
+                            <th><input type="text" id="filtro_nro_parcial_of" placeholder="Filtrar Nro Parcial OF" class="form-control filtro-texto" /></th>
+                            <th><input type="text" id="filtro_cant_piezas" placeholder="Filtrar Cant. Piezas entregadas" class="form-control filtro-texto" /></th>
+                            <th><input type="text" id="filtro_nro_remito" placeholder="Filtrar Nro Remito" class="form-control filtro-texto" /></th>
+                            <th><input type="text" id="filtro_fecha_entrega" placeholder="Filtrar Fecha de entrega" class="form-control filtro-texto" /></th>
+                            <th><input type="text" id="filtro_nombre_inspector" placeholder="Filtrar Nombre Inspector-control" class="form-control filtro-texto" /></th>
                         </tr>
                     </thead>
-                    <tbody>
-                            @php
-                                $totalCantPiezas = 0; // Inicializa la variable para almacenar la suma
-                            @endphp
-                                    @foreach ($entrega_productos as $entrega_producto)
-                                    <!-- Verifica si el filtro está definido o si coincide con el Nro_OF -->
-                                    @if (!isset($filtroNroOF_entregas) || $entrega_producto->listado_of->Nro_OF == $filtroNroOF_entregas)
-                            <tr>
-                                <td>{{$entrega_producto ->Id_List_Entreg_Prod }}</td>
-                                <td>{{$entrega_producto ->Id_OF}}</td>
-                                <td>{{$entrega_producto ->listado_of->producto->Prod_Codigo }}</td>
-                                <td>{{$entrega_producto ->listado_of->producto->Prod_Descripcion }}</td>
-                                <td>{{$entrega_producto ->listado_of->producto->categoria->Nombre_Categoria }}</td>
-                                <td>{{$entrega_producto ->listado_of->Nro_Maquina }}</td>
-                                <td>{{$entrega_producto ->listado_of->Familia_Maquinas }}</td>
-                                <td>{{$entrega_producto ->listado_of->Ingreso_mp->Nro_Ingreso_MP }}</td>
-                                <td>{{$entrega_producto ->listado_of->Ingreso_mp->Codigo_MP }}</td>
-                                <td>{{$entrega_producto ->listado_of->Ingreso_mp->N°_Certificado_MP }}</td>
-                                <td>{{$entrega_producto ->listado_of->Ingreso_mp->Proveedor->Prov_Nombre}}</td>
-                                <td>{{$entrega_producto ->Nro_Parcial_Calidad }}</td>
-                                <td>{{$entrega_producto ->Cant_Piezas_Entregadas }}</td>
-                                <td>{{$entrega_producto ->Nro_Remito_Entrega_Calidad }}</td>
-                                <td>{{$entrega_producto ->Fecha_Entrega_Calidad }}</td>
-                                <td>{{$entrega_producto ->Inspector_Calidad}}</td>
-                                </td>
-                                @php
-                                $totalCantPiezas += $entrega_producto->Cant_Piezas_Entregadas;
-                            @endphp
-                            </tr>
-                            @endif
-                        @endforeach
-                    </tbody>
                 </table>
             </div>
         </div>
     </div>
+</div>
 @stop
 
 @section('css')
-    <!-- Agrega los estilos de DataTables aquí -->
-    <link rel="stylesheet" href="https://cdn.datatables.net/2.0.3/css/dataTables.dataTables.css">
-    <style>
-        /* Estilos para centrar los datos en DataTables */
-        #entrega_productos th,
-        #entrega_productos td {
-            text-align: center; /* Centra el contenido de las celdas */
-        }
-
-        <style>
-        /* Estilos personalizados para el título */
-        .titulo-cantidad {
-            font-weight: bold;
-            color: blue; /* Cambia el color del texto a azul */
-        }
-
-        /* Estilos personalizados para el número */
-        .total-numero {
-            background-color: green; /* Cambia el color de fondo a verde */
-            color: white; /* Cambia el color del texto a blanco */
-            padding: 3px 5px; /* Añade un poco de relleno */
-            border-radius: 3px; /* Agrega bordes redondeados */
-        }
-
-        /* Establece el ancho de las primeras dos columnas */
-        #entrega_productos th:nth-child(1),
-        #entrega_productos td:nth-child(1),
-        #entrega_productos th:nth-child(2),
-        #entrega_productos td:nth-child(2) {
-            width: 5px; /* Ancho deseado para las primeras dos columnas */
-        }
-    </style>
-
-
-    </style>
-@endsection
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap5.min.css">
+<link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.2.9/css/responsive.bootstrap5.min.css">
+<link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.2.2/css/buttons.bootstrap5.min.css">
+<link rel="stylesheet" href="{{ asset('vendor/adminlte/dist/css/Listado_Entregas.css') }}">
+@stop
 
 @section('js')
-    <!-- Scripts de DataTables aquí -->
-    <script src="https://code.jquery.com/jquery-3.3.1.js"></script>
-    <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
-    <script src="https://cdn.datatables.net/fixedheader/3.1.6/js/dataTables.fixedHeader.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap5.min.js"></script>
+<script src="https://cdn.datatables.net/responsive/2.2.9/js/dataTables.responsive.min.js"></script>
+<script src="https://cdn.datatables.net/responsive/2.2.9/js/responsive.bootstrap5.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.2.2/js/dataTables.buttons.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.2.2/js/buttons.bootstrap5.min.js"></script>
+<script>
+$(document).ready(function() {
+    var table = $('#entrega_productos').DataTable({
+        processing: true,
+        serverSide: true,
+        ajax: {
+            url: "{{ route('entregas_productos.data') }}",
+            type: 'GET',
+            data: function (d) {
+                d.filtro_clase_familia = $('#filtro_clase_familia').val();
+                d.filtro_codigo_mp = $('#filtro_codigo_mp').val();
+                d.filtro_nombre_proveedor = $('#filtro_nombre_proveedor').val();
+                d.filtro_nombre_inspector = $('#filtro_nombre_inspector').val();
+                d.filtro_id = $('#filtro_id').val();
+                d.filtro_nro_of = $('#filtro_nro_of').val();
+                d.filtro_codigo_producto = $('#filtro_codigo_producto').val();
+                d.filtro_descripcion = $('#filtro_descripcion').val();
+                d.filtro_nro_maquina = $('#filtro_nro_maquina').val();
+                d.filtro_nro_ingreso_mp = $('#filtro_nro_ingreso_mp').val();
+                d.filtro_nro_certificado_mp = $('#filtro_nro_certificado_mp').val();
+                d.filtro_nro_parcial_of = $('#filtro_nro_parcial_of').val();
+                d.filtro_cant_piezas = $('#filtro_cant_piezas').val();
+                d.filtro_nro_remito = $('#filtro_nro_remito').val();
+                d.filtro_fecha_entrega = $('#filtro_fecha_entrega').val();
+            }
+        },
+        columns: [
+            { data: 'Id_List_Entreg_Prod', name: 'Id_List_Entreg_Prod' },
+            { data: 'Id_OF', name: 'Id_OF' },
+            { data: 'Prod_Codigo', name: 'Prod_Codigo' },
+            { data: 'Prod_Descripcion', name: 'Prod_Descripcion' },
+            { data: 'Nombre_Categoria', name: 'Nombre_Categoria' },
+            { data: 'Nro_Maquina', name: 'Nro_Maquina' },
+            { data: 'Nro_Ingreso_MP', name: 'Nro_Ingreso_MP' },
+            { data: 'Codigo_MP', name: 'Codigo_MP' },
+            { data: 'N_Certificado_MP', name: 'N_Certificado_MP' },
+            { data: 'Nombre_Proveedor', name: 'Nombre_Proveedor' },
+            { data: 'Nro_Parcial_Calidad', name: 'Nro_Parcial_Calidad' },
+            { data: 'Cant_Piezas_Entregadas', name: 'Cant_Piezas_Entregadas' },
+            { data: 'Nro_Remito_Entrega_Calidad', name: 'Nro_Remito_Entrega_Calidad' },
+            { data: 'Fecha_Entrega_Calidad', name: 'Fecha_Entrega_Calidad' },
+            { data: 'Inspector_Calidad', name: 'Inspector_Calidad' },
+        ],
+        scrollY: '60vh',
+        scrollCollapse: true,
+        searching: false,
+        paging: true,
+        fixedHeader: true,
+        responsive: true,
+        orderCellsTop: true,
+        pageLength: 50,
+        lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]],
+        language: {
+            url: "{{ asset('Spanish.json') }}"
+        },
+        initComplete: function () {
+            var api = this.api();
+            api.columns().every(function () {
+                var column = this;
+                if ($(column.header()).hasClass('filtro-select')) {
+                    var select = $('<select><option value="">Todos</option></select>')
+                        .appendTo($(column.header()).find('input').parent().empty())
+                        .on('change', function () {
+                            var val = $.fn.dataTable.util.escapeRegex($(this).val());
+                            column.search(val ? '^' + val + '$' : '', true, false).draw();
+                        });
 
-    <script>
-        $(document).ready(function () {
-            var table = $('#entrega_productos').DataTable({
-                orderCellsTop: true,
-                fixedHeader: true,
-                // scrollY: '600px', // Altura del área de desplazamiento vertical
-                pageLength: 50, // Mostrar solo 10 resultados por defecto
-                lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]],
+                    column.data().unique().sort().each(function (d, j) {
+                        select.append('<option value="' + d + '">' + d + '</option>')
+                    });
+                }
             });
+        }
+    });
 
-            // Clonar la fila de encabezado y agregar filtros
-            $('#entrega_productos thead tr').clone(true).prependTo('#entrega_productos thead');
+    // Llenar los selects con valores únicos de las columnas especificadas
+    table.on('xhr', function () {
+        var json = table.ajax.json();
+        var uniqueValues = {
+            'Nombre_Categoria': new Set(),
+            'Codigo_MP': new Set(),
+            'Nombre_Proveedor': new Set()
+        };
 
-            $('#entrega_productos thead tr:eq(1) th').each(function (i) {
-                var title = $(this).text();
-                $(this).html('<input type="text" placeholder="Buscar...' + title + '" />');
+        var totalCantPiezas = 0;  // Inicializa la variable para almacenar la suma
 
-                $('input', this).on('keyup change', function () {
-                    if (table.column(i).search() !== this.value) {
-                        table.column(i).search(this.value).draw();
-                    }
-                });
-            });
+        $.each(json.data, function (index, item) {
+            uniqueValues['Nombre_Categoria'].add(item.Nombre_Categoria);
+            uniqueValues['Codigo_MP'].add(item.Codigo_MP);
+            uniqueValues['Nombre_Proveedor'].add(item.Nombre_Proveedor);
 
-            // Escucha el evento de cambio de filtro en la columna "Nro_OF"
-            $('#entrega_productos thead tr:eq(1) th:nth-child(2) input').on('keyup change', function () {
-                var filtroNroOF_entregas = $(this).val(); // Obtiene el valor del filtro aplicado a "Nro_OF"
-                var totalCantPiezas = 0; // Inicializa la variable para almacenar la suma
-
-                // Recorre solo las filas visibles de la tabla
-                table.rows({ search: 'applied' }).every(function () {
-                    // Obtiene los datos de la fila actual como un arreglo
-                    var rowData = this.data();
-
-                    // Verifica si el valor de "Nro_OF" coincide con el filtro aplicado
-                    if (rowData[1] === filtroNroOF_entregas || !filtroNroOF_entregas) { // Agrega !filtroNroOF_entregas para manejar el caso de que no haya filtro
-                        // Si coincide o no hay filtro, suma el valor de "Cant_Piezas"
-                        totalCantPiezas += parseFloat(rowData[12]); // La columna "Cant_Piezas" es la décima columna (el índice es 9)
-                    }
-                });
-
-                // Actualiza el valor total fuera de la tabla
-                $('#totalCantPiezas').text(totalCantPiezas);
-            });
+            totalCantPiezas += parseFloat(item.Cant_Piezas_Entregadas);  // Suma las piezas entregadas
         });
-    </script>
+
+        $('#totalCantPiezas').text(totalCantPiezas.toString().replace(/\B(?=(\d{3})+(?!\d))/g, "."));  // Actualiza el total de piezas entregadas
+
+        // Llenar los selectores con los valores únicos
+        fillSelect('#filtro_clase_familia', uniqueValues['Nombre_Categoria']);
+        fillSelect('#filtro_codigo_mp', uniqueValues['Codigo_MP']);
+        fillSelect('#filtro_nombre_proveedor', uniqueValues['Nombre_Proveedor']);
+    });
+
+    function fillSelect(selector, data) {
+        var select = $(selector);
+        select.empty();
+        select.append('<option value="">Todos</option>');
+        data.forEach(function (value) {
+            select.append('<option value="' + value + '">' + value + '</option>');
+        });
+    }
+
+    // Recargar la tabla al cambiar los selectores y campos de texto
+    $('.filtro-select, .filtro-texto').on('change keyup', function () {
+        table.ajax.reload();
+    });
+
+});
+</script>
 @stop
