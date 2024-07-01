@@ -487,7 +487,7 @@
                 'submenu' => [
                     [
                         'text' => 'Listado_OF',
-                        'route' => 'listado_de_of.index',
+                        'route' => 'listado_of.index',
                         'icon' => 'fas fa-fw fa-solid fa-cubes',
                         'can' => 'ver produccion', // Define el permiso necesario
                     ],

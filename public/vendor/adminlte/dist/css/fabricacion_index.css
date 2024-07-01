@@ -81,25 +81,62 @@
     text-align: center; /* Centra el contenido de las celdas */
 }
 
-/* Estilos para los encabezados de los filtros */
-.filtro-header {
-    background-color: #f5f5f5;
-}
-
-#filtro_nro_of,
-#filtro_categoria,
-#filtro_maquina,
-#filtro_familia {
+/* Estilos para los campos select */
+.filtro-select {
     border: 2px solid red;
-    color: black;
     padding-right: 24px;
 }
 
-/* Estilos para los campos select y el campo de texto */
-.filtro-select,
+/* Estilos para los campos de texto */
 .filtro-texto {
-    border: 2px solid red;
+    border: 2px solid #1E90FF; /* Azul Francia */
     padding-right: 24px;
+}
+
+/* Estilos para los placeholders */
+.filtro-texto::placeholder {
+    color: black;
+}
+
+/* Quitar el botón de limpiar en IE/Edge */
+.filtro-texto::-ms-clear {
+    display: none;
+}
+
+/* Botón de limpiar personalizado */
+.filtro-texto-clear {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    display: none;
+}
+
+.filtro-texto:valid + .filtro-texto-clear {
+    display: block;
+}
+
+/* Estilos para los select con un ícono de cerrar al lado */
+.filtro-select-wrapper {
+    position: relative;
+}
+
+.filtro-select-wrapper .filtro-select {
+    padding-right: 24px;
+}
+
+.filtro-select-wrapper .filtro-select-clear {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    display: none;
+}
+
+.filtro-select:valid + .filtro-select-clear {
+    display: block;
 }
 
 .filtro-texto::placeholder {

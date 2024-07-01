@@ -27,6 +27,7 @@ Route::post('/fabricacion/check-nro-of-parcial', [FabricacionController::class, 
 // Ruta específica para DataTables
 
 Route::get('productos/data', [ProductoController::class, 'getData'])->name('productos.data');
+Route::get('listado_of/data', [ListadoOFController::class, 'getData'])->name('listado_of.data');
 Route::get('fabricacion/data', [RegistroDeFabricacionController::class, 'getData'])->name('fabricacion.data');
 Route::get('/entregas_productos/data', [ListadoEntregaProductoController::class, 'getData'])->name('entregas_productos.data');
 Route::get('/fabricacion/withFiltro', [RegistroDeFabricacionController::class, 'indexWithFiltro'])->name('fabricacion.withFiltro');
@@ -56,10 +57,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('categoria', ProductoCategoriaController::class);
     Route::resource('fabricacion', RegistroDeFabricacionController::class);
     Route::resource('entregas_productos', ListadoEntregaProductoController::class);
+    Route::resource('listado_of', ListadoOfController::class);
     
     Route::get('/materia_prima_ingresos', [MpIngresoController::class, 'index'])->name('materia_prima_ingresos.index');
     Route::get('/materia_prima_salidas', [MpSalidaController::class, 'index'])->name('materia_prima_salidas.index');
-    Route::get('/listado_de_of', [ListadoOfController::class, 'index'])->name('listado_de_of.index');
+    // Route::get('/listado_of', [ListadoOfController::class, 'index'])->name('listado_de_of.index');
     Route::get('/productos_categoria', [ProductoCategoriaController::class, 'index'])->name('productos_categoria.index');
     Route::get('/entregas_productos', [ListadoEntregaProductoController::class, 'index'])->name('entregas_productos.index');
     Route::get('/listado-of/get-id-producto/{nroOf}', [ListadoOfController::class, 'getIdProductoPorNroOf']);

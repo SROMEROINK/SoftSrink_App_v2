@@ -5,7 +5,7 @@
 
     <style>
         body {
-            background-image: url('/build/assets/Softsrink.png');
+            background-image: url('vendor/adminlte/dist/img/SoftSrink.png');
             background-size: cover;
             background-position: center;
         }

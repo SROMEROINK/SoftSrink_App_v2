@@ -6,7 +6,7 @@
 <x-header-card 
     title="Listado de Productos" 
     quantityTitle="Cantidad de productos:" 
-    buttonRoute="{{ route('productos.create') }}" 
+    buttonRoute="{{ route('fabricacion.create') }}" 
     buttonText="Crear registro" 
 />
 @stop
@@ -67,7 +67,7 @@
 <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap5.min.css">
 <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.2.9/css/responsive.bootstrap5.min.css">
 <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.2.2/css/buttons.bootstrap5.min.css">
-<link rel="stylesheet" href="{{ asset('vendor/adminlte/dist/css/Productos_Index.css') }}">
+<link rel="stylesheet" href="{{ asset('vendor\adminlte\dist\css\Productos_Index.css') }}">
 @stop
 
 @section('js')
@@ -210,6 +210,13 @@ $(document).ready(function() {
 
     // Recargar la tabla al cambiar los selectores y campos de texto
     $('.filtro-select, .filtro-texto').on('change keyup', function () {
+        table.ajax.reload();
+    });
+
+    // Funcionalidad para limpiar filtros
+    $('#clearFilters').click(function() {
+        $('.filtro-select').val('');
+        $('.filtro-texto').val('');
         table.ajax.reload();
     });
 });

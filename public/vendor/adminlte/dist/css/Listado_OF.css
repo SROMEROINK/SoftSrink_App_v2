@@ -1,50 +1,7 @@
-/* public\vendor\adminlte\dist\css\Listado_Entregas.css */
-
 /* Ajustes para la tabla */
 .table-responsive {
     max-width: 100%; /* Asegura que la tabla no se desborde */
     margin: 0 auto; /* Centra la tabla */
-}
-
-/* Estilos para la sección de información */
-.info-section {
-    display: flex;
-    align-items: center;
-}
-
-
-/* Ajustes para el ancho de la tabla */
-.table {
-    width: auto;
-    margin: 0 auto; /* Centra la tabla */
-}
-
-/* Estilos para centrar los datos en DataTables */
-#entrega_productos th,
-#entrega_productos td {
-    text-align: center; /* Centra el contenido de las celdas */
-}
-
-
-/* Ajuste de ancho de los filtros en los encabezados */
-#listado_productos thead input {
-    width: 100%;
-}
-
-/* Estilos para los botones de navegación */
-.btn-toolbar {
-    margin-bottom: 20px; /* Añade margen inferior a la barra de botones */
-}
-
-.btn-toolbar .btn-group {
-    margin-right: 10px; /* Espacia los grupos de botones */
-}
-
-.btn-toolbar .btn {
-    margin: 5px; /* Añade margen alrededor de cada botón */
-    padding: 10px 20px; /* Añade espacio interno a los botones */
-    border-radius: 5px; /* Bordes redondeados */
-    transition: background-color 0.3s ease; /* Transición suave para el cambio de color de fondo */
 }
 
 /* Estilos para el card del título */
@@ -87,17 +44,10 @@
     margin-left: 10px; /* Espacio entre el título y el número */
 }
 
-
-
-
-/* Estilos personalizados para el título */
-.titulo-cantidad {
-    font-weight: bold;
-    color: #0a0000; /* Un color más neutro y profesional */
-    font-size: 1.3rem; /* Aumenta el tamaño de la fuente */
-    margin: 0; /* Quita el margen */
-    line-height: 1.5; /* Alinea verticalmente */
-    margin-top: 8px; /* Añade margen superior para bajar el texto */
+/* Estilos para la sección de información */
+.info-section {
+    display: flex;
+    align-items: center;
 }
 
 /* Estilos para el botón de crear registro */
@@ -113,9 +63,20 @@
     display: inline-block;
 }
 
+/* Asegurar que el contenedor se alinee al inicio */
+.card-header {
+    justify-content: flex-start;
+}
+
 /* Asegurar que el botón se alinee al final */
 .card-header .create-button {
     margin-left: auto;
+}
+
+/* Estilos para centrar los datos en DataTables */
+#listado_of th,
+#listado_of td {
+    text-align: center; /* Centra el contenido de las celdas */
 }
 
 /* Estilos para los campos select */
@@ -133,4 +94,57 @@
 /* Estilos para los placeholders */
 .filtro-texto::placeholder {
     color: black;
+}
+
+/* Quitar el botón de limpiar en IE/Edge */
+.filtro-texto::-ms-clear {
+    display: none;
+}
+
+/* Botón de limpiar personalizado */
+.filtro-texto-clear {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    display: none;
+}
+
+.filtro-texto:valid + .filtro-texto-clear {
+    display: block;
+}
+
+/* Estilos para los select con un ícono de cerrar al lado */
+.filtro-select-wrapper {
+    position: relative;
+}
+
+.filtro-select-wrapper .filtro-select {
+    padding-right: 24px;
+}
+
+.filtro-select-wrapper .filtro-select-clear {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    display: none;
+}
+
+.filtro-select:valid + .filtro-select-clear {
+    display: block;
+}
+
+/* Estilos para los botones de navegación */
+.btn-toolbar .btn-group {
+    margin-right: 10px; /* Espacia los grupos de botones */
+}
+
+.btn-toolbar .btn {
+    margin: 5px; /* Añade margen alrededor de cada botón */
+    padding: 10px 20px; /* Añade espacio interno a los botones */
+    border-radius: 5px; /* Bordes redondeados */
+    transition: background-color 0.3s ease; /* Transición suave para el cambio de color de fondo */
 }

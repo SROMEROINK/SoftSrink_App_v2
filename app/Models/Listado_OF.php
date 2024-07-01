@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\Producto;
+use App\Models\Categoria;
 use App\Models\Ingreso_mp;
 
 
@@ -44,6 +45,12 @@ class Listado_OF extends Model
             return $this->belongsTo('App\Models\Producto', 'Producto_Id', 'Id_Producto'); // Cambia el nombre del modelo a Producto y especifica correctamente el namespace
         }
 
+
+        public function categoria()
+        {    // La clave foránea en Listado_OF: 'Producto_Id'
+            // La clave primaria en categoria: 'Id_Categoria'
+            return $this->belongsTo(Categoria::class, 'Id_Prod_Clase_Familia', 'Id_Categoria');
+        }
 
         
         public function  ingreso_mp()

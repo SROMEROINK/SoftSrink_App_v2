@@ -34,6 +34,57 @@ class RegistroDeFabricacionController extends Controller
                     'updater'
                 ])->select('Id_OF', 'Nro_OF', 'Id_Producto', 'Nro_Parcial', 'Cant_Piezas', 'Fecha_Fabricacion', 'Horario', 'Nombre_Operario', 'Turno', 'Cant_Horas_Extras', 'created_at', 'updated_at', 'created_by', 'updated_by');
     
+                // Filtros personalizados
+                if ($request->has('filtro_nro_of') && $request->filtro_nro_of != '') {
+                    $registros_fabricacion->where('Nro_OF', $request->filtro_nro_of);
+                }
+                if ($request->has('filtro_prod_codigo') && $request->filtro_prod_codigo != '') {
+                    $registros_fabricacion->whereHas('listado_of.producto', function ($query) use ($request) {
+                        $query->where('Prod_Codigo', 'like', '%' . $request->filtro_prod_codigo . '%');
+                    });
+                }
+                if ($request->has('filtro_prod_descripcion') && $request->filtro_prod_descripcion != '') {
+                    $registros_fabricacion->whereHas('listado_of.producto', function ($query) use ($request) {
+                        $query->where('Prod_Descripcion', 'like', '%' . $request->filtro_prod_descripcion . '%');
+                    });
+                }
+                if ($request->has('filtro_categoria') && $request->filtro_categoria != '') {
+                    $registros_fabricacion->whereHas('listado_of.producto.categoria', function ($query) use ($request) {
+                        $query->where('Nombre_Categoria', $request->filtro_categoria);
+                    });
+                }
+                if ($request->has('filtro_maquina') && $request->filtro_maquina != '') {
+                    $registros_fabricacion->whereHas('listado_of', function ($query) use ($request) {
+                        $query->where('Nro_Maquina', $request->filtro_maquina);
+                    });
+                }
+                if ($request->has('filtro_familia') && $request->filtro_familia != '') {
+                    $registros_fabricacion->whereHas('listado_of', function ($query) use ($request) {
+                        $query->where('Familia_Maquinas', $request->filtro_familia);
+                    });
+                }
+                if ($request->has('filtro_fecha_fabricacion') && $request->filtro_fecha_fabricacion != '') {
+                    $registros_fabricacion->where('Fecha_Fabricacion', $request->filtro_fecha_fabricacion);
+                }
+                if ($request->has('filtro_nro_parcial') && $request->filtro_nro_parcial != '') {
+                    $registros_fabricacion->where('Nro_Parcial', $request->filtro_nro_parcial);
+                }
+                if ($request->has('filtro_cant_piezas') && $request->filtro_cant_piezas != '') {
+                    $registros_fabricacion->where('Cant_Piezas', $request->filtro_cant_piezas);
+                }
+                if ($request->has('filtro_horario') && $request->filtro_horario != '') {
+                    $registros_fabricacion->where('Horario', $request->filtro_horario);
+                }
+                if ($request->has('filtro_nombre_operario') && $request->filtro_nombre_operario != '') {
+                    $registros_fabricacion->where('Nombre_Operario', $request->filtro_nombre_operario);
+                }
+                if ($request->has('filtro_turno') && $request->filtro_turno != '') {
+                    $registros_fabricacion->where('Turno', $request->filtro_turno);
+                }
+                if ($request->has('filtro_cant_horas_extras') && $request->filtro_cant_horas_extras != '') {
+                    $registros_fabricacion->where('Cant_Horas_Extras', $request->filtro_cant_horas_extras);
+                }
+    
                 return DataTables::eloquent($registros_fabricacion)
                     ->addColumn('Prod_Codigo', function ($registro) {
                         return $registro->listado_of->producto->Prod_Codigo ?? '';
@@ -62,26 +113,6 @@ class RegistroDeFabricacionController extends Controller
                     ->editColumn('updated_at', function ($registro) {
                         return $registro->updated_at ? $registro->updated_at->format('Y-m-d H:i:s') : '';
                     })
-                    ->filter(function ($query) use ($request) {
-                        if ($request->has('filtro_categoria') && $request->filtro_categoria != '') {
-                            $query->whereHas('listado_of.producto.categoria', function ($q) use ($request) {
-                                $q->where('Nombre_Categoria', $request->filtro_categoria);
-                            });
-                        }
-                        if ($request->has('filtro_maquina') && $request->filtro_maquina != '') {
-                            $query->whereHas('listado_of', function ($q) use ($request) {
-                                $q->where('Nro_Maquina', $request->filtro_maquina);
-                            });
-                        }
-                        if ($request->has('filtro_familia') && $request->filtro_familia != '') {
-                            $query->whereHas('listado_of', function ($q) use ($request) {
-                                $q->where('Familia_Maquinas', $request->filtro_familia);
-                            });
-                        }
-                        if ($request->has('filtro_nro_of') && $request->filtro_nro_of != '') {
-                            $query->where('Nro_OF', $request->filtro_nro_of);
-                        }
-                    })
                     ->make(true);
             }
         } catch (\Exception $e) {
@@ -89,12 +120,11 @@ class RegistroDeFabricacionController extends Controller
             return response()->json(['error' => 'Error fetching data'], 500);
         }
     }
-
+    
     public function index()
     {
         return view('Fabricacion.index');
     }
-
 
     // public function indexWithFiltro(Request $request)
     // {

@@ -6,7 +6,7 @@
 <x-header-card 
     title="Listado de Entregas de Productos" 
     quantityTitle="Cantidad de piezas Entregadas:" 
-    buttonRoute="{{ route('entregas_productos.create') }}" 
+    buttonRoute="{{ route('fabricacion.create') }}" 
     buttonText="Crear registro" 
 />
 @stop
@@ -65,7 +65,7 @@
 <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap5.min.css">
 <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.2.9/css/responsive.bootstrap5.min.css">
 <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.2.2/css/buttons.bootstrap5.min.css">
-<link rel="stylesheet" href="{{ asset('vendor/adminlte/dist/css/Listado_Entregas.css') }}">
+<link rel="stylesheet" href="{{ asset('vendor\adminlte\dist\css\Listado_Entregas.css') }}">
 @stop
 
 @section('js')
@@ -193,6 +193,12 @@ $(document).ready(function() {
         table.ajax.reload();
     });
 
+    // Funcionalidad para limpiar filtros
+    $('#clearFilters').click(function() {
+        $('.filtro-select').val('');
+        $('.filtro-texto').val('');
+        table.ajax.reload();
+    });
 });
 </script>
 @stop
