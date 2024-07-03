@@ -254,14 +254,33 @@ class RegistroDeFabricacionController extends Controller
      */
     public function update(Request $request, string $Id_OF)
     {
+        Log::info('Datos recibidos para la actualización:', $request->all());
+    
         $registro_fabricacion = RegistroDeFabricacion::find($Id_OF);
         if (!$registro_fabricacion) {
+            Log::error('No se encontró el registro especificado.', ['Id_OF' => $Id_OF]);
             return response()->json(['status' => 'error', 'message' => 'No se encontró el registro especificado.'], 404);
         }
-
+    
+        // Concatenar el Nro_OF y Nro_Parcial para el nuevo Nro_OF_Parcial
+        $nuevoNroOFParcial = $request->Nro_OF . '/' . $request->Nro_Parcial;
+    
+        // Solo comprobar si el nuevo Nro_Parcial es diferente del actual
+        if ($request->Nro_Parcial != $registro_fabricacion->Nro_Parcial) {
+            // Comprobar si el nuevo Nro_OF_Parcial ya existe en otro registro
+            $existe = RegistroDeFabricacion::where('Nro_OF_Parcial', $nuevoNroOFParcial)
+                                            ->where('Id_OF', '!=', $Id_OF)
+                                            ->exists();
+    
+            if ($existe) {
+                Log::error('El Nro OF Parcial ya existe.', ['Nro_OF_Parcial' => $nuevoNroOFParcial]);
+                return response()->json(['status' => 'error', 'message' => 'El Nro OF Parcial ya existe.'], 400);
+            }
+        }
+    
         $registro_fabricacion->Nro_OF = $request->Nro_OF;
         $registro_fabricacion->Nro_Parcial = $request->Nro_Parcial;
-        $registro_fabricacion->Nro_OF_Parcial = $request->Nro_OF_Parcial;
+        $registro_fabricacion->Nro_OF_Parcial = $nuevoNroOFParcial;
         $registro_fabricacion->Cant_Piezas = $request->Cant_Piezas;
         $registro_fabricacion->Fecha_Fabricacion = $request->Fecha_Fabricacion;
         $registro_fabricacion->Horario = $request->Horario;
@@ -269,11 +288,16 @@ class RegistroDeFabricacionController extends Controller
         $registro_fabricacion->Turno = $request->Turno;
         $registro_fabricacion->Cant_Horas_Extras = $request->Cant_Horas_Extras;
         $registro_fabricacion->updated_by = Auth::id(); // Registrar el usuario que actualiza el registro
-
+    
+        Log::info('Datos del registro antes de guardar:', $registro_fabricacion->toArray());
+    
         $registro_fabricacion->save();
-        
+    
+        Log::info('Registro actualizado correctamente.', ['Id_OF' => $Id_OF]);
+    
         return response()->json(['status' => 'success', 'message' => 'Registro actualizado correctamente.']);
     }
+
 
 
     /**

@@ -22,7 +22,8 @@
         @method('PUT')
         <div class="form-group">
             <label for="Nro_OF">Número OF:</label>
-            <input type="number" class="form-control" id="Nro_OF" name="Nro_OF" value="{{ $registro_fabricacion->Nro_OF }}" required>
+            <input type="number" class="form-control" id="Nro_OF" name="Nro_OF_display" value="{{ $registro_fabricacion->Nro_OF }}" required readonly>
+            <input type="hidden" id="Nro_OF_hidden" name="Nro_OF" value="{{ $registro_fabricacion->Nro_OF }}">
         </div>
         <div class="form-group">
             <label for="Nro_Parcial">Nro Parcial:</label>
@@ -30,7 +31,8 @@
         </div>
         <div class="form-group">
             <label for="Nro_OF_Parcial">Nro OF Parcial:</label>
-            <input type="text" class="form-control" id="Nro_OF_Parcial" name="Nro_OF_Parcial" value="{{ $registro_fabricacion->Nro_OF_Parcial }}" required>
+            <input type="text" class="form-control" id="Nro_OF_Parcial" name="Nro_OF_Parcial_display" value="{{ $registro_fabricacion->Nro_OF . '/' . $registro_fabricacion->Nro_Parcial }}" required readonly>
+            <input type="hidden" id="Nro_OF_Parcial_hidden" name="Nro_OF_Parcial" value="{{ $registro_fabricacion->Nro_OF . '/' . $registro_fabricacion->Nro_Parcial }}">
         </div>
         <div class="form-group">
             <label for="Cant_Piezas">Cantidad de Piezas:</label>
@@ -75,7 +77,34 @@
 
 @section('js')
     <script>
-        function updateOperarioOptions(horario) {
+
+function updateNroOFParcial() {
+    var nroOF = document.getElementById('Nro_OF').value;
+    var nroParcial = document.getElementById('Nro_Parcial').value;
+    var nroOFParcial = nroOF + '/' + nroParcial;
+
+    var nroOFParcialField = document.getElementById('Nro_OF_Parcial');
+    if (nroOFParcialField) {
+        nroOFParcialField.value = nroOFParcial;
+    }
+
+    var nroOFHiddenField = document.getElementById('Nro_OF_hidden');
+    if (nroOFHiddenField) {
+        nroOFHiddenField.value = nroOF;
+    }
+
+    var nroOFParcialHiddenField = document.getElementById('Nro_OF_Parcial_hidden');
+    if (nroOFParcialHiddenField) {
+        nroOFParcialHiddenField.value = nroOFParcial;
+    }
+}
+
+document.getElementById('Nro_OF').addEventListener('input', updateNroOFParcial);
+document.getElementById('Nro_Parcial').addEventListener('input', updateNroOFParcial);
+
+
+
+function updateOperarioOptions(horario) {
             var operarioSelect = $('#Nombre_Operario');
             var turnoInput = $('#Turno');
             var horasExtrasInput = $('#Cant_Horas_Extras');
@@ -122,37 +151,49 @@
     <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         $(document).ready(function() {
-            $('#updateForm').on('submit', function(e) {
-                e.preventDefault();
-                var formData = $(this).serialize();
+    $('#updateForm').on('submit', function(e) {
+        e.preventDefault();
+        var formData = $(this).serialize();
+        var originalParcial = "{{ $registro_fabricacion->Nro_Parcial }}";
+        var newParcial = $('#Nro_Parcial').val();
 
-                $.ajax({
-                    url: '{{ route('fabricacion.update', ['fabricacion' => $registro_fabricacion->Id_OF]) }}',
-                    type: 'POST',
-                    data: formData,
-                    success: function(response) {
-                        Swal.fire({
-                            position: 'center',  // Cambiado a 'center'
-                            icon: 'success',
-                            title: 'Registro actualizado correctamente',
-                            showConfirmButton: false,
-                            timer: 1500
-                        }).then((result) => {
-                            if (result.dismiss === Swal.DismissReason.timer) {
-                                window.location = '{{ route('fabricacion.showByNroOF', ['nroOF' => $registro_fabricacion->Nro_OF]) }}';
-                            }
-                        });
-                    },
-                    error: function(response) {
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error',
-                            text: 'No se pudo actualizar el registro.',
-                            position: 'center'  // Añadido para centrar la alerta de error
-                        });
+        if (originalParcial == newParcial) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'El Nro OF Parcial ya existe o no ha cambiado.',
+                position: 'center'
+            });
+            return;
+        }
+
+        $.ajax({
+            url: '{{ route('fabricacion.update', ['fabricacion' => $registro_fabricacion->Id_OF]) }}',
+            type: 'POST',
+            data: formData,
+            success: function(response) {
+                Swal.fire({
+                    position: 'center',
+                    icon: 'success',
+                    title: 'Registro actualizado correctamente',
+                    showConfirmButton: false,
+                    timer: 1500
+                }).then((result) => {
+                    if (result.dismiss === Swal.DismissReason.timer) {
+                        window.location = '{{ route('fabricacion.showByNroOF', ['nroOF' => $registro_fabricacion->Nro_OF]) }}';
                     }
                 });
-            });
+            },
+            error: function(response) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'No se pudo actualizar el registro.',
+                    position: 'center'
+                });
+            }
         });
+    });
+});
     </script>
 @stop
