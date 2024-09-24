@@ -1,5 +1,5 @@
 @extends('adminlte::page')
-
+<!-- resources\views\Fabricacion\create.blade.php -->
 @section('title', 'Carga de Producción')
 
 @section('content_header')

@@ -6,7 +6,7 @@
 <x-header-card 
     title="Programación de la Producción - Listado_OF" 
     quantityTitle="Cantidad de piezas solicitadas:" 
-    buttonRoute="{{ route('fabricacion.create') }}" 
+    buttonRoute="{{ route('listado_of.create') }}" 
     buttonText="Crear registro" 
 />
 @stop
@@ -25,7 +25,8 @@
                             <th>Producto</th>
                             <th>Descripción</th>
                             <th>Nombre_Categoria</th>
-                            <th>Revision_Plano_2</th>
+                            <th>Nro Plano</th>
+                            <th>Nro Revision</th>
                             <th>Fecha_del_Pedido</th>
                             <th>Cant_Fabricacion</th>
                             <th>Nro_Maquina</th>
@@ -42,9 +43,10 @@
                             <th><select id="filtro_estado_planificacion" class="form-control filtro-select"><option value="">Todos</option></select></th>
                             <th><select id="filtro_estado" class="form-control filtro-select"><option value="">Todos</option></select></th>
                             <th><input type="text" id="filtro_producto" placeholder="Filtrar Producto" class="form-control filtro-texto" /></th>
-                            <th><input type="text" id="filtro_Descripción" placeholder="Filtrar Descripción" class="form-control filtro-texto" /></th>
+                            <th><input type="text" id="filtro_descripción" placeholder="Filtrar descripción" class="form-control filtro-texto" /></th>
                             <th><select id="filtro_nombre_categoria" class="form-control filtro-select"><option value="">Todos</option></select></th>
-                            <th><input type="text" id="filtro_revision_plano_2" placeholder="Filtrar Revision_Plano_2" class="form-control filtro-texto" /></th>
+                            <th><input type="text" id="filtro_nro_plano" placeholder="Filtrar nro_plano" class="form-control filtro-texto" /></th>
+                            <th><input type="text" id="filtro_nro_revision" placeholder="Filtrar nro_revision" class="form-control filtro-texto" /></th>
                             <th><input type="text" id="filtro_fecha_pedido" placeholder="Filtrar Fecha_del_Pedido" class="form-control filtro-texto" /></th>
                             <th><input type="text" id="filtro_cant_fabricacion" placeholder="Filtrar Cant_Fabricacion" class="form-control filtro-texto" /></th>
                             <th><select id="filtro_nro_maquina" class="form-control filtro-select"><option value="">Todos</option></select></th>
@@ -96,9 +98,10 @@ $(document).ready(function() {
                 d.filtro_familia_maquinas = $('#filtro_familia_maquinas').val();
                 d.filtro_nro_of = $('#filtro_nro_of').val();
                 d.filtro_producto = $('#filtro_producto').val();
-                d.filtro_Descripción = $('#filtro_Descripción').val();
+                d.filtro_Descripción = $('#filtro_descripción').val();
                 d.filtro_nombre_categoria = $('#filtro_nombre_categoria').val();
-                d.filtro_revision_plano_2 = $('#filtro_revision_plano_2').val();
+                d.filtro_nro_plano = $('#filtro_nro_plano').val();
+                d.filtro_nro_revision = $('#filtro_nro_revision').val();
                 d.filtro_fecha_pedido = $('#filtro_fecha_pedido').val();
                 d.filtro_cant_fabricacion = $('#filtro_cant_fabricacion').val();
                 d.filtro_mp_id = $('#filtro_mp_id').val();
@@ -116,6 +119,7 @@ $(document).ready(function() {
             { data: 'Producto_Nombre', name: 'Producto_Nombre' },
             { data: 'Descripción', name: 'Descripción' },
             { data: 'Nombre_Categoria', name: 'Nombre_Categoria' },
+            { data: 'Prod_N_Plano', name: 'Prod_N_Plano' },
             { data: 'Revision_Plano_2', name: 'Revision_Plano_2' },
             { data: 'Fecha_del_Pedido', name: 'Fecha_del_Pedido' },
             { data: 'Cant_Fabricacion', name: 'Cant_Fabricacion' },

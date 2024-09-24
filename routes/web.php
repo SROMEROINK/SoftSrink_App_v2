@@ -12,6 +12,7 @@ use App\Http\Controllers\MpSalidaController;
 use App\Http\Controllers\ListadoOfController;
 use App\Http\Controllers\ProductoCategoriaController;
 use App\Http\Controllers\RegistroDeFabricacionController;
+use App\Http\Controllers\FechasOfController;
 use App\Http\Controllers\ListadoEntregaProductoController;
 use App\Http\Controllers\Admin\HomeController as AdminHomeController;
 use App\Http\Controllers\AjaxController;
@@ -21,7 +22,8 @@ Route::get('/', function () {
     return redirect()->route('login');
 })->name('default_login');
 
-Route::post('/fabricacion/check-nro-of-parcial', [FabricacionController::class, 'checkNroOFParcial']);
+//Modificado el dia 12/9/2024, porque no existe el controlador FabricacionController
+//Route::post('/fabricacion/check-nro-of-parcial', [FabricacionController::class, 'checkNroOFParcial']);
 
 
 // Ruta específica para DataTables
@@ -29,20 +31,11 @@ Route::post('/fabricacion/check-nro-of-parcial', [FabricacionController::class, 
 Route::get('productos/data', [ProductoController::class, 'getData'])->name('productos.data');
 Route::get('listado_of/data', [ListadoOFController::class, 'getData'])->name('listado_of.data');
 Route::get('fabricacion/data', [RegistroDeFabricacionController::class, 'getData'])->name('fabricacion.data');
+Route::get('fechas_of/data', [FechasOfController::class, 'getData'])->name('fechas_of.data');
 Route::get('/entregas_productos/data', [ListadoEntregaProductoController::class, 'getData'])->name('entregas_productos.data');
 Route::get('/fabricacion/withFiltro', [RegistroDeFabricacionController::class, 'indexWithFiltro'])->name('fabricacion.withFiltro');
 
-// Rutas de autenticación
-Route::middleware('guest')->group(function () {
-    Route::get('login', [AuthController::class, 'showLoginForm'])->name('login');
-    Route::post('login', [AuthController::class, 'login']);
-    Route::get('register', [RegisteredUserController::class, 'create'])->name('register');
-    Route::post('register', [RegisteredUserController::class, 'store']);
-    Route::get('forgot-password', [PasswordResetLinkController::class, 'create'])->name('password.request');
-    Route::post('forgot-password', [PasswordResetLinkController::class, 'store'])->name('password.email');
-    Route::get('reset-password/{token}', [NewPasswordController::class, 'create'])->name('password.reset');
-    Route::post('reset-password', [NewPasswordController::class, 'store'])->name('password.store');
-});
+
 
 // Rutas para usuarios autenticados
 Route::middleware(['auth', 'verified'])->group(function () {
@@ -51,13 +44,17 @@ Route::middleware(['auth', 'verified'])->group(function () {
     })->name('dashboard');
 
     Route::resource('profile', ProfileController::class)->only(['index', 'edit', 'show', 'update', 'destroy']);
+    
+    //Modificado el dia 12/9/2024, porque no existe el controlador Admin\HomeController
     Route::get('/home', [AdminHomeController::class, 'index'])->name('adminHome');
+
     Route::resource('productos', ProductoController::class);
     Route::resource('mp_ingresos', MpIngresoController::class);
     Route::resource('categoria', ProductoCategoriaController::class);
     Route::resource('fabricacion', RegistroDeFabricacionController::class);
     Route::resource('entregas_productos', ListadoEntregaProductoController::class);
     Route::resource('listado_of', ListadoOfController::class);
+    Route::resource('fechas_of', FechasOfController::class);
     
     Route::get('/materia_prima_ingresos', [MpIngresoController::class, 'index'])->name('materia_prima_ingresos.index');
     Route::get('/materia_prima_salidas', [MpSalidaController::class, 'index'])->name('materia_prima_salidas.index');

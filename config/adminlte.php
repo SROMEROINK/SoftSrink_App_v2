@@ -511,6 +511,26 @@
                     ],
                 ],
             ],
+
+            [
+                'text' => 'Fechas de Producción',
+                'icon' => 'fas fa-database',
+                'submenu' => [
+                    [
+                        'text' => 'Fechas_Of',
+                        'route' => 'fechas_of.index',
+                        'icon' => 'fas fa-fw fa-solid fa-cubes',
+                        'can' => 'ver produccion', // Define el permiso necesario
+                    ],
+                    /*[
+                        'text' => 'Carga_Fabricación',
+                        'route' => 'fabricacion.create',
+                        'icon' => 'fas fa-fw fa-solid fa-cubes',
+                        'can' => 'ver produccion', // Define el permiso necesario
+                    ],*/
+                ],
+            ],
+
             [
                 'text' => 'Entrega de Productos',
                 'icon' => 'fas fa-database',

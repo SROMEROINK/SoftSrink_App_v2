@@ -126,7 +126,7 @@ use Illuminate\Support\Facades\Log;
         
         public function index()
         {
-            return view('entregas_productos.index');
+            return view('Entregas_Productos.index');
         }
     
     // public function index(Request $request)
@@ -144,7 +144,7 @@ use Illuminate\Support\Facades\Log;
      */
     public function create()
     {
-        return view('entregas_productos.create');
+        return view('Entregas_Productos.create');
     }
 
     /**

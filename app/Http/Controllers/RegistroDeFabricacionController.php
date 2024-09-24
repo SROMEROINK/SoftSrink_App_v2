@@ -32,7 +32,7 @@ class RegistroDeFabricacionController extends Controller
                     'listado_of.producto.categoria', 
                     'creator', 
                     'updater'
-                ])->select('Id_OF', 'Nro_OF', 'Id_Producto', 'Nro_Parcial', 'Cant_Piezas', 'Fecha_Fabricacion', 'Horario', 'Nombre_Operario', 'Turno', 'Cant_Horas_Extras', 'created_at', 'updated_at', 'created_by', 'updated_by');
+                ])->select('Id_OF', 'Nro_OF', 'Id_Producto', 'Nro_Parcial', 'Cant_Piezas', 'Fecha_Fabricacion', 'Horario', 'Nombre_Operario', 'Turno', 'Cant_Horas_Extras', 'created_at', 'updated_at', 'created_by', 'updated_by')->orderBy('created_at', 'desc'); // Cambiar a descendente;
     
                 // Filtros personalizados
                 if ($request->has('filtro_nro_of') && $request->filtro_nro_of != '') {
@@ -265,17 +265,44 @@ class RegistroDeFabricacionController extends Controller
         // Concatenar el Nro_OF y Nro_Parcial para el nuevo Nro_OF_Parcial
         $nuevoNroOFParcial = $request->Nro_OF . '/' . $request->Nro_Parcial;
     
-        // Solo comprobar si el nuevo Nro_Parcial es diferente del actual
-        if ($request->Nro_Parcial != $registro_fabricacion->Nro_Parcial) {
-            // Comprobar si el nuevo Nro_OF_Parcial ya existe en otro registro
-            $existe = RegistroDeFabricacion::where('Nro_OF_Parcial', $nuevoNroOFParcial)
-                                            ->where('Id_OF', '!=', $Id_OF)
-                                            ->exists();
+        // Comprobar si el nuevo Nro_OF_Parcial ya existe en otro registro
+        $existe = RegistroDeFabricacion::where('Nro_OF_Parcial', $nuevoNroOFParcial)
+                                        ->where('Id_OF', '!=', $Id_OF)
+                                        ->exists();
     
-            if ($existe) {
-                Log::error('El Nro OF Parcial ya existe.', ['Nro_OF_Parcial' => $nuevoNroOFParcial]);
-                return response()->json(['status' => 'error', 'message' => 'El Nro OF Parcial ya existe.'], 400);
+        if ($existe) {
+            Log::error('El Nro OF Parcial ya existe.', ['Nro_OF_Parcial' => $nuevoNroOFParcial]);
+            return response()->json(['status' => 'error', 'message' => 'El Nro OF Parcial ya existe.'], 400);
+        }
+    
+        // Comparar si hay cambios en los campos
+        $cambios = [
+            'Nro_OF' => $request->Nro_OF,
+            'Nro_Parcial' => $request->Nro_Parcial,
+            'Nro_OF_Parcial' => $nuevoNroOFParcial,
+            'Cant_Piezas' => $request->Cant_Piezas,
+            'Fecha_Fabricacion' => $request->Fecha_Fabricacion,
+            'Horario' => $request->Horario,
+            'Nombre_Operario' => $request->Nombre_Operario,
+            'Turno' => $request->Turno,
+            'Cant_Horas_Extras' => $request->Cant_Horas_Extras
+        ];
+    
+        $hayCambios = false;
+        foreach ($cambios as $campo => $valor) {
+            if ($registro_fabricacion->$campo != $valor) {
+                Log::info("Cambio detectado en el campo $campo. Valor actual: {$registro_fabricacion->$campo}, Nuevo valor: $valor");
+                $hayCambios = true;
+                break;
             }
+        }
+    
+        if (!$hayCambios) {
+            Log::info('No se realizaron cambios en el registro. Detalles del registro actual:', [
+                'registro_actual' => $registro_fabricacion->toArray(),
+                'datos_recibidos' => $cambios
+            ]);
+            return response()->json(['status' => 'warning', 'message' => 'No se realizaron cambios en el registro.'], 200);
         }
     
         $registro_fabricacion->Nro_OF = $request->Nro_OF;
@@ -297,9 +324,6 @@ class RegistroDeFabricacionController extends Controller
     
         return response()->json(['status' => 'success', 'message' => 'Registro actualizado correctamente.']);
     }
-
-
-
     /**
      * Remove the specified resource from storage.
      */

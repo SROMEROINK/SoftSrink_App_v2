@@ -131,7 +131,7 @@ class ProductoController extends Controller
     
     public function index()
     {
-        return view('productos.index');
+        return view('Productos.index');
     }
     
     
@@ -142,7 +142,7 @@ class ProductoController extends Controller
     public function create()
     {
         // Devolver la vista de creación
-        return view('productos.create');
+        return view('Productos.create');
     }
 
     /**
@@ -171,7 +171,7 @@ class ProductoController extends Controller
     public function show(Producto $producto)
     {
         // Mostrar la vista de detalles del producto
-        return view('productos.show', compact('producto'));
+        return view('Productos.show', compact('producto'));
     }
 
     /**
@@ -180,7 +180,7 @@ class ProductoController extends Controller
     public function edit(Producto $producto)
     {
         // Devolver la vista de edición y pasar el producto a esa vista
-        return view('productos.edit', compact('producto'));
+        return view('Productos.edit', compact('producto'));
     }
 
     /**

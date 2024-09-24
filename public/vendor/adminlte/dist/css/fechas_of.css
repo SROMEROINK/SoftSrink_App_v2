@@ -1,0 +1,152 @@
+/* public/vendor/adminlte/dist/css/fechas_of.css */
+
+/* Ajustes para la tabla */
+.table-responsive {
+    max-width: 100%; /* Asegura que la tabla no se desborde */
+    margin: 0 auto; /* Centra la tabla */
+}
+
+/* Estilos para el card del título */
+.card-title-header {
+    display: flex;
+    justify-content: center; /* Centra el contenido horizontalmente */
+    align-items: center; /* Centra el contenido verticalmente */
+    background-color: #f8f9fa; /* Color de fondo del card */
+    padding: 1rem; /* Añade padding alrededor del contenido */
+    border-radius: 0.25rem; /* Bordes redondeados */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Añade una sombra suave */
+}
+
+/* Estilos para el título principal */
+.card-title-header h4 {
+    font-size: 27px; /* Aumenta el tamaño de la fuente */
+    font-weight: bold; /* Negrita para destacar */
+    color: #343a40; /* Color más oscuro para el título */
+    margin: 0; /* Quita el margen */
+}
+
+/* Estilos personalizados para el título */
+.titulo-cantidad {
+    font-weight: bold;
+    color: #0a0000; /* Un color más neutro y profesional */
+    font-size: 1.3rem; /* Aumenta el tamaño de la fuente */
+    margin: 0; /* Quita el margen */
+    line-height: 1.5; /* Alinea verticalmente */
+    margin-top: 8px; /* Añade margen superior para bajar el texto */
+}
+
+/* Estilos personalizados para el número */
+.total-numero {
+    padding: 3px 5px; /* Añade un poco de relleno */
+    background-color: #007bff; /* Color de fondo */
+    color: white; /* Color del texto */
+    border-radius: 3px; /* Agrega bordes redondeados */
+    font-size: 1.3rem; /* Tamaño de la fuente igual al del título */
+    margin-top: 3px; /* Añade margen superior para bajar el texto */
+    margin-left: 10px; /* Espacio entre el título y el número */
+}
+
+/* Estilos para la sección de información */
+.info-section {
+    display: flex;
+    align-items: center;
+}
+
+/* Estilos para el botón de crear registro */
+.card-header .btn.create-button {
+    background-color: #28a745; /* Color del botón */
+    border-color: #28a745; /* Color del borde */
+    color: white; /* Color del texto */
+    padding: 0.4rem 0.8rem; /* Aumenta el padding para hacer el botón más grande */
+    font-size: 18px; /* Aumenta el tamaño del texto */
+    border-radius: 0.35rem; /* Bordes redondeados */
+    text-align: center;
+    text-decoration: none; /* Sin subrayado */
+    display: inline-block;
+}
+
+/* Asegurar que el contenedor se alinee al inicio */
+.card-header {
+    justify-content: flex-start;
+}
+
+/* Asegurar que el botón se alinee al final */
+.card-header .create-button {
+    margin-left: auto;
+}
+
+/* Estilos para centrar los datos en DataTables */
+#fechas_of_table th,
+#fechas_of_table td {
+    text-align: center; /* Centra el contenido de las celdas */
+}
+
+/* Estilos para los campos select */
+.filtro-select {
+    border: 2px solid red;
+    padding-right: 24px;
+}
+
+/* Estilos para los campos de texto */
+.filtro-texto {
+    border: 2px solid #1E90FF; /* Azul Francia */
+    padding-right: 24px;
+}
+
+/* Estilos para los placeholders */
+.filtro-texto::placeholder {
+    color: black;
+}
+
+/* Quitar el botón de limpiar en IE/Edge */
+.filtro-texto::-ms-clear {
+    display: none;
+}
+
+/* Botón de limpiar personalizado */
+.filtro-texto-clear {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    display: none;
+}
+
+.filtro-texto:valid + .filtro-texto-clear {
+    display: block;
+}
+
+/* Estilos para los select con un ícono de cerrar al lado */
+.filtro-select-wrapper {
+    position: relative;
+}
+
+.filtro-select-wrapper .filtro-select {
+    padding-right: 24px;
+}
+
+.filtro-select-wrapper .filtro-select-clear {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    display: none;
+}
+
+.filtro-select:valid + .filtro-select-clear {
+    display: block;
+}
+
+/* Estilos para los botones de navegación */
+.btn-toolbar .btn-group {
+    margin-right: 10px; /* Espacia los grupos de botones */
+}
+
+.btn-toolbar .btn {
+    margin: 5px; /* Añade margen alrededor de cada botón */
+    padding: 10px 20px; /* Añade espacio interno a los botones */
+    border-radius: 5px; /* Bordes redondeados */
+    transition: background-color 0.3s ease; /* Transición suave para el cambio de color de fondo */
+}

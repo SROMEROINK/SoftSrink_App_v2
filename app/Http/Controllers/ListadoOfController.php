@@ -53,7 +53,7 @@ public function getData(Request $request)
                     $query->where('Prod_Codigo', 'like', '%' . $request->filtro_producto . '%');
                 });
             }
-            if ($request->has('filtro_Descripción') && $request->filtro_Descripción != '') {
+            if ($request->has('filtro_descripción') && $request->filtro_Descripción != '') {
                 $listado_of->whereHas('producto', function ($query) use ($request) {
                     $query->where('Prod_Descripcion', 'like', '%' . $request->filtro_Descripción . '%');
                 });
@@ -63,8 +63,13 @@ public function getData(Request $request)
                     $query->where('Nombre_Categoria', $request->filtro_nombre_categoria);
                 });
             }
-            if ($request->has('filtro_revision_plano_2') && $request->filtro_revision_plano_2 != '') {
-                $listado_of->where('Revision_Plano_2', $request->filtro_revision_plano_2);
+            if ($request->has('filtro_nro_plano') && $request->filtro_nro_plano != '') {
+                $listado_of->whereHas('producto', function ($query) use ($request) {
+                    $query->where('Prod_N_Plano', $request->filtro_nro_plano);
+                });
+            }
+            if ($request->has('filtro_nro_revision') && $request->filtro_nro_revision != '') {
+                $listado_of->where('Revision_Plano_2', $request->filtro_nro_revision);
             }
             if ($request->has('filtro_fecha_pedido') && $request->filtro_fecha_pedido != '') {
                 $listado_of->where('Fecha_del_Pedido', $request->filtro_fecha_pedido);
@@ -101,6 +106,12 @@ public function getData(Request $request)
                 ->addColumn('Nombre_Categoria', function ($of) {
                     return $of->producto->categoria->Nombre_Categoria ?? '';
                 })
+                ->addColumn('Prod_N_Plano', function ($of) {
+                    return $of->producto->Prod_N_Plano ?? '';
+                })
+                ->addColumn('Revision_Plano_2', function ($of) {
+                    return $of->Revision_Plano_2 ?? '';
+                })
                 ->addColumn('Nro_Ingreso_MP', function ($of) {
                     return $of->ingreso_mp->Nro_Ingreso_MP ?? '';
                 })
@@ -114,7 +125,7 @@ public function getData(Request $request)
 
 public function index()
 {
-    return view('listado_of.index');
+    return view('Listado_OF.index');
 }
     
     
@@ -156,17 +167,52 @@ public function index()
     public function create()
     {
         // Devolver la vista de creación
-        return view('listado_of.create');
+        return view('Listado_OF.create');
     }
 
     /**
      * Store a newly created resource in storage.
      */
     public function store(Request $request)
-    {
-        //
+{
+    $validated = $request->validate([
+        'nro_of.*' => 'required|numeric',
+        'estado_planificacion.*' => 'required|string',
+        'estado.*' => 'required|string',
+        'producto_id.*' => 'required|numeric',
+        'revision_plano_1.*' => 'required|string',
+        'revision_plano_2.*' => 'required|string',
+        'fecha_del_pedido.*' => 'required|date',
+        'cant_fabricacion.*' => 'required|numeric',
+        'nro_maquina.*' => 'nullable|string',
+        'familia_maquinas.*' => 'nullable|string',
+        'mp_id.*' => 'required|numeric',
+        'pedido_de_mp.*' => 'nullable|string',
+        'tiempo_pieza_real.*' => 'nullable|numeric',
+        'tiempo_pieza_aprox.*' => 'nullable|numeric',
+    ]);
+
+    foreach ($request->nro_of as $key => $nro_of) {
+        Listado_OF::create([
+            'Nro_OF' => $nro_of,
+            'Estado_Planificacion' => $request->estado_planificacion[$key],
+            'Estado' => $request->estado[$key],
+            'Producto_Id' => $request->producto_id[$key],
+            'Revision_Plano_1' => $request->revision_plano_1[$key],
+            'Revision_Plano_2' => $request->revision_plano_2[$key],
+            'Fecha_del_Pedido' => $request->fecha_del_pedido[$key],
+            'Cant_Fabricacion' => $request->cant_fabricacion[$key],
+            'Nro_Maquina' => $request->nro_maquina[$key] ?? null,
+            'Familia_Maquinas' => $request->familia_maquinas[$key] ?? null,
+            'MP_Id' => $request->mp_id[$key],
+            'Pedido_de_MP' => $request->pedido_de_mp[$key] ?? null,
+            'Tiempo_Pieza_Real' => $request->tiempo_pieza_real[$key] ?? null,
+            'Tiempo_Pieza_Aprox' => $request->tiempo_pieza_aprox[$key] ?? null,
+        ]);
     }
 
+    return redirect()->route('listado_of.index')->with('success', 'Ordenes de fabricación creadas correctamente.');
+}
     /**
      * Display the specified resource.
      */

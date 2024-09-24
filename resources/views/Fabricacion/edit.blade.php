@@ -77,51 +77,48 @@
 
 @section('js')
     <script>
+        function updateNroOFParcial() {
+            var nroOF = document.getElementById('Nro_OF').value;
+            var nroParcial = document.getElementById('Nro_Parcial').value;
+            var nroOFParcial = nroOF + '/' + nroParcial;
 
-function updateNroOFParcial() {
-    var nroOF = document.getElementById('Nro_OF').value;
-    var nroParcial = document.getElementById('Nro_Parcial').value;
-    var nroOFParcial = nroOF + '/' + nroParcial;
+            var nroOFParcialField = document.getElementById('Nro_OF_Parcial');
+            if (nroOFParcialField) {
+                nroOFParcialField.value = nroOFParcial;
+            }
 
-    var nroOFParcialField = document.getElementById('Nro_OF_Parcial');
-    if (nroOFParcialField) {
-        nroOFParcialField.value = nroOFParcial;
-    }
+            var nroOFHiddenField = document.getElementById('Nro_OF_hidden');
+            if (nroOFHiddenField) {
+                nroOFHiddenField.value = nroOF;
+            }
 
-    var nroOFHiddenField = document.getElementById('Nro_OF_hidden');
-    if (nroOFHiddenField) {
-        nroOFHiddenField.value = nroOF;
-    }
+            var nroOFParcialHiddenField = document.getElementById('Nro_OF_Parcial_hidden');
+            if (nroOFParcialHiddenField) {
+                nroOFParcialHiddenField.value = nroOFParcial;
+            }
+        }
 
-    var nroOFParcialHiddenField = document.getElementById('Nro_OF_Parcial_hidden');
-    if (nroOFParcialHiddenField) {
-        nroOFParcialHiddenField.value = nroOFParcial;
-    }
-}
+        document.getElementById('Nro_OF').addEventListener('input', updateNroOFParcial);
+        document.getElementById('Nro_Parcial').addEventListener('input', updateNroOFParcial);
 
-document.getElementById('Nro_OF').addEventListener('input', updateNroOFParcial);
-document.getElementById('Nro_Parcial').addEventListener('input', updateNroOFParcial);
-
-
-
-function updateOperarioOptions(horario) {
+        function updateOperarioOptions(horario) {
             var operarioSelect = $('#Nombre_Operario');
             var turnoInput = $('#Turno');
             var horasExtrasInput = $('#Cant_Horas_Extras');
-        
+
             operarioSelect.empty();
-        
+
             var opcionesOperario = {
                 "H.Extras": [{ value: "B.Abtt", text: "B.Abtt" }, { value: "G.Silva", text: "G.Silva" }, { value: "T.Berraz", text: "T.Berraz" }],
                 "H.Extras/Sábados": [{ value: "B.Abtt", text: "B.Abtt" }, { value: "G.Silva", text: "G.Silva" }, { value: "T.Berraz", text: "T.Berraz" }]
             };
-        
+
             var turnoYHoras = {
                 "H.Normales": { turno: "Mañana", horas: 8 },
                 "H.Extras": { turno: "Tarde", horas: 3 },
                 "H.Extras/Sábados": { turno: "Mañana", horas: 6 }
             };
-        
+
             if (horario === "H.Normales") {
                 operarioSelect.empty().append(new Option(" ' ' ", " ' ' ")).val(" ' ' ").prop('disabled', false);
                 turnoInput.val(turnoYHoras[horario].turno);
@@ -138,30 +135,41 @@ function updateOperarioOptions(horario) {
                 operarioSelect.prop('disabled', true);
             }
         }
-        
+
         $('#Horario').change(function() {
             updateOperarioOptions($(this).val());
         });
-        
-        updateOperarioOptions($('#Horario').val());
-    </script>
-    
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
-    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script>
+        updateOperarioOptions($('#Horario').val());
+
         $(document).ready(function() {
+    // Datos originales para comparar
+    var originalData = {
+        Nro_Parcial: "{{ $registro_fabricacion->Nro_Parcial }}",
+        Cant_Piezas: "{{ $registro_fabricacion->Cant_Piezas }}",
+        Fecha_Fabricacion: "{{ $registro_fabricacion->Fecha_Fabricacion }}",
+        Horario: "{{ $registro_fabricacion->Horario }}",
+        Nombre_Operario: "{{ $registro_fabricacion->Nombre_Operario }}",
+        Turno: "{{ $registro_fabricacion->Turno }}",
+        Cant_Horas_Extras: "{{ $registro_fabricacion->Cant_Horas_Extras }}"
+    };
+
     $('#updateForm').on('submit', function(e) {
         e.preventDefault();
-        var formData = $(this).serialize();
-        var originalParcial = "{{ $registro_fabricacion->Nro_Parcial }}";
-        var newParcial = $('#Nro_Parcial').val();
+        var formData = $(this).serializeArray();
+        var hasChanges = false;
 
-        if (originalParcial == newParcial) {
+        formData.forEach(function(field) {
+            if (originalData[field.name] != field.value) {
+                hasChanges = true;
+            }
+        });
+
+        if (!hasChanges) {
             Swal.fire({
                 icon: 'error',
                 title: 'Error',
-                text: 'El Nro OF Parcial ya existe o no ha cambiado.',
+                text: 'No se realizaron cambios en el registro.',
                 position: 'center'
             });
             return;
@@ -172,17 +180,26 @@ function updateOperarioOptions(horario) {
             type: 'POST',
             data: formData,
             success: function(response) {
-                Swal.fire({
-                    position: 'center',
-                    icon: 'success',
-                    title: 'Registro actualizado correctamente',
-                    showConfirmButton: false,
-                    timer: 1500
-                }).then((result) => {
-                    if (result.dismiss === Swal.DismissReason.timer) {
-                        window.location = '{{ route('fabricacion.showByNroOF', ['nroOF' => $registro_fabricacion->Nro_OF]) }}';
-                    }
-                });
+                if (response.status === 'warning') {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: response.message,
+                        position: 'center'
+                    });
+                } else {
+                    Swal.fire({
+                        position: 'center',
+                        icon: 'success',
+                        title: response.message,
+                        showConfirmButton: false,
+                        timer: 1500
+                    }).then((result) => {
+                        if (result.dismiss === Swal.DismissReason.timer) {
+                            window.location = '{{ route('fabricacion.showByNroOF', ['nroOF' => $registro_fabricacion->Nro_OF]) }}';
+                        }
+                    });
+                }
             },
             error: function(response) {
                 Swal.fire({
