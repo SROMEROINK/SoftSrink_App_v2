@@ -66,7 +66,7 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/css/bootstrap.min.css">
 <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap5.min.css">
 <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.2.9/css/responsive.bootstrap5.min.css">
-<link rel="stylesheet" href="{{ asset('vendor/adminlte/dist/css/fechas_of.css') }}">
+<link rel="stylesheet" href="{{ asset('vendor/adminlte/dist/css/fechas_of_index.css') }}">
 @endsection
 
 @section('js')

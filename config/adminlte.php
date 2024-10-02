@@ -432,13 +432,13 @@
                 'submenu' => [
                     [
                         'text' => 'Ingreso_mp',
-                        'route' => 'materia_prima_ingresos.index',
+                        'route' => 'mp_ingresos.index',
                         'icon' => 'fas fa-fw fa-solid fa-cubes',
                         'can' => 'ver materia prima', // Define el permiso necesario
                     ],
                     [
                         'text' => 'Salidas_mp',
-                        'route' => 'materia_prima_salidas.index',
+                        'route' => 'mp_egresos.index',
                         'icon' => 'fas fa-fw fa-solid fa-cubes',
                         'can' => 'ver materia prima', // Define el permiso necesario
                     ],
@@ -486,8 +486,8 @@
                 'icon' => 'fas fa-database',
                 'submenu' => [
                     [
-                        'text' => 'Listado_OF',
-                        'route' => 'listado_of.index',
+                        'text' => 'Pedido del Cliente',
+                        'route' => 'pedido_cliente.index',
                         'icon' => 'fas fa-fw fa-solid fa-cubes',
                         'can' => 'ver produccion', // Define el permiso necesario
                     ],
@@ -522,12 +522,12 @@
                         'icon' => 'fas fa-fw fa-solid fa-cubes',
                         'can' => 'ver produccion', // Define el permiso necesario
                     ],
-                    /*[
-                        'text' => 'Carga_Fabricación',
+                    [
+                        'text' => 'Carga_Fechas_of',
                         'route' => 'fabricacion.create',
                         'icon' => 'fas fa-fw fa-solid fa-cubes',
                         'can' => 'ver produccion', // Define el permiso necesario
-                    ],*/
+                    ],
                 ],
             ],
 

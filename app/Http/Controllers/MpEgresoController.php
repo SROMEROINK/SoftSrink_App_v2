@@ -3,9 +3,9 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\MpSalidas;
+use App\Models\MpEgreso;
 
-class MpSalidaController extends Controller
+class MpEgresoController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -14,10 +14,10 @@ class MpSalidaController extends Controller
     {
         // Obtener el valor del filtro de la solicitud
         $filtroNroOF = $request->query('filtroNroOF');
-        $salidas_mp = MpSalidas::with('listado_of.producto')->get();
+        $salidas_mp = MpEgreso::with('listado_of.producto')->get();
     
         
-        return view('Materia_Prima_Salidas.index', compact('salidas_mp','filtroNroOF'));
+        return view('materia_prima.egresos.index.php', compact('salidas_mp','filtroNroOF'));
     }
 
     /**

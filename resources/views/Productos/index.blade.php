@@ -42,8 +42,8 @@
                             <th><input type="text" id="filtro_descripcion" placeholder="Filtrar Descripción" class="form-control filtro-texto" /></th>
                             <th><select id="filtro_clasificacion_piezas" class="form-control filtro-select"><option value="">Todos</option></select></th>
                             <th><select id="filtro_familia" class="form-control filtro-select"><option value="">Todos</option></select></th>
-                            <th><select id="filtro_sub_familia" class="form-control filtro-select"><option value="">Todos</option></select></th>
-                            <th><select id="filtro_grupo_sub_familia" class="form-control filtro-select"><option value="">Todos</option></select></th>
+                            <th><select id="filtro_sub_categoria" class="form-control filtro-select"><option value="">Todos</option></select></th>
+                            <th><select id="filtro_grupo_sub_categoria" class="form-control filtro-select"><option value="">Todos</option></select></th>
                             <th><select id="filtro_codigo_conjunto" class="form-control filtro-select"><option value="">Todos</option></select></th>
                             <th><select id="filtro_cliente" class="form-control filtro-select"><option value="">Todos</option></select></th>
                             <th><input type="text" id="filtro_plano" placeholder="Filtrar Nº Plano" class="form-control filtro-texto" /></th>
@@ -91,7 +91,7 @@ $(document).ready(function() {
                 d.filtro_clasificacion_piezas = $('#filtro_clasificacion_piezas').val();
                 d.filtro_familia = $('#filtro_familia').val();
                 d.filtro_sub_familia = $('#filtro_sub_familia').val();
-                d.filtro_grupo_sub_familia = $('#filtro_grupo_sub_familia').val();
+                d.filtro_grupo_sub_categoria = $('#filtro_grupo_sub_categoria').val();
                 d.filtro_codigo_conjunto = $('#filtro_codigo_conjunto').val();
                 d.filtro_cliente = $('#filtro_cliente').val();
                 d.filtro_material_mp = $('#filtro_material_mp').val();
@@ -190,8 +190,8 @@ $(document).ready(function() {
         // Llenar los selectores con los valores únicos
         fillSelect('#filtro_clasificacion_piezas', uniqueValues['Nombre_Clasificacion']);
         fillSelect('#filtro_familia', uniqueValues['Nombre_Categoria']);
-        fillSelect('#filtro_sub_familia', uniqueValues['Nombre_SubCategoria']);
-        fillSelect('#filtro_grupo_sub_familia', uniqueValues['Nombre_GrupoSubCategoria']);
+        fillSelect('#filtro_sub_categoria', uniqueValues['Nombre_SubCategoria']);
+        fillSelect('#filtro_grupo_sub_categoria', uniqueValues['Nombre_GrupoSubCategoria']);
         fillSelect('#filtro_codigo_conjunto', uniqueValues['Nombre_GrupoConjuntos']);
         fillSelect('#filtro_cliente', uniqueValues['Cli_Nombre']);
         fillSelect('#filtro_material_mp', uniqueValues['Prod_Material_MP']);

@@ -13,5 +13,12 @@ class GrupoSubcategoria extends Model
     protected $primaryKey = 'Id_GrupoSubCategoria';
     protected $fillable = ['Nombre_GrupoSubCategoria'];
     public $timestamps = false;
+
+        // Relación: Cada subcategoría pertenece a una categoría
+        public function categoria()
+        {
+            return $this->belongsTo(Categoria::class, 'Id_Categoria', 'Id_Categoria');
+        }
+        
 }
 

@@ -7,6 +7,8 @@ use Yajra\DataTables\Facades\DataTables;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use App\Models\Producto;
+use App\Models\Categoria;
+use App\Models\SubCategoria;
 
 class ProductoController extends Controller
 {
@@ -19,6 +21,67 @@ class ProductoController extends Controller
         $this->middleware('permission:editar produccion')->only('destroy');
     }
 
+    // Método para obtener las categorías de productos
+    public function getCategorias()
+    {
+        $categorias = Categoria::select('Id_Categoria as id', 'Nombre_Categoria as nombre')->get();
+        return response()->json(['success' => true, 'data' => $categorias]);
+    }
+
+    public function getSubcategorias(Request $request)
+    {
+        $categoriaId = $request->categoria;
+    
+        if ($categoriaId) {
+            // Verificar el valor de $categoriaId
+            // dd($categoriaId);
+    
+            $subcategorias = SubCategoria::where('Id_Categoria', $categoriaId)
+                ->select('Id_SubCategoria as id', 'Nombre_SubCategoria as nombre')
+                ->get();
+    
+            return response()->json(['success' => true, 'data' => $subcategorias]);
+        }
+    
+        return response()->json(['success' => false, 'message' => 'Categoría no seleccionada.']);
+    }
+    
+
+// Método para obtener los códigos de productos basado en los filtros de categoría y subfamilia
+public function getCodigosProducto(Request $request)
+{
+    $query = Producto::query();
+
+    if ($request->has('categoria') && !empty($request->categoria)) {
+        $query->where('Id_Prod_Clase_Familia', $request->categoria);
+    }
+
+    if ($request->has('subcategoria') && !empty($request->subcategoria)) {
+        $query->where('Id_Prod_Sub_Familia', $request->subcategoria);
+    }
+
+    $productos = $query->select('Id_Producto as id', 'Prod_Codigo as codigo')->get();
+
+    return response()->json([
+        'success' => true,
+        'data' => $productos
+    ]);
+}
+
+public function getDescripcionProducto($id)
+{
+    try {
+        // Obtener la descripción del producto basado en su ID
+        $producto = Producto::findOrFail($id);
+        return response()->json(['success' => true, 'descripcion' => $producto->Prod_Descripcion]);
+    } catch (\Exception $e) {
+        return response()->json(['success' => false, 'error' => 'Producto no encontrado.']);
+    }
+}
+
+
+
+
 
     public function getData(Request $request)
     {
@@ -27,8 +90,8 @@ class ProductoController extends Controller
                 $productos = Producto::with([
                     'clasificacionPiezas',
                     'categoria',
-                    'subFamilia',
-                    'grupoSubFamilia',
+                    'subCategoria',
+                    'grupoSubCategoria',
                     'grupoConjuntos',
                     'cliente'
                 ])->select(
@@ -48,10 +111,10 @@ class ProductoController extends Controller
                         return $producto->categoria->Nombre_Categoria ?? '';
                     })
                     ->addColumn('Nombre_SubCategoria', function ($producto) {
-                        return $producto->subFamilia->Nombre_SubCategoria ?? '';
+                        return $producto->subCategoria->Nombre_SubCategoria ?? '';
                     })
                     ->addColumn('Nombre_GrupoSubCategoria', function ($producto) {
-                        return $producto->grupoSubFamilia->Nombre_GrupoSubCategoria ?? '';
+                        return $producto->grupoSubCategoria->Nombre_GrupoSubCategoria ?? '';
                     })
                     ->addColumn('Nombre_GrupoConjuntos', function ($producto) {
                         return $producto->grupoConjuntos->Nombre_GrupoConjuntos ?? '';
@@ -60,66 +123,7 @@ class ProductoController extends Controller
                         return $producto->cliente->Cli_Nombre ?? '';
                     })
                     ->filter(function ($query) use ($request) {
-                        if ($request->has('filtro_clasificacion_piezas') && $request->filtro_clasificacion_piezas != '') {
-                            $query->whereHas('clasificacionPiezas', function ($q) use ($request) {
-                                $q->where('Nombre_Clasificacion', $request->filtro_clasificacion_piezas);
-                            });
-                        }
-                        if ($request->has('filtro_familia') && $request->filtro_familia != '') {
-                            $query->whereHas('categoria', function ($q) use ($request) {
-                                $q->where('Nombre_Categoria', $request->filtro_familia);
-                            });
-                        }
-                        if ($request->has('filtro_sub_familia') && $request->filtro_sub_familia != '') {
-                            $query->whereHas('subFamilia', function ($q) use ($request) {
-                                $q->where('Nombre_SubCategoria', $request->filtro_sub_familia);
-                            });
-                        }
-                        if ($request->has('filtro_grupo_sub_familia') && $request->filtro_grupo_sub_familia != '') {
-                            $query->whereHas('grupoSubFamilia', function ($q) use ($request) {
-                                $q->where('Nombre_GrupoSubCategoria', $request->filtro_grupo_sub_familia);
-                            });
-                        }
-                        if ($request->has('filtro_codigo_conjunto') && $request->filtro_codigo_conjunto != '') {
-                            $query->whereHas('grupoConjuntos', function ($q) use ($request) {
-                                $q->where('Nombre_GrupoConjuntos', $request->filtro_codigo_conjunto);
-                            });
-                        }
-                        if ($request->has('filtro_cliente') && $request->filtro_cliente != '') {
-                            $query->whereHas('cliente', function ($q) use ($request) {
-                                $q->where('Cli_Nombre', $request->filtro_cliente);
-                            });
-                        }
-                        if ($request->has('filtro_material_mp') && $request->filtro_material_mp != '') {
-                            $query->where('Prod_Material_MP', $request->filtro_material_mp);
-                        }
-                        if ($request->has('filtro_diametro_mp') && $request->filtro_diametro_mp != '') {
-                            $query->where('Prod_Diametro_de_MP', $request->filtro_diametro_mp);
-                        }
-                        if ($request->has('filtro_codigo_mp') && $request->filtro_codigo_mp != '') {
-                            $query->where('Prod_Codigo_MP', $request->filtro_codigo_mp);
-                        }
-                        if ($request->has('filtro_id') && $request->filtro_id != '') {
-                            $query->where('Id_Producto', 'like', "%{$request->filtro_id}%");
-                        }
-                        if ($request->has('filtro_codigo') && $request->filtro_codigo != '') {
-                            $query->where('Prod_Codigo', 'like', "%{$request->filtro_codigo}%");
-                        }
-                        if ($request->has('filtro_descripcion') && $request->filtro_descripcion != '') {
-                            $query->where('Prod_Descripcion', 'like', "%{$request->filtro_descripcion}%");
-                        }
-                        if ($request->has('filtro_plano') && $request->filtro_plano != '') {
-                            $query->where('Prod_N_Plano', 'like', "%{$request->filtro_plano}%");
-                        }
-                        if ($request->has('filtro_revision_plano') && $request->filtro_revision_plano != '') {
-                            $query->where('Prod_Plano_Ultima_Revisión', 'like', "%{$request->filtro_revision_plano}%");
-                        }
-                        if ($request->has('filtro_longitud_pieza') && $request->filtro_longitud_pieza != '') {
-                            $query->where('Prod_Longitud_de_Pieza', 'like', "%{$request->filtro_longitud_pieza}%");
-                        }
-                        if ($request->has('filtro_longitud_total') && $request->filtro_longitud_total != '') {
-                            $query->where('Prod_Longitug_Total', 'like', "%{$request->filtro_longitud_total}%");
-                        }
+                        // Aquí van los filtros adicionales
                     })
                     ->make(true);
             }
@@ -128,26 +132,18 @@ class ProductoController extends Controller
             return response()->json(['error' => 'Error fetching data'], 500);
         }
     }
-    
+
     public function index()
     {
         return view('Productos.index');
     }
-    
-    
 
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create()
     {
         // Devolver la vista de creación
         return view('Productos.create');
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
         // Validar los datos del formulario
@@ -165,27 +161,18 @@ class ProductoController extends Controller
         return redirect()->route('productos.index')->with('success', 'Producto creado con éxito');
     }
 
-    /**
-     * Display the specified resource.
-     */
     public function show(Producto $producto)
     {
         // Mostrar la vista de detalles del producto
         return view('Productos.show', compact('producto'));
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
     public function edit(Producto $producto)
     {
         // Devolver la vista de edición y pasar el producto a esa vista
         return view('Productos.edit', compact('producto'));
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Request $request, Producto $producto)
     {
         // Validar los datos del formulario
@@ -203,9 +190,6 @@ class ProductoController extends Controller
         return redirect()->route('productos.index')->with('success', 'Producto actualizado con éxito');
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy(Producto $producto)
     {
         // Eliminar el producto

@@ -74,8 +74,8 @@
 }
 
 /* Estilos para centrar los datos en DataTables */
-#listado_of th,
-#listado_of td {
+#pedido_cliente th,
+#pedido_cliente td {
     text-align: center; /* Centra el contenido de las celdas */
 }
 
@@ -148,3 +148,67 @@
     border-radius: 5px; /* Bordes redondeados */
     transition: background-color 0.3s ease; /* Transición suave para el cambio de color de fondo */
 }
+
+/* Centrar los encabezados de la tabla */
+
+
+/* #pedido_cliente thead th {
+    text-align: center;
+    vertical-align: middle; /* Asegura que el contenido se centre también verticalmente 
+} */
+
+/* Estilos para ajustar la tabla a un diseño más profesional */
+.table-custom {
+    background-color: #f9f9f9; /* Fondo ligeramente gris */
+    border: 1px solid #e0e0e0; /* Borde gris claro */
+}
+
+/* Estilo para los encabezados */
+.table-custom thead th {
+    background-color: #e7e7e7; /* Fondo gris claro para encabezados */
+    color: #333333; /* Texto de color gris oscuro */
+    border-bottom: 2px solid #d3d3d3; /* Borde inferior más grueso */
+    text-align: center; /* Centrar el contenido de las celdas */
+}
+
+/* Estilo para los encabezados cuando el usuario pasa el mouse */
+.table-custom thead th:hover {
+    background-color: #cccccc; /* Fondo ligeramente más oscuro al hacer hover */
+    color: #000; /* Texto en negro */
+}
+
+/* Estilos personalizados para la tabla */
+.table-custom {
+    background-color: #f4f4f4; /* Fondo más gris */
+    border: 1px solid #ddd; /* Borde gris */
+}
+
+.table-custom th {
+    background-color: #e0e0e0; /* Fondo para encabezados */
+    color: #333; /* Color de texto más suave */
+    font-weight: 600;
+}
+
+.table-custom tbody tr:nth-of-type(odd) {
+    background-color: #f8f8f8; /* Filas alternas más claras */
+}
+
+.table-custom tbody tr:hover {
+    background-color: #e7e7e7; /* Hover de las filas */
+}
+
+.table-responsive {
+    border: 1px solid #e0e0e0; /* Bordes alrededor del contenedor */
+    border-radius: 6px;
+}
+
+/* Estilo para las celdas */
+.table-custom td {
+    padding: 10px; /* Ajuste de padding */
+    border: 1px solid #ddd; /* Bordes internos */
+}
+
+
+
+
+

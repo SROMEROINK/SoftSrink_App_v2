@@ -27,29 +27,29 @@ class Producto extends Model
     // Relaciones
     public function clasificacionPiezas()
     {
-        return $this->belongsTo(ClasificacionPiezas::class, 'Id_Prod_Clasificacion_Piezas', 'Id_Clasificacion');
+        return $this->belongsTo(ProductoClasificacion::class, 'Id_Prod_Clasificacion_Piezas', 'Id_Clasificacion');
     }
 
     public function categoria()
     {
-        return $this->belongsTo(Categoria::class, 'Id_Prod_Clase_Familia', 'Id_Categoria');
+        return $this->belongsTo(ProductoCategoria::class, 'Id_Prod_Clase_Familia', 'Id_Categoria');
     }
 
-    public function subFamilia()
+    public function subCategoria()
     {
-        return $this->belongsTo(SubFamilia::class, 'Id_Prod_Sub_Familia', 'Id_SubCategoria');
+        return $this->belongsTo(ProductoSubCategoria::class, 'Id_Prod_Sub_Familia', 'Id_SubCategoria');
     }
 
-    public function grupoSubFamilia()
+    public function grupoSubCategoria()
     {
-        return $this->belongsTo(GrupoSubcategoria::class, 'Id_Prod_Grupos_de_Sub_Familia', 'Id_GrupoSubCategoria');
+        return $this->belongsTo(ProductoGrupoSubcategoria::class, 'Id_Prod_Grupos_de_Sub_Familia', 'Id_GrupoSubCategoria');
     }
 
 // En app\Models\Productos\Producto.php
 
 public function grupoConjuntos()
 {
-    return $this->belongsTo(GrupoConjuntos::class, 'Id_Prod_Codigo_Conjuntos', 'Id_GrupoConjuntos');
+    return $this->belongsTo(ProductoGrupoConjuntos::class, 'Id_Prod_Codigo_Conjuntos', 'Id_GrupoConjuntos');
 }
 
     public function cliente()

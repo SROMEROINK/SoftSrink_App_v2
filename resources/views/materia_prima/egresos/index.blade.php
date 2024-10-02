@@ -53,7 +53,6 @@
                             <th>Cant_Unid_Adicionales</th>
                             <th>Cant_Unid_Devoluciones</th>
                             <th>Total_Salidas_MP</th>
-                            <th>Longitud_Unid_MP</th>
                             <th>Total_Mts_Utilizados</th>
                             <th>Fecha_Pedido_Producción</th>
                             <th>Respons_Pedido</th>
@@ -86,7 +85,6 @@
                                 <td>{{$salida_mp->Cantidad_MP_Adicionales }}</td>
                                 <td>{{$salida_mp->Cant_Devoluciones}}</td>
                                 <td>{{$salida_mp->Total_Salidas_MP }}</td>
-                                <td>{{$salida_mp->Longitud_Unidad_MP }}</td>
                                 <td>{{$salida_mp->Total_Mtros_Utilizados }}</td>
                                 <td>{{$salida_mp->Fecha_del_Pedido_Produccion }}</td>
                                 <td>{{$salida_mp->Responsable_Pedido_Produccion}}</td>

@@ -13,5 +13,15 @@ class Categoria extends Model
     protected $primaryKey = 'Id_Categoria';
     protected $fillable = ['Nombre_Categoria'];
     public $timestamps = false;
+
+    // Relación uno a muchos: Una categoría tiene muchas subcategorías
+public function subcategorias()
+{
+    return $this->hasMany(SubCategoria::class, 'Id_Categoria', 'Id_Categoria');
 }
+
+
+}
+
+
 

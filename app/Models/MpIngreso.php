@@ -1,12 +1,12 @@
 <?php
-
+// app\Models\MpIngreso.php
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\Proveedor; // Importa el modelo correcto
 
-class Ingreso_mp extends Model
+class MpIngreso extends Model
 {
     use HasFactory;
 
@@ -14,9 +14,33 @@ class Ingreso_mp extends Model
     protected $primaryKey = 'Id_MP';
     protected $fillable = [
         // Asegúrate de que estos campos corresponden a las columnas en tu tabla 'mp_ingreso'
-        'Nro_Ingreso_MP', 'Nro_Pedido', 'Nro_Remito', 'Fecha_Ingreso', 'Nro_OC' ,
-        'Id_Proveedor' , 'Materia_Prima', 'Diametro_MP' , 'Codigo_MP', 'N°_Certificado_MP' , 'Detalle_Origen_MP' , 'Unidades_MP' ,
-        'Longitud_Unidad_MP' , 'Mts_Totales' , 'Kilos_Totales'
+ 
+
+'Nro_Ingreso_MP',
+'Nro_Pedido',
+'Nro_Remito',
+'Fecha_Ingreso',
+'Nro_OC',
+'Id_Proveedor',
+'Materia_Prima',
+'Diametro_MP',
+'Codigo_MP',
+'Nro_Certificado_MP',
+'Detalle_Origen_MP',
+'Unidades_MP',
+'Longitud_Unidad_MP',
+'Mts_Totales',
+'Kilos_Totales',
+'Ultima_Carga',
+'Prod_habilitado_deshabilitado',
+'created_at',
+'created_by',
+'updated_at',
+'updated_by',
+'deleted_at',
+'deleted_by'
+
+    
   
     ];
 
