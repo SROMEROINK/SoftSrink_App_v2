@@ -4,6 +4,7 @@ namespace App\Models; // Asegúrate de que el namespace sea correcto
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes; // Importa la clase SoftDeletes
 
 class Cliente extends Model
 {

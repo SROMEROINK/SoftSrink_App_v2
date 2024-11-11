@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\Categoria;
+use App\Models\ProductoCategoria;
 
 class ProductoCategoriaController extends Controller
 {

@@ -1,0 +1,29 @@
+/* public\vendor\adminlte\dist\css\proveedores_edit.css */
+.form-control {
+    position: relative;
+    border: 1px solid #ddd;
+    transition: border-color 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+}
+
+.form-control:focus {
+    border-color: #2196F3; /* Color azul */
+    box-shadow: 0 0 10px rgba(33, 150, 243, 0.5); /* Brillo azul de neón */
+    outline: none;
+}
+
+.title-container {
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 5px;
+    padding: 3px;
+    margin-bottom: 3px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.page-title {
+    margin: 0;
+    font-size: 24px;
+    font-weight: bold;
+}

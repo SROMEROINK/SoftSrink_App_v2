@@ -1,4 +1,4 @@
-/* public\vendor\adminlte\dist\css\mp_ingreso_index.css */
+/* public/vendor/adminlte/dist/css/fabricacion_index.css */
 
 /* Ajustes para la tabla */
 .table-responsive {
@@ -52,35 +52,90 @@
     align-items: center;
 }
 
-/* Estilos para el botón de crear registro */
-.card-header .btn.create-button {
-    background-color: #28a745; /* Color del botón */
-    border-color: #28a745; /* Color del borde */
-    color: white; /* Color del texto */
-    padding: 0.4rem 0.8rem; /* Aumenta el padding para hacer el botón más grande */
-    font-size: 18px; /* Aumenta el tamaño del texto */
-    border-radius: 0.35rem; /* Bordes redondeados */
-    text-align: center;
-    text-decoration: none; /* Sin subrayado */
-    display: inline-block;
-}
-
-/* Asegurar que el contenedor se alinee al inicio */
+/* Ajustes de estilos para la cabecera de la tarjeta con botones */
 .card-header {
-    justify-content: flex-start;
+    display: flex;
+    justify-content: space-between; /* Espacia los elementos a los extremos del contenedor */
+    align-items: center; /* Alinea los elementos verticalmente */
+    padding: 0.75rem 1.25rem; /* Espaciado interno de la cabecera */
 }
 
-/* Asegurar que el botón se alinee al final */
-.card-header .create-button {
-    margin-left: auto;
+/* Estilos para los botones dentro del card-header */
+.card-header .btn {
+    padding: 0.375rem 0.75rem; /* Padding estándar para Bootstrap */
+    font-size: 1rem; /* Tamaño de fuente uniforme */
+    line-height: 1.5; /* Alineación de línea adecuada para la altura del texto */
+    border-radius: 0.25rem; /* Radio de borde para bordes redondeados */
+    margin-left: 5px; /* Espacio entre botones, solo si hay múltiples botones al lado */
 }
+
+/* Estilo específico para mantener la altura de los botones uniforme y alineación */
+.card-header .btn {
+    height: 38px; /* Altura específica para que todos los botones sean iguales */
+    display: inline-flex; /* Utiliza flex para centrar el contenido verticalmente */
+    align-items: center; /* Alinea el texto y los íconos dentro del botón verticalmente */
+    justify-content: center; /* Centra el contenido horizontalmente */
+}
+
+/* Ajustes de responsividad y estética para la barra de título */
+.info-section {
+    display: flex;
+    flex-grow: 1; /* Permite que el contenedor de información se expanda para llenar el espacio */
+    justify-content: flex-start; /* Alinea la información al inicio del contenedor */
+}
+
+/* Estilos para el número de proveedores, asegurando visibilidad y coherencia */
+.total-numero {
+    background-color: #007bff; /* Color de fondo para destacar el número */
+    color: white; /* Color de texto para contrastar con el fondo */
+    border-radius: 3px; /* Bordes redondeados para estética */
+    padding: 3px 7px; /* Padding adecuado para visualización */
+    font-size: 1rem; /* Tamaño de fuente coherente con los botones */
+    margin-left: 10px; /* Espaciado a la izquierda para separar del texto */
+}
+
+
+
 
 /* Estilos para centrar los datos en DataTables */
 #ingresos_materia_prima th,
 #ingresos_materia_prima td {
     text-align: center; /* Centra el contenido de las celdas */
-    vertical-align: middle; /* Asegura que el contenido se centre también verticalmente */
 }
+
+/* Estilos para el encabezado de la columna "Acciones" */
+#ingresos_materia_prima th.acciones {
+    text-align: center;
+    vertical-align: middle;
+}
+
+/* Estilos para las celdas de la columna "Acciones" para asegurar la alineación de los botones */
+#ingresos_materia_prima td.acciones {
+    text-align: center;
+    vertical-align: middle;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%; /* Ajustar la altura al 100% para cubrir toda la celda si es necesario */
+}
+
+/* Ajuste para asegurar que los botones dentro de las celdas de acciones estén correctamente alineados */
+#ingresos_materia_prima td.acciones button {
+    margin: 0 auto; /* Centra los botones horizontalmente en la celda */
+    display: block; /* Cambiar a 'block' puede ayudar en la alineación si 'inline-block' no funciona */
+}
+
+
+
+
+/* Reducir padding dentro de las celdas para una mejor alineación */
+#ingresos_materia_prima td.acciones button {
+    padding: 4px 8px; /* Ajusta según necesidad */
+    margin: 0 auto; /* Centrado automático dentro de la celda */
+    display: block; /* Cambia a inline-block si prefieres que los botones estén en línea */
+}
+
+
 
 /* Estilos para los campos select */
 .filtro-select {
@@ -196,3 +251,29 @@
     border-radius: 5px; /* Bordes redondeados */
     transition: background-color 0.3s ease; /* Transición suave para el cambio de color de fondo */
 }
+
+/* Ajustes de ancho para la tabla */
+#ingresos_materia_prima {
+    table-layout: auto;
+    width: 100%;
+}
+
+#ingresos_materia_prima th,
+#ingresos_materia_prima td {
+    white-space: nowrap;
+    padding: 5px; /* Reducir el padding */
+}
+
+#ingresos_materia_prima th {
+    max-width: 150px; /* Limitar el ancho de las cabeceras */
+}
+
+/* Ajustes para que los botones estén en la misma fila */
+.table-responsive .btn-sm {
+    padding: 3px 6px; /* Reducir el padding de los botones */
+    font-size: 12px;  /* Reducir el tamaño de fuente */
+    margin-right: 2px; /* Espacio entre botones */
+}
+
+
+

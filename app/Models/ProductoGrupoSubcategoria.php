@@ -4,9 +4,10 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes; // Importa la clase SoftDeletes
 
 // app\Models\Productos\GrupoSubcategoria.php
-class GrupoSubcategoria extends Model
+class ProductoGrupoSubcategoria extends Model
 {
     use HasFactory;
     protected $table = 'producto_grupo_subcategoria';
@@ -17,7 +18,7 @@ class GrupoSubcategoria extends Model
         // Relación: Cada subcategoría pertenece a una categoría
         public function categoria()
         {
-            return $this->belongsTo(Categoria::class, 'Id_Categoria', 'Id_Categoria');
+            return $this->belongsTo(ProductoCategoria::class, 'Id_Categoria', 'Id_Categoria');
         }
         
 }

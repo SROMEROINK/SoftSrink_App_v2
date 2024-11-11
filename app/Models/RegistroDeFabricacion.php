@@ -5,6 +5,7 @@ namespace App\Models;
 
         use Illuminate\Database\Eloquent\Factories\HasFactory;
         use Illuminate\Database\Eloquent\Model;
+        use Illuminate\Database\Eloquent\SoftDeletes; // Importa la clase SoftDeletes
         use App\Models\Listado_OF;
         use App\Models\Producto;
 

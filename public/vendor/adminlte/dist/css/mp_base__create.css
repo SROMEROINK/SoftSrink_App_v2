@@ -1,0 +1,149 @@
+/*public\vendor\adminlte\dist\css\mp_diametro_create.css*/
+
+:root {
+    --colorTextos: #49454567;
+    --colorPrimario: #6A82FB;
+    --colorSecundario: #FC5C7D;
+}
+
+*,
+::before,
+::after {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Poppins', sans-serif;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+h1 {
+    text-align: center;
+    margin: 10px 0;
+    font-weight: 800;
+}
+
+form {
+    background: #fff;
+    width: 100%;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 0 6px 0 rgba(255, 255, 255, 0.8);
+}
+
+.table {
+    width: 100%;
+    margin: 20px 0;
+    table-layout: fixed;
+}
+
+.table th,
+.table td {
+    vertical-align: middle;
+    text-align: center;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    padding: 10px;
+    font-weight: bold;
+}
+
+.table input,
+.table select {
+    background: none;
+    color: #494545;
+    font-size: 16px;
+    padding: 10px 10px 10px 5px;
+    width: 100%;
+    border: none;
+    border-bottom: 1px solid var(--colorTextos);
+    transition: 0.3s ease all;
+    text-align: center;
+    line-height: 1.2;
+}
+
+.table input:focus,
+.table select:focus {
+    outline: none;
+    color: rgb(94, 93, 93);
+    border-bottom: 1px solid var(--colorPrimario);
+}
+
+.table .btn {
+    width: auto;
+    padding: 5px 10px;
+    border-radius: 4px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background 0.3s ease;
+    margin: 0 2px;
+}
+
+.table .btn-info {
+    background: var(--colorPrimario);
+    color: #fff;
+    min-width: 110px;
+}
+
+.table .btn-danger {
+    background: var(--colorSecundario);
+    color: #fff;
+    min-width: 110px;
+}
+
+.table .btn-info:hover {
+    background: var(--colorPrimario);
+}
+
+.table .btn-danger:hover {
+    background: var(--colorSecundario);
+}
+
+.btn-der {
+    margin-top: 20px;
+    display: flex;
+    justify-content: flex-start;
+    gap: 10px;
+}
+
+.btn-der .btn {
+    background: var(--colorPrimario);
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    padding: 10px 20px;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+.btn-der .btn-success {
+    background: var(--colorSecundario);
+}
+
+.btn-der .btn-success:hover,
+.btn-der .btn-primary:hover {
+    background: var(--colorSecundario);
+    opacity: 1;
+}
+
+.table tbody tr.duplicated {
+    background-color: #f8d7da;
+}
+
+.table th.col-nro-fila,
+.table td.col-nro-fila {
+    width: 100px;
+    text-align: center;
+    vertical-align: middle;
+}
+
+.swal2-popup .btn-info {
+    margin-top: 10px;
+}
+

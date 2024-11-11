@@ -8,8 +8,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use App\Models\PedidoCliente;
 use App\Models\Producto;
-use App\Models\Categoria;
-use App\Models\SubCategoria;
+use App\Models\ProductoCategoria;
+use App\Models\ProductoSubCategoria;
 
 class PedidoClienteController extends Controller
 {
@@ -119,7 +119,7 @@ public function getUltimoNroOF()
     public function create()
     {
         // Obtener las categorías de productos para cargarlas en el formulario
-        $categorias = Categoria::select('Id_Categoria as id', 'Nombre_Categoria as nombre')->get();
+        $categorias = ProductoCategoria::select('Id_Categoria as id', 'Nombre_Categoria as nombre')->get();
     
         // Devolver la vista de creación con las categorías cargadas
         return view('pedido_cliente.create', compact('categorias'));

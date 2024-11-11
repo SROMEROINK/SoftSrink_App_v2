@@ -1,0 +1,91 @@
+/* Estilos específicos para el h1 dentro de content_header */
+.content-header h1 {
+    font-size: 2rem; /* Tamaño de la fuente */
+    font-weight: bold;
+    color: #343a40; /* Color del texto */
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    text-align: center; /* Centrar el texto */
+    background-color: #f8f9fa; /* Fondo */
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+
+
+
+/* Estilos para la tarjeta principal */
+.container {
+    max-width: 1200px; /* Ampliar aún más el ancho del formulario */
+    margin: 0 auto;
+    padding-top: 30px;
+}
+
+.card-header {
+    background-color: #343a40;
+    color: #fff;
+    padding: 25px;
+    font-size: 1.75rem; /* Aumentar el tamaño de fuente del título */
+    font-weight: bold;
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    border-radius: 4px 4px 0 0;
+}
+
+.card {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    border: none;
+    margin-bottom: 20px;
+}
+
+/* Estilos para el cuerpo de la tarjeta */
+.card-body {
+    padding: 30px;
+}
+
+/* Estilos para la lista de detalles */
+.list-group-item {
+    border: none;
+    padding: 15px 25px;
+    font-size: 1.1rem;
+    color: #495057;
+}
+
+.list-group-item strong {
+    color: #333;
+    font-weight: 600;
+    margin-right: 10px;
+}
+
+/* Alternar fondo en los elementos de la lista */
+.list-group-item:nth-child(odd) {
+    background-color: #f8f9fa;
+}
+
+/* Estilos para el pie de página de la tarjeta */
+.card-footer {
+    text-align: right;
+    padding: 20px;
+    background-color: #f1f1f1;
+    border-radius: 0 0 4px 4px;
+}
+
+/* Estilos para el botón de volver */
+.card-footer .btn-default {
+    background-color: #6c757d;
+    color: #fff;
+    padding: 12px 30px; /* Aumentar el tamaño del botón */
+    font-size: 1rem; /* Aumentar el tamaño de fuente del botón */
+    border-radius: 4px;
+    transition: background-color 0.3s ease;
+}
+
+.card-footer .btn-default:hover {
+    background-color: #5a6268;
+    color: #fff;
+}
+
+
+

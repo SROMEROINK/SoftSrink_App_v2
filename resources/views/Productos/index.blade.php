@@ -22,7 +22,7 @@
                             <th>ID</th>
                             <th>Código</th>
                             <th>Descripción</th>
-                            <th>Clasificación Piezas</th>
+                            <th>Nombre Tipo</th>
                             <th>Familia</th>
                             <th>Sub-Familia</th>
                             <th>Grupo-Sub-Familia</th>
@@ -40,7 +40,7 @@
                             <th><input type="text" id="filtro_id" placeholder="Filtrar ID" class="form-control filtro-texto" /></th>
                             <th><input type="text" id="filtro_codigo" placeholder="Filtrar Código" class="form-control filtro-texto" /></th>
                             <th><input type="text" id="filtro_descripcion" placeholder="Filtrar Descripción" class="form-control filtro-texto" /></th>
-                            <th><select id="filtro_clasificacion_piezas" class="form-control filtro-select"><option value="">Todos</option></select></th>
+                            <th><select id="filtro_tipo" class="form-control filtro-select"><option value="">Todos</option></select></th>
                             <th><select id="filtro_familia" class="form-control filtro-select"><option value="">Todos</option></select></th>
                             <th><select id="filtro_sub_categoria" class="form-control filtro-select"><option value="">Todos</option></select></th>
                             <th><select id="filtro_grupo_sub_categoria" class="form-control filtro-select"><option value="">Todos</option></select></th>
@@ -81,86 +81,104 @@
 <script src="https://cdn.datatables.net/buttons/2.2.2/js/buttons.bootstrap5.min.js"></script>
 <script>
 $(document).ready(function() {
-    var table = $('#listado_productos').DataTable({
-        processing: true,
-        serverSide: true,
-        ajax: {
-            url: "{{ route('productos.data') }}",
-            type: 'GET',
-            data: function (d) {
-                d.filtro_clasificacion_piezas = $('#filtro_clasificacion_piezas').val();
-                d.filtro_familia = $('#filtro_familia').val();
-                d.filtro_sub_familia = $('#filtro_sub_familia').val();
-                d.filtro_grupo_sub_categoria = $('#filtro_grupo_sub_categoria').val();
-                d.filtro_codigo_conjunto = $('#filtro_codigo_conjunto').val();
-                d.filtro_cliente = $('#filtro_cliente').val();
-                d.filtro_material_mp = $('#filtro_material_mp').val();
-                d.filtro_diametro_mp = $('#filtro_diametro_mp').val();
-                d.filtro_codigo_mp = $('#filtro_codigo_mp').val();
-                d.filtro_id = $('#filtro_id').val();
-                d.filtro_codigo = $('#filtro_codigo').val();
-                d.filtro_descripcion = $('#filtro_descripcion').val();
-                d.filtro_plano = $('#filtro_plano').val();
-                d.filtro_revision_plano = $('#filtro_revision_plano').val();
-                d.filtro_longitud_pieza = $('#filtro_longitud_pieza').val();
-                d.filtro_longitud_total = $('#filtro_longitud_total').val();
+
+// Función genérica para cargar opciones en selectores de filtro
+function loadFilterOptions(url, selectId, defaultText) {
+    $.ajax({
+        url: url,  // URL proporcionada como parámetro
+        type: 'GET',
+        success: function(response) {
+            if (response.success) {
+                var selectElement = $(selectId);
+                selectElement.empty();
+                selectElement.append('<option value="">' + defaultText + '</option>');  // Añadir opción predeterminada
+                
+                // Llenar el select con los datos obtenidos
+                response.data.forEach(function(item) {
+                    var value = item.Nombre_Categoria || item.Nombre_Tipo || item.Nombre_SubCategoria || item.Prod_Material_MP || item.Cli_Nombre;
+                    selectElement.append('<option value="' + value + '">' + value + '</option>');
+                });
             }
         },
-        columns: [
-            { data: 'Id_Producto', name: 'Id_Producto' },
-            { data: 'Prod_Codigo', name: 'Prod_Codigo' },
-            { data: 'Prod_Descripcion', name: 'Prod_Descripcion' },
-            { data: 'Nombre_Clasificacion', name: 'Nombre_Clasificacion' },
-            { data: 'Nombre_Categoria', name: 'Nombre_Categoria' },
-            { data: 'Nombre_SubCategoria', name: 'Nombre_SubCategoria' },
-            { data: 'Nombre_GrupoSubCategoria', name: 'Nombre_GrupoSubCategoria' },
-            { data: 'Nombre_GrupoConjuntos', name: 'Nombre_GrupoConjuntos' },
-            { data: 'Cli_Nombre', name: 'Cli_Nombre' },
-            { data: 'Prod_N_Plano', name: 'Prod_N_Plano' },
-            { data: 'Prod_Plano_Ultima_Revisión', name: 'Prod_Plano_Ultima_Revisión' },
-            { data: 'Prod_Material_MP', name: 'Prod_Material_MP' },
-            { data: 'Prod_Diametro_de_MP', name: 'Prod_Diametro_de_MP' },
-            { data: 'Prod_Codigo_MP', name: 'Prod_Codigo_MP' },
-            { data: 'Prod_Longitud_de_Pieza', name: 'Prod_Longitud_de_Pieza' },
-            { data: 'Prod_Longitug_Total', name: 'Prod_Longitug_Total' },
-        ],
-        scrollY: '60vh',
-        scrollCollapse: true,
-        searching: false,
-        paging: true,
-        fixedHeader: true,
-        responsive: true,
-        orderCellsTop: true,
-        pageLength: 10,
-        lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]],
-        language: {
-            url: "{{ asset('Spanish.json') }}"
-        },
-        initComplete: function () {
-            var api = this.api();
-            api.columns().every(function () {
-                var column = this;
-                if ($(column.header()).hasClass('filtro-select')) {
-                    var select = $('<select><option value="">Todos</option></select>')
-                        .appendTo($(column.header()).find('input').parent().empty())
-                        .on('change', function () {
-                            var val = $.fn.dataTable.util.escapeRegex($(this).val());
-                            column.search(val ? '^' + val + '$' : '', true, false).draw();
-                        });
-
-                    column.data().unique().sort().each(function (d, j) {
-                        select.append('<option value="' + d + '">' + d + '</option>')
-                    });
-                }
-            });
+        error: function() {
+            console.error('No se pudieron cargar los datos para el filtro: ' + selectId);
         }
     });
+}
 
-    // Llenar los selects con valores únicos de las columnas especificadas
-    table.on('xhr', function () {
-        var json = table.ajax.json();
+// Llamadas para cargar los filtros
+loadFilterOptions("{{ route('productos.categorias') }}", '#filtro_familia', 'Todos');
+loadFilterOptions("{{ route('productos.Tipos') }}", '#filtro_tipo', 'Todos');
+loadFilterOptions("{{ route('productos.Subcategorias') }}", '#filtro_sub_categoria', 'Todos');
+loadFilterOptions("{{ route('productos.getMaterialesMP') }}", '#filtro_material_mp', 'Todos');
+loadFilterOptions("{{ route('productos.getClientes') }}", '#filtro_cliente', 'Todos');
+
+var table = $('#listado_productos').DataTable({
+    processing: true,
+    serverSide: true,
+    ajax: {
+        url: "{{ route('productos.data') }}",
+        type: 'GET',
+        data: function (d) {
+            // Enviar los valores seleccionados en los filtros
+            d.filtro_tipo = $('#filtro_tipo').val();
+            d.filtro_familia = $('#filtro_familia').val();
+            d.filtro_sub_familia = $('#filtro_sub_categoria').val();
+            d.filtro_grupo_sub_categoria = $('#filtro_grupo_sub_categoria').val();
+            d.filtro_codigo_conjunto = $('#filtro_codigo_conjunto').val();
+            d.filtro_cliente = $('#filtro_cliente').val();
+            d.filtro_material_mp = $('#filtro_material_mp').val();
+            d.filtro_diametro_mp = $('#filtro_diametro_mp').val();
+            d.filtro_codigo_mp = $('#filtro_codigo_mp').val();
+            d.filtro_id = $('#filtro_id').val();
+            d.filtro_codigo = $('#filtro_codigo').val();
+            d.filtro_descripcion = $('#filtro_descripcion').val();
+            d.filtro_plano = $('#filtro_plano').val();
+            d.filtro_revision_plano = $('#filtro_revision_plano').val();
+            d.filtro_longitud_pieza = $('#filtro_longitud_pieza').val();
+            d.filtro_longitud_total = $('#filtro_longitud_total').val();
+        }
+    },
+    columns: [
+        { data: 'Id_Producto', name: 'Id_Producto' },
+        { data: 'Prod_Codigo', name: 'Prod_Codigo' },
+        { data: 'Prod_Descripcion', name: 'Prod_Descripcion' },
+        { data: 'Nombre_Tipo', name: 'Nombre_Tipo' },
+        { data: 'Nombre_Categoria', name: 'Nombre_Categoria' },
+        { data: 'Nombre_SubCategoria', name: 'Nombre_SubCategoria' },
+        { data: 'Nombre_GrupoSubCategoria', name: 'Nombre_GrupoSubCategoria' },
+        { data: 'Nombre_GrupoConjuntos', name: 'Nombre_GrupoConjuntos' },
+        { data: 'Cli_Nombre', name: 'Cli_Nombre' },
+        { data: 'Prod_N_Plano', name: 'Prod_N_Plano' },
+        { data: 'Prod_Plano_Ultima_Revisión', name: 'Prod_Plano_Ultima_Revisión' },
+        { data: 'Prod_Material_MP', name: 'Prod_Material_MP' },
+        { data: 'Prod_Diametro_de_MP', name: 'Prod_Diametro_de_MP' },
+        { data: 'Prod_Codigo_MP', name: 'Prod_Codigo_MP' },
+        { data: 'Prod_Longitud_de_Pieza', name: 'Prod_Longitud_de_Pieza' },
+        { data: 'Prod_Longitug_Total', name: 'Prod_Longitug_Total' },
+    ],
+    scrollY: '60vh',
+    scrollCollapse: true,
+    searching: false,
+    paging: true,
+    fixedHeader: true,
+    responsive: true,
+    orderCellsTop: true,
+    pageLength: 10,
+    lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]],
+    language: {
+        url: "{{ asset('Spanish.json') }}"
+    },
+    initComplete: function () {
+        // Llenar los filtros con valores únicos al cargar
+        updateFilters(table);
+    }
+});
+
+    // Función para llenar los selectores con valores únicos, se aplica después de cada búsqueda
+    function updateFilters(table) {
         var uniqueValues = {
-            'Nombre_Clasificacion': new Set(),
+            'Nombre_Tipo': new Set(),
             'Nombre_Categoria': new Set(),
             'Nombre_SubCategoria': new Set(),
             'Nombre_GrupoSubCategoria': new Set(),
@@ -171,10 +189,9 @@ $(document).ready(function() {
             'Prod_Codigo_MP': new Set(),
         };
 
-        var totalItems = json.data.length;  // Cuenta la cantidad de productos
-
-        $.each(json.data, function (index, item) {
-            uniqueValues['Nombre_Clasificacion'].add(item.Nombre_Clasificacion);
+        // Recorremos los datos actuales de la tabla y llenamos los selectores
+        table.rows({search: 'applied'}).data().each(function (item) {
+            uniqueValues['Nombre_Tipo'].add(item.Nombre_Tipo);
             uniqueValues['Nombre_Categoria'].add(item.Nombre_Categoria);
             uniqueValues['Nombre_SubCategoria'].add(item.Nombre_SubCategoria);
             uniqueValues['Nombre_GrupoSubCategoria'].add(item.Nombre_GrupoSubCategoria);
@@ -185,10 +202,7 @@ $(document).ready(function() {
             uniqueValues['Prod_Codigo_MP'].add(item.Prod_Codigo_MP);
         });
 
-        $('#totalCantPiezas').text(totalItems.toString().replace(/\B(?=(\d{3})+(?!\d))/g, "."));  // Actualiza el total de productos
-
-        // Llenar los selectores con los valores únicos
-        fillSelect('#filtro_clasificacion_piezas', uniqueValues['Nombre_Clasificacion']);
+        fillSelect('#filtro_tipo', uniqueValues['Nombre_Tipo']);
         fillSelect('#filtro_familia', uniqueValues['Nombre_Categoria']);
         fillSelect('#filtro_sub_categoria', uniqueValues['Nombre_SubCategoria']);
         fillSelect('#filtro_grupo_sub_categoria', uniqueValues['Nombre_GrupoSubCategoria']);
@@ -197,8 +211,9 @@ $(document).ready(function() {
         fillSelect('#filtro_material_mp', uniqueValues['Prod_Material_MP']);
         fillSelect('#filtro_diametro_mp', uniqueValues['Prod_Diametro_de_MP']);
         fillSelect('#filtro_codigo_mp', uniqueValues['Prod_Codigo_MP']);
-    });
+    }
 
+    // Función para llenar los selectores con valores únicos
     function fillSelect(selector, data) {
         var select = $(selector);
         select.empty();
@@ -208,17 +223,18 @@ $(document).ready(function() {
         });
     }
 
-    // Recargar la tabla al cambiar los selectores y campos de texto
+    // Aplicar los filtros correlativamente
     $('.filtro-select, .filtro-texto').on('change keyup', function () {
-        table.ajax.reload();
+        table.ajax.reload(null, false);  // Recargar sin mover la página
     });
 
-    // Funcionalidad para limpiar filtros
+    // Limpiar filtros
     $('#clearFilters').click(function() {
         $('.filtro-select').val('');
         $('.filtro-texto').val('');
         table.ajax.reload();
     });
 });
+
 </script>
 @stop

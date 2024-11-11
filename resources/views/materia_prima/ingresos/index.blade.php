@@ -7,8 +7,11 @@
 <x-header-card 
     title="Ingresos de Materia Prima" 
     quantityTitle="Total de Unidades Ingresadas:" 
+    quantity="{{ $totalIngresos }}" 
     buttonRoute="{{ route('mp_ingresos.create') }}" 
     buttonText="Crear Ingreso" 
+    deletedRouteUrl="{{ route('mp_ingresos.deleted') }}"
+    deletedButtonText="Ver Ingresos Eliminados" 
 />
 @stop
 
@@ -20,16 +23,14 @@
                 <table id="ingresos_materia_prima" class="table table-striped table-bordered" style="width:100%">
                     <thead>
                         <tr>
-                            <th>Id_MP</th>
+                       
                             <th>Nro_Ingreso_MP</th>
-                            <th>Nro_Pedido</th>
-                            <th>Nro_Remito</th>
                             <th>Fecha_Ingreso</th>
                             <th>Nro_OC</th>
                             <th>Proveedor</th>
-                            <th>Materia_Prima</th>
-                            <th>Diametro_MP</th>
-                            <th>Codigo_MP</th>
+                            <th>Materia Prima</th> <!-- Campo actualizado -->
+                            <th>Diámetro MP</th> <!-- Campo actualizado -->
+                            <th>Código MP</th>
                             <th>Nro_Certificado_MP</th>
                             <th>Detalle_Origen_MP</th>
                             <th>Unidades_MP</th>
@@ -41,10 +42,8 @@
                             <th>Acciones</th>
                         </tr>
                         <tr class="filter-row">
-                            <th></th>
+                            
                             <th><input type="text" id="filtro_nro_ingreso" class="form-control filtro-texto" placeholder="Buscar Nro_Ingreso_MP"></th>
-                            <th><input type="text" id="filtro_nro_pedido" class="form-control filtro-texto" placeholder="Filtrar Nro_Pedido"></th>
-                            <th><input type="text" id="filtro_nro_remito" class="form-control filtro-texto" placeholder="Filtrar Nro_Remito"></th>
                             <th><input type="text" id="filtro_fecha_ingreso" class="form-control filtro-texto" placeholder="Filtrar Fecha"></th>
                             <th><input type="text" id="filtro_nro_oc" class="form-control filtro-texto" placeholder="Filtrar Nro_OC"></th>
                             <th><select id="filtro_proveedor" class="form-control filtro-select"><option value="">Todos</option></select></th>
@@ -85,29 +84,72 @@
 <script src="https://cdn.datatables.net/buttons/2.2.2/js/dataTables.buttons.min.js"></script>
 <script src="https://cdn.datatables.net/buttons/2.2.2/js/buttons.bootstrap5.min.js"></script>
 
+
+
+
+<script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+
 <script>
+
+     // Función para eliminar un ingreso
+     function deleteIngreso(id) {
+    Swal.fire({
+        title: '¿Estás seguro?',
+        text: "¡No podrás revertir esto!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Sí, eliminarlo'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            $.ajax({
+                url: `/mp_ingresos/${id}`,
+                type: 'DELETE',
+                data: {
+                    _token: '{{ csrf_token() }}'
+                },
+                success: function(response) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: '¡Eliminado!',
+                        text: 'El ingreso de materia prima ha sido eliminado.',
+                        showConfirmButton: false,
+                        timer: 1500
+                    });
+                    // Recargar la tabla sin recargar toda la página
+                    $('#ingresos_materia_prima').DataTable().ajax.reload(null, false);
+                },
+                error: function() {
+                    Swal.fire('¡Error!', 'Ha ocurrido un error al intentar eliminar.', 'error');
+                }
+            });
+        }
+    });
+}
+
+
 $(document).ready(function () {
-    // Variable para verificar si los filtros ya fueron cargados
     var filtersLoaded = false;
 
     // Inicialización de la tabla DataTables
     var table = $('#ingresos_materia_prima').DataTable({
         processing: true,
         serverSide: true,
+        
         ajax: {
             url: "{{ route('mp_ingresos.data') }}",
             type: 'GET',
             data: function (d) {
-                // Pasar todos los filtros al servidor como parámetros
+
+                d.filtro_nro_ingreso = $('#filtro_nro_ingreso').val();
+                d.filtro_fecha_ingreso = $('#filtro_fecha_ingreso').val();
+                d.filtro_nro_oc = $('#filtro_nro_oc').val();
                 d.filtro_proveedor = $('#filtro_proveedor').val();
                 d.filtro_materia_prima = $('#filtro_materia_prima').val();
                 d.filtro_diametro = $('#filtro_diametro').val();
                 d.filtro_codigo_mp = $('#filtro_codigo_mp').val();
-                d.filtro_nro_ingreso = $('#filtro_nro_ingreso').val();
-                d.filtro_nro_pedido = $('#filtro_nro_pedido').val();
-                d.filtro_nro_remito = $('#filtro_nro_remito').val();
-                d.filtro_fecha_ingreso = $('#filtro_fecha_ingreso').val();
-                d.filtro_nro_oc = $('#filtro_nro_oc').val();
                 d.filtro_certificado = $('#filtro_certificado').val();
                 d.filtro_detalle_origen = $('#filtro_detalle_origen').val();
                 d.filtro_unidades = $('#filtro_unidades').val();
@@ -117,10 +159,7 @@ $(document).ready(function () {
             }
         },
         columns: [
-            { data: 'Id_MP' },
             { data: 'Nro_Ingreso_MP' },
-            { data: 'Nro_Pedido' },
-            { data: 'Nro_Remito' },
             { data: 'Fecha_Ingreso' },
             { data: 'Nro_OC' },
             { data: 'Proveedor' },
@@ -138,15 +177,25 @@ $(document).ready(function () {
             {
                 data: 'Id_MP',
                 render: function (data) {
-                    return `<a href="/mp_ingresos/${data}" class="btn btn-info btn-sm">Ver</a>`;
+                    return `
+                            <a href="/mp_ingresos/${data}" class="btn btn-info btn-sm">Ver</a>
+                            <a href="/mp_ingresos/${data}/edit" class="btn btn-primary btn-sm">Editar</a>
+                            <button onclick="deleteIngreso(${data})" class="btn btn-danger btn-sm">Eliminar</button>
+                        `;
                 },
                 orderable: false,
                 searchable: false
             }
         ],
-        responsive: true,
+        scrollX: true,
+        scrollY: '60vh',
+        scrollCollapse: true,
+        searching: false,
         paging: true,
-        lengthMenu: [[10, 25, 50], [10, 25, 50]],
+        fixedHeader: true,
+        responsive: true,
+        pageLength: 50,
+        lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "All"]],
         language: {
             lengthMenu: "Mostrar _MENU_ registros por página",
             zeroRecords: "No se encontraron resultados",
@@ -161,8 +210,11 @@ $(document).ready(function () {
                 previous: "Anterior"
             }
         },
+
+
+
+
         drawCallback: function () {
-            // Evitar que los filtros se recarguen con base en los datos de la tabla
             if (!filtersLoaded) {
                 loadUniqueFilters(); // Cargar los filtros únicos solo una vez
                 filtersLoaded = true;
@@ -170,22 +222,27 @@ $(document).ready(function () {
         }
     });
 
+     
+
+
     // Función para cargar los filtros únicos desde el servidor
     function loadUniqueFilters() {
         $.ajax({
             url: "{{ route('mp_ingresos.filters') }}",
             type: 'GET',
             success: function (data) {
-                rellenarSelect('#filtro_proveedor', data.proveedores);
-                rellenarSelect('#filtro_materia_prima', data.materias_primas);
-                rellenarSelect('#filtro_diametro', data.diametros);
-                rellenarSelect('#filtro_codigo_mp', data.codigos);
+                fillSelect('#filtro_proveedor', data.proveedores);
+                fillSelect('#filtro_materia_prima', data.materias_primas);
+                fillSelect('#filtro_diametro', data.diametros);
+                fillSelect('#filtro_codigo_mp', data.codigos);
             }
         });
-    }
+    };
 
-    // Función para rellenar los selectores con los datos únicos
-    function rellenarSelect(selector, data) {
+
+
+    // Función para rellenar los selectores con datos únicos
+    function fillSelect(selector, data) {
         var select = $(selector);
         select.empty();
         select.append('<option value="">Todos</option>');
@@ -194,17 +251,26 @@ $(document).ready(function () {
         });
     }
 
-    // Recargar la tabla cuando cambie algún filtro
-    $('#filtro_proveedor, #filtro_materia_prima, #filtro_diametro, #filtro_codigo_mp').on('change', function () {
-        table.ajax.reload();
+    // Recargar la tabla al cambiar los selectores o campos de texto
+    $('.filtro-select, .filtro-texto').on('change keyup', function () {
+        table.ajax.reload(null, false);
     });
 
     // Limpiar los filtros al hacer clic en el botón
-    $('#clearFilters').click(function() {
+    $('#clearFilters').click(function () {
         $('.filtro-select').val('');
         $('.filtro-texto').val('');
         table.ajax.reload();
     });
+
+    
+    // Actualizar el contador de materias base
+    table.on('xhr', function () {
+        var json = table.ajax.json();
+        var totalIngresos = json.recordsTotal;
+        $('#totalCantPiezas').text(totalIngresos);
+    });
+
 });
 </script>
 @stop

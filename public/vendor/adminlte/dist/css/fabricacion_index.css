@@ -52,17 +52,33 @@
     align-items: center;
 }
 
-/* Estilos para el botón de crear registro */
-.card-header .btn.create-button {
-    background-color: #28a745; /* Color del botón */
-    border-color: #28a745; /* Color del borde */
-    color: white; /* Color del texto */
-    padding: 0.4rem 0.8rem; /* Aumenta el padding para hacer el botón más grande */
-    font-size: 18px; /* Aumenta el tamaño del texto */
-    border-radius: 0.35rem; /* Bordes redondeados */
-    text-align: center;
-    text-decoration: none; /* Sin subrayado */
-    display: inline-block;
+/* Asegurar que el botón "Crear registro" se alinee al final del contenedor .card-header */
+.card-header .button-group {
+    display: flex; /* Usa flexbox para controlar la alineación */
+    justify-content: flex-end; /* Alinea los elementos hacia el final del contenedor */
+    margin-left: auto; /* Empuja el botón hacia la derecha dentro del contenedor .button-group */
+}
+
+/* Estilos específicos para el botón de "Crear registro" */
+.card-header .button-group .btn.create-button {
+    background-color: #28a745; /* Color verde estándar para acciones positivas */
+    border-color: #28a745; /* Mismo color de borde que el fondo */
+    color: white; /* Texto blanco para alta legibilidad */
+    padding: 0.4rem 0.8rem; /* Padding generoso para un aspecto más grande y fácil de clicar */
+    font-size: 18px; /* Tamaño de fuente grande para facilidad de lectura */
+    border-radius: 0.35rem; /* Bordes redondeados suaves */
+    text-align: center; /* Asegura que el texto esté centrado */
+    text-decoration: none; /* Elimina cualquier subrayado */
+    display: inline-flex; /* Uso de flex para centrar el contenido verticalmente */
+    align-items: center; /* Centra el contenido del botón verticalmente */
+    justify-content: center; /* Centra el contenido del botón horizontalmente */
+}
+
+/* Opcional: Transiciones suaves al interactuar con el botón */
+.card-header .button-group .btn.create-button:hover {
+    background-color: #218838; /* Un verde ligeramente más oscuro al pasar el mouse */
+    border-color: #1e7e34; /* Color de borde correspondiente al hover */
+    transition: background-color 0.3s, border-color 0.3s; /* Suaviza la transición de colores */
 }
 
 /* Asegurar que el contenedor se alinee al inicio */
@@ -70,10 +86,7 @@
     justify-content: flex-start;
 }
 
-/* Asegurar que el botón se alinee al final */
-.card-header .create-button {
-    margin-left: auto;
-}
+
 
 /* Estilos para centrar los datos en DataTables */
 #registro_de_fabricacion th,

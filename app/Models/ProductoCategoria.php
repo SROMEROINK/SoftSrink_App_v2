@@ -4,9 +4,10 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes; // Importa la clase SoftDeletes
 
 // app\Models\Productos\Categoria.php
-class Categoria extends Model
+class ProductoCategoria extends Model
 {
     use HasFactory;
     protected $table = 'producto_categoria';
@@ -17,7 +18,7 @@ class Categoria extends Model
     // Relación uno a muchos: Una categoría tiene muchas subcategorías
 public function subcategorias()
 {
-    return $this->hasMany(SubCategoria::class, 'Id_Categoria', 'Id_Categoria');
+    return $this->hasMany(ProductoSubCategoria::class, 'Id_Categoria', 'Id_Categoria');
 }
 
 

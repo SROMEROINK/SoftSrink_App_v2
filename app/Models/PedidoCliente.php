@@ -4,8 +4,9 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes; // Importa la clase SoftDeletes
 use App\Models\Producto;
-use App\Models\Categoria;
+use App\Models\ProductoCategoria;
 use App\Models\Ingreso_mp;
 
 class PedidoCliente extends Model

@@ -1,6 +1,6 @@
 <?php
 
-
+// database\migrations\2024_06_06_172156_add_audit_fields_to_tables.php
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -36,7 +36,7 @@ class AddAuditFieldsToTables extends Migration
         'nc_recupero_calidad',
         'nc_recupero_cliente',
         'producto_categoria',
-        'producto_clasificacion',
+        'producto_tipo',
         'producto_grupo_conjuntos',
         'producto_grupo_subcategoria',
         'producto_subcategoria',

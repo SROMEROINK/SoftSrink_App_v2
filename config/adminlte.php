@@ -426,6 +426,30 @@
                 ],
             ],
             [
+                'text' => 'Proveedores',
+                'icon' => 'fas fa-database',
+                'can' => 'ver materia prima', // Define el permiso necesario
+                'submenu' => [
+                    [
+                        'text' => 'Listado Proveedores',
+                        'route' => 'proveedores.index',
+                        'icon' => 'fas fa-fw fa-solid fa-cubes',
+                        'can' => 'ver materia prima', // Define el permiso necesario
+                    ],
+
+                    [
+                        'text' => 'Marcas Insumos',
+                        'route' => 'marcas_insumos.index',
+                        'icon' => 'fas fa-fw fa-solid fa-cubes',
+                        'can' => 'ver materia prima', // Define el permiso necesario
+                    ],
+                    
+                    
+                ],
+            ],
+
+
+            [
                 'text' => 'Materia Prima',
                 'icon' => 'fas fa-database',
                 'can' => 'ver materia prima', // Define el permiso necesario
