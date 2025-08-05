@@ -1,5 +1,5 @@
+{{-- resources\views\pedido_cliente\index.blade.php --}}
 @extends('adminlte::page')
-
 @section('title', 'Programación de la Producción - Pedido del Cliente')
 
 @section('content_header')
@@ -10,6 +10,9 @@
     buttonText="Crear registro" 
 />
 @stop
+
+
+
 
 @section('content')
 <div class="container-fluid">
@@ -25,6 +28,13 @@
                             <th style="text-align: center;">Nombre_Categoria</th>
                             <th style="text-align: center;">Fecha_del_Pedido</th>
                             <th style="text-align: center;">Cant_Fabricacion</th>
+                            <th>Creado</th>
+                            <th>Por</th>
+                            <th>Actualizado</th>
+                            <th>Por</th>
+                            <th style="text-align: center;">Estado</th>
+                            <th style="text-align: center;">Acciones</th>
+
                         </tr>
                         <tr class="filter-row">
                             <th><input type="text" id="filtro_nro_of" placeholder="Filtrar Nro_OF" class="form-control filtro-texto" /></th>
@@ -33,7 +43,12 @@
                             <th><select id="filtro_nombre_categoria" class="form-control filtro-select"><option value="">Todos</option></select></th>
                             <th><input type="text" id="filtro_fecha_pedido" placeholder="Filtrar Fecha_del_Pedido" class="form-control filtro-texto" /></th>
                             <th><input type="text" id="filtro_cant_fabricacion" placeholder="Filtrar Cant_Fabricacion" class="form-control filtro-texto" /></th>
-                        </tr>
+                           <th></th> <!-- created_at -->
+                           <th></th> <!-- creator -->
+                           <th></th> <!-- updated_at -->
+                           <th></th> <!-- updater -->
+                           <th></th> <!-- estado -->
+                           <th></th> <!-- acciones -->
                     </thead>
                 </table>
             </div>
@@ -67,6 +82,73 @@
 <script src="https://cdn.datatables.net/buttons/2.2.2/js/dataTables.buttons.min.js"></script>
 <script src="https://cdn.datatables.net/buttons/2.2.2/js/buttons.bootstrap5.min.js"></script>
 
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+
+<script>
+function deletePedido(id) {
+    Swal.fire({
+        title: '¿Estás seguro?',
+        text: 'Este pedido se eliminará permanentemente si no tiene piezas fabricadas.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = `/pedido_cliente/${id}`;
+
+            const method = document.createElement('input');
+            method.type = 'hidden';
+            method.name = '_method';
+            method.value = 'DELETE';
+
+            const csrf = document.createElement('input');
+            csrf.type = 'hidden';
+            csrf.name = '_token';
+            csrf.value = '{{ csrf_token() }}';
+
+            form.appendChild(method);
+            form.appendChild(csrf);
+            document.body.appendChild(form);
+            form.submit();
+        }
+    });
+}
+</script>
+
+ 
+
+@if(session('success'))
+<script>
+    Swal.fire({
+        title: '¡Éxito!',
+        text: '{{ session('success') }}',
+        icon: 'success',
+        confirmButtonText: 'OK',
+        timer: 3000,
+        timerProgressBar: true
+    });
+</script>
+@endif
+
+@if(session('error'))
+<script>
+    Swal.fire({
+        title: 'Error',
+        text: '{{ session('error') }}',
+        icon: 'error',
+        confirmButtonText: 'Entendido',
+        timer: 4000,
+        timerProgressBar: true
+    });
+@endif
+
+</script>  
 
 
 <script>
@@ -86,16 +168,44 @@ $(document).ready(function() {
             d.filtro_nombre_categoria = $('#filtro_nombre_categoria').val();
             d.filtro_fecha_pedido = $('#filtro_fecha_pedido').val();
             d.filtro_cant_fabricacion = $('#filtro_cant_fabricacion').val();
+            d.filtro_estado = $('#filtro_estado').val();
         }
     },
     columns: [
-        { data: 'Nro_OF', name: 'Nro_OF' },
-        { data: 'Producto_Nombre', name: 'Producto_Nombre' },
-        { data: 'Descripción', name: 'Descripción' },
-        { data: 'Nombre_Categoria', name: 'Nombre_Categoria' },
-        { data: 'Fecha_del_Pedido', name: 'Fecha_del_Pedido' },
-        { data: 'Cant_Fabricacion', name: 'Cant_Fabricacion' },
-    ],
+    { data: 'Nro_OF', name: 'Nro_OF' },
+    { data: 'Producto_Nombre', name: 'Producto_Nombre' },
+    { data: 'Descripción', name: 'Descripción' },
+    { data: 'Nombre_Categoria', name: 'Nombre_Categoria' },
+    { data: 'Fecha_del_Pedido', name: 'Fecha_del_Pedido' },
+    { data: 'Cant_Fabricacion', name: 'Cant_Fabricacion' },
+    { data: 'created_at', name: 'created_at' },
+    { data: 'creator', name: 'creator' },
+    { data: 'updated_at', name: 'updated_at' },
+    { data: 'updater', name: 'updater' },
+    { data: 'Estado', name: 'Estado', orderable: false, searchable: false },
+
+    {
+        data: 'Id_OF',
+        className: 'acciones',
+        orderable: false,
+        searchable: false,
+        render: function (data, type, row, meta) {
+    let eliminarBtn = row.Estado.includes('Fabricado')
+        ? `<button class="btn btn-secondary btn-sm" disabled>🔒</button>`
+        : `<button onclick="deletePedido(${data})" class="btn btn-danger btn-sm">Eliminar</button>`;
+
+    return `
+        <a href="/pedido_cliente/${data}" class="btn btn-info btn-sm">Ver</a>
+        <a href="/pedido_cliente/${data}/edit" class="btn btn-primary btn-sm">Editar</a>
+        ${eliminarBtn}
+    `;
+}
+
+    }
+],
+
+
+
     scrollX: true,
     scrollY: '60vh',
     scrollCollapse: true,
@@ -108,6 +218,8 @@ $(document).ready(function() {
         url: "{{ asset('Spanish.json') }}"
     }
 });
+
+
 
     // Llenar los selects con valores únicos de las columnas especificadas
     table.on('xhr', function () {

@@ -1,5 +1,7 @@
 @extends('adminlte::page')
 
+{{-- resources\views\pedido_cliente\create.blade.php --}}
+
 @section('title', 'Crear Nueva Orden de Fabricación')
 
 @section('content_header')
@@ -211,9 +213,6 @@ $(document).ready(function() {
         $(this).closest('tr').remove();
     });
 
-    $(document).on('click', '.eliminarFila', function() {
-        $(this).closest('tr').remove();
-    });
 
     $('form').submit(function(event) {
         event.preventDefault();
@@ -242,27 +241,9 @@ $(document).ready(function() {
             }
         });
     });
-
-
-    // Cargar categorías solo en la fila especificada
-    function cargarCategorias($select) {
-        $.ajax({
-            url: '/productos/categorias',
-            type: 'GET',
-            dataType: 'json',
-            success: function(response) {
-                if (response.success) {
-                    $select.empty().append('<option value="">Seleccione Categoría</option>');
-                    $.each(response.data, function(index, categoria) {
-                        $select.append('<option value="' + categoria.id + '">' + categoria.nombre + '</option>');
-                    });
-                } else {
-                    console.error('Error al cargar las categorías.');
-                }
-            }
-        });
-    }
 });
+
+
 
 </script>
 @stop

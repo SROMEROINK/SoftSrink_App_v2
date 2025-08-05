@@ -17,6 +17,44 @@
 
 @section('content')
 <div class="container-fluid">
+    <div class="row mb-4">
+    <div class="col-md-4">
+        <div class="small-box bg-info">
+            <div class="inner">
+                <h3 id="total-ingresos">-</h3>
+                <p>Total de Ingresos</p>
+            </div>
+            <div class="icon">
+                <i class="fas fa-cubes"></i>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="small-box bg-success">
+            <div class="inner">
+                <h3 id="activos-ingresos">-</h3>
+                <p>Ingresos Activos</p>
+            </div>
+            <div class="icon">
+                <i class="fas fa-check-circle"></i>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="small-box bg-danger">
+            <div class="inner">
+                <h3 id="eliminados-ingresos">-</h3>
+                <p>Ingresos Eliminados</p>
+            </div>
+            <div class="icon">
+                <i class="fas fa-trash-alt"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
     <div class="row">
         <div class="col-12">
             <div class="table-responsive">
@@ -87,10 +125,20 @@
 
 
 
+
+
+
 <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 
 <script>
+
+    // Cargar resumen de ingresos
+$.get("{{ route('mp_ingresos.resumen') }}", function (data) {
+    $('#total-ingresos').text(data.total);
+    $('#activos-ingresos').text(data.activos);
+    $('#eliminados-ingresos').text(data.eliminados);
+});
 
      // Función para eliminar un ingreso
      function deleteIngreso(id) {
@@ -194,7 +242,7 @@ $(document).ready(function () {
         paging: true,
         fixedHeader: true,
         responsive: true,
-        pageLength: 50,
+        pageLength: 10,
         lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "All"]],
         language: {
             lengthMenu: "Mostrar _MENU_ registros por página",

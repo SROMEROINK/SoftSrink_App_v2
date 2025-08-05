@@ -167,13 +167,16 @@ $(document).ready(function() {
     $('form').on('submit', function(e) {
         e.preventDefault();
 
-        let hasChanges = false;
-        for (const key in originalValues) {
-            if (originalValues[key] !== $('#' + key).val()) {
-                hasChanges = true;
-                break;
-            }
+       let hasChanges = false;
+    for (const key in originalValues) {
+        const original = String(originalValues[key]).trim();
+        const actual = String($('#' + key).val()).trim();
+
+        if (original !== actual) {
+            hasChanges = true;
+            break;
         }
+    }
 
         if (!hasChanges) {
             Swal.fire({
@@ -209,7 +212,7 @@ $(document).ready(function() {
                     icon: 'error',
                     title: 'Ocurrió un error al actualizar el ingreso de materia prima',
                     showConfirmButton: true,
-                });
+                 });
             }
         });
     });

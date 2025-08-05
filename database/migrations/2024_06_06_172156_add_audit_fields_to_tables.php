@@ -1,6 +1,5 @@
 <?php
 
-// database\migrations\2024_06_06_172156_add_audit_fields_to_tables.php
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -14,7 +13,7 @@ class AddAuditFieldsToTables extends Migration
         'carga_registro_de_fabricacion',
         'clientes',
         'datos_de_la_empresa',
-        'estado_planificación',
+        'estado_planificacion',
         'fechas_of',
         'htal_alta',
         'htal_devolucion',
@@ -47,56 +46,61 @@ class AddAuditFieldsToTables extends Migration
 
     public function up()
     {
-        foreach ($this->tables as $table) {
-            Schema::table($table, function (Blueprint $table) {
-                // Agregar timestamps si no existen
-                if (!Schema::hasColumns($table->getTable(), ['created_at', 'updated_at'])) {
+        foreach ($this->tables as $tableName) {
+            Schema::table($tableName, function (Blueprint $table) use ($tableName) {
+                if (!Schema::hasColumns($tableName, ['created_at', 'updated_at'])) {
                     $table->timestamps();
                 }
 
-                // Agregar soft deletes si no existen
-                if (!Schema::hasColumn($table->getTable(), 'deleted_at')) {
+                if (!Schema::hasColumn($tableName, 'deleted_at')) {
                     $table->softDeletes();
                 }
 
-                // Agregar columnas de auditoría sin restricciones de clave externa
-                if (!Schema::hasColumn($table->getTable(), 'created_by')) {
+                if (!Schema::hasColumn($tableName, 'created_by')) {
                     $table->unsignedBigInteger('created_by')->nullable()->after('created_at');
                 }
-                if (!Schema::hasColumn($table->getTable(), 'updated_by')) {
+
+                if (!Schema::hasColumn($tableName, 'updated_by')) {
                     $table->unsignedBigInteger('updated_by')->nullable()->after('updated_at');
                 }
-                if (!Schema::hasColumn($table->getTable(), 'deleted_by')) {
+
+                if (!Schema::hasColumn($tableName, 'deleted_by')) {
                     $table->unsignedBigInteger('deleted_by')->nullable()->after('deleted_at');
                 }
             });
         }
 
-        // Eliminar claves externas si ya existen
-        foreach ($this->tables as $table) {
-            Schema::table($table, function (Blueprint $table) {
-                try {
-                    $table->dropForeign([$table->getTable() . '_created_by_foreign']);
-                } catch (\Exception $e) {}
-                try {
-                    $table->dropForeign([$table->getTable() . '_updated_by_foreign']);
-                } catch (\Exception $e) {}
-                try {
-                    $table->dropForeign([$table->getTable() . '_deleted_by_foreign']);
-                } catch (\Exception $e) {}
+        // Intentar eliminar claves foráneas antiguas
+        foreach ($this->tables as $tableName) {
+            Schema::table($tableName, function (Blueprint $table) use ($tableName) {
+                $foreignKeys = [
+                    $tableName . '_created_by_foreign',
+                    $tableName . '_updated_by_foreign',
+                    $tableName . '_deleted_by_foreign',
+                ];
+
+                foreach ($foreignKeys as $fk) {
+                    try {
+                        $table->dropForeign($fk);
+                    } catch (\Exception $e) {
+                        // Silenciar si no existe
+                    }
+                }
             });
         }
 
-        // Agregar las restricciones de clave externa en una segunda pasada
-        foreach ($this->tables as $table) {
-            Schema::table($table, function (Blueprint $table) {
-                if (Schema::hasColumn($table->getTable(), 'created_by')) {
+        // Agregar claves foráneas nuevamente
+        foreach ($this->tables as $tableName) {
+            Schema::table($tableName, function (Blueprint $table) use ($tableName) {
+                if (Schema::hasColumn($tableName, 'created_by')) {
                     $table->foreign('created_by')->references('id')->on('users')->onDelete('set null');
                 }
-                if (Schema::hasColumn($table->getTable(), 'updated_by')) {
+
+                if (Schema::hasColumn($tableName, 'updated_by')) {
                     $table->foreign('updated_by')->references('id')->on('users')->onDelete('set null');
                 }
-                if (Schema::hasColumn($table->getTable(), 'deleted_by')) {
+
+                if (Schema::hasColumn($tableName, 'deleted_by')) {
                     $table->foreign('deleted_by')->references('id')->on('users')->onDelete('set null');
                 }
             });
@@ -105,22 +109,29 @@ class AddAuditFieldsToTables extends Migration
 
     public function down()
     {
-        foreach ($this->tables as $table) {
-            Schema::table($table, function (Blueprint $table) {
-                if (Schema::hasColumn($table->getTable(), 'created_by')) {
-                    $table->dropForeign([$table->getTable() . '_created_by_foreign']);
+        foreach ($this->tables as $tableName) {
+            Schema::table($tableName, function (Blueprint $table) use ($tableName) {
+                if (Schema::hasColumn($tableName, 'created_by')) {
+                    try {
+                        $table->dropForeign($tableName . '_created_by_foreign');
+                    } catch (\Exception $e) {}
                     $table->dropColumn('created_by');
                 }
-                if (Schema::hasColumn($table->getTable(), 'updated_by')) {
-                    $table->dropForeign([$table->getTable() . '_updated_by_foreign']);
+
+                if (Schema::hasColumn($tableName, 'updated_by')) {
+                    try {
+                        $table->dropForeign($tableName . '_updated_by_foreign');
+                    } catch (\Exception $e) {}
                     $table->dropColumn('updated_by');
                 }
-                if (Schema::hasColumn($table->getTable(), 'deleted_by')) {
-                    $table->dropForeign([$table->getTable() . '_deleted_by_foreign']);
+
+                if (Schema::hasColumn($tableName, 'deleted_by')) {
+                    try {
+                        $table->dropForeign($tableName . '_deleted_by_foreign');
+                    } catch (\Exception $e) {}
                     $table->dropColumn('deleted_by');
                 }
             });
         }
     }
 }
-

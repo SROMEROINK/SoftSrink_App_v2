@@ -1,4 +1,6 @@
+<!-- resources\views\layouts\app.blade.php-->
 <!DOCTYPE html>
+
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
     <!-- Meta tags and other head content -->

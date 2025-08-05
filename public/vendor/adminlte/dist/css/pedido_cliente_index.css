@@ -1,3 +1,5 @@
+/*public\vendor\adminlte\dist\css\pedido_cliente_index.css*/
+
 /* Ajustes para la tabla */
 .table-responsive {
     max-width: 100%; /* Asegura que la tabla no se desborde */
@@ -207,6 +209,48 @@
     padding: 10px; /* Ajuste de padding */
     border: 1px solid #ddd; /* Bordes internos */
 }
+
+/* Centrado y distribución de botones en la columna de acciones */
+#pedido_cliente td.acciones {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 4px; /* Espacio entre botones */
+    white-space: nowrap;
+}
+
+#pedido_cliente td.acciones .btn-sm {
+    padding: 4px 8px;
+    font-size: 12px;
+}
+
+/* Alineación del botón Crear Registro */
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 1.25rem;
+}
+
+.card-header .create-button {
+    margin-left: auto;
+    height: 38px;
+    padding: 0.375rem 0.75rem;
+    font-size: 1rem;
+    line-height: 1.5;
+    border-radius: 0.25rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.card-header .button-group {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 10px; /* Espacio entre botones */
+}
+
 
 
 

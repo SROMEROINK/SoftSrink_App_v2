@@ -8,8 +8,16 @@ use App\Models\Proveedor;  // Asegúrate de importar el modelo Proveedor correct
 use App\Models\MpDiametro;
 use App\Models\MpMateriaPrima;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule; // al inicio del controlador
+
+
+
 
 class MpIngresoController extends Controller
+
+
 {
 
     public function getUniqueFilters(Request $request)
@@ -55,7 +63,7 @@ class MpIngresoController extends Controller
         ]);
 
     } catch (\Exception $e) {
-        \Log::error('Error en getUniqueFilters: ' . $e->getMessage());
+        Log::error('Error en getUniqueFilters: ' . $e->getMessage());
         return response()->json(['error' => 'Error al recuperar los filtros únicos.'], 500);
     }
 }
@@ -156,12 +164,25 @@ public function getData(Request $request)
             ->make(true);
 
     } catch (\Exception $e) {
-        \Log::error('Error en getData: ' . $e->getMessage());
+        Log::error('Error en getData: ' . $e->getMessage());
         return response()->json(['error' => 'Error al recuperar los datos.'], 500);
     }
 }
 
-    
+
+public function resumenIngresos()
+{
+    $total = MpIngreso::withTrashed()->count();
+    $activos = MpIngreso::count();
+    $eliminados = MpIngreso::onlyTrashed()->count();
+
+    return response()->json([
+        'total' => $total,
+        'activos' => $activos,
+        'eliminados' => $eliminados
+    ]);
+}
+
     
     
     
@@ -223,27 +244,34 @@ public function getData(Request $request)
                 'Mts_Totales' => 'required|numeric',
                 'Kilos_Totales' => 'required|numeric',
                 'Nro_Certificado_MP' => 'sometimes|string|max:255',
-                'Detalle_Origen_MP' => 'sometimes|string|max:255',
+                'Detalle_Origen_MP' => 'nullable|string|max:255',
             ]);
     
-            \DB::beginTransaction();
+            DB::beginTransaction();
     
             // Asigna el usuario y el estado al registro antes de guardarlo
             $validatedData['created_by'] = Auth::id();
             $validatedData['reg_Status'] = 1;
             MpIngreso::create($validatedData);
     
-            \DB::commit();
+            DB::commit();
     
             return response()->json(['success' => true, 'message' => 'Ingreso de materia prima creado exitosamente.']);
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json(['success' => false, 'errors' => $e->errors()], 422);
         } catch (\Exception $e) {
-            \DB::rollBack();
-            \Log::error('Error al crear el ingreso de materia prima:', ['error' => $e->getMessage()]);
-            return response()->json(['success' => false, 'message' => 'Error al crear el ingreso de materia prima: ' . $e->getMessage()], 400);
-        }
+            DB::rollBack();
+         Log::error('Error al crear ingreso de MP', [
+            'error' => $e->getMessage(),
+            'usuario' => Auth::id(),
+        ]);
+
+        return response()->json([
+            'success' => false,
+            'message' => 'Error al crear el ingreso de materia prima: ' . $e->getMessage()
+        ], 400);
     }
+}
     
 
 /*
@@ -287,8 +315,20 @@ Este si funciona 09/11/2024:
 {
     $ingreso = MpIngreso::findOrFail($id);
 
+    Log::info('Intentando actualizar MP', [
+        'id' => $id,
+        'usuario' => Auth::id(),
+        'request_data' => $request->all()
+    ]);
+
     $validatedData = $request->validate([
-        'Nro_Ingreso_MP' => 'required|integer|unique:mp_ingreso,Nro_Ingreso_MP,' . $id . ',Id_MP',
+        'Nro_Ingreso_MP' => [
+            'required',
+            'integer',
+            Rule::unique('mp_ingreso', 'Nro_Ingreso_MP')
+                ->ignore($id, 'Id_MP')
+                ->whereNull('deleted_at'),
+        ],
         'Nro_Pedido' => 'required|string|max:255',
         'Nro_Remito' => 'required|string|max:255',
         'Fecha_Ingreso' => 'required|date',
@@ -302,40 +342,70 @@ Este si funciona 09/11/2024:
         'Mts_Totales' => 'required|numeric',
         'Kilos_Totales' => 'required|numeric',
         'Nro_Certificado_MP' => 'sometimes|string|max:255',
-        'Detalle_Origen_MP' => 'sometimes|string|max:255',
+        'Detalle_Origen_MP' => 'nullable|string|max:255',
         'reg_Status' => 'required|in:0,1',
     ]);
+
+    DB::beginTransaction();
+
+    Log::info('Datos validados correctamente para actualización:', $validatedData);
+
+// Normalización de datos para evitar errores en isDirty()
+$validatedData['Detalle_Origen_MP'] = $validatedData['Detalle_Origen_MP'] ?? '';
+$validatedData['Nro_Certificado_MP'] = $validatedData['Nro_Certificado_MP'] ?? '';
+$validatedData['Codigo_MP'] = trim($validatedData['Codigo_MP']);
+$validatedData['Kilos_Totales'] = number_format((float)$validatedData['Kilos_Totales'], 2, '.', '');
+$validatedData['Mts_Totales'] = number_format((float)$validatedData['Mts_Totales'], 2, '.', '');
+$validatedData['Longitud_Unidad_MP'] = number_format((float)$validatedData['Longitud_Unidad_MP'], 2, '.', '');
+$validatedData['Unidades_MP'] = (int) $validatedData['Unidades_MP'];
+$validatedData['Id_Proveedor'] = (int) $validatedData['Id_Proveedor'];
+$validatedData['Id_Materia_Prima'] = (int) $validatedData['Id_Materia_Prima'];
+$validatedData['Id_Diametro_MP'] = (int) $validatedData['Id_Diametro_MP'];
+$validatedData['reg_Status'] = (int) $validatedData['reg_Status'];
 
     $ingreso->fill($validatedData);
 
     if ($ingreso->isDirty()) {
+        Log::info('Campos modificados detectados', [
+            'campos_modificados' => $ingreso->getDirty()
+        ]);
+
         $ingreso->updated_by = Auth::id();
         $ingreso->save();
+        DB::commit();
+
+       
         return redirect()->route('mp_ingresos.index')->with('success', 'Ingreso de materia prima actualizado correctamente.');
     } else {
-        return back()->with('warning', 'No se realizaron cambios.');
+        DB::rollBack();
+        Log::warning('No se realizaron cambios en el ingreso de MP', [
+            'id' => $id,
+            'datos_validados' => $validatedData
+        ]);
+
+        if ($request->ajax()) {
+    return response()->json(['success' => false, 'warning' => 'No se realizaron cambios.'], 200);
+}
+
+return back()->with('warning', 'No se realizaron cambios.');
     }
 }
 
-public function destroy($Id_MP)
+public function destroy($id)
 {
-    try {
-        // Buscar el ingreso de materia prima por su ID
-        $ingreso = MpIngreso::findOrFail($Id_MP);
+    $materia = MpMateriaPrima::findOrFail($id);
 
-        // Asignar el ID del usuario que elimina el registro
-        $ingreso->deleted_by = Auth::id();
-        $ingreso->save();
+    $usadaEnFabricacion = $materia->registrosFabricacion()->exists();
 
-        // Soft delete
-        $ingreso->delete();
-
-        return response()->json(['success' => 'Ingreso de materia prima eliminado correctamente']);
-    } catch (\Exception $e) {
-        \Log::error('Error al eliminar el ingreso de materia prima:', ['error' => $e->getMessage()]);
-        return response()->json(['error' => 'Error al eliminar el ingreso de materia prima'], 400);
+    if ($usadaEnFabricacion) {
+        return back()->with('error', 'Esta materia prima ya fue usada en fabricación y no puede ser eliminada.');
     }
+
+    $materia->delete();
+
+    return back()->with('success', 'Materia prima eliminada correctamente.');
 }
+
 
 public function restore($id)
 {
@@ -346,7 +416,7 @@ public function restore($id)
 
         return redirect()->route('mp_ingresos.index')->with('success', 'Ingreso de materia prima restaurado con éxito');
     } catch (\Exception $e) {
-        \Log::error('Error al restaurar el ingreso de materia prima:', ['error' => $e->getMessage()]);
+        Log::error('Error al restaurar el ingreso de materia prima:', ['error' => $e->getMessage()]);
         return redirect()->route('mp_ingresos.index')->with('error', 'Error al restaurar el ingreso de materia prima');
     }
 }

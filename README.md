@@ -67,9 +67,29 @@ bash
 Copiar
 Editar
 php artisan test
-👨‍💻 Autor
+
+📌 Notas Técnicas – Publicación de un Release en GitHub
+🧪 ¿Cuándo crear un Release?
+Hacer un Release sirve para marcar un hito estable del proyecto que puede ser descargado, clonado o compartido como una versión funcional.
+
+✅ Crear un release cuando:
+
+ Finalizaste una funcionalidad completa (ej.: CRUD, módulo de calidad, módulo de stock).
+
+ Ya no vas a hacer cambios importantes por unos días o semanas.
+
+ Querés subir una versión estable al servidor.
+
+ Alguien más necesita trabajar sobre tu proyecto (ej.: frontend, testing, cliente).
+
+ Querés dejar un punto de restauración claro (ej.: v1.0, v1.1).
+
+ ⚠️ Este repositorio no incluye datos reales. La base de datos fue omitida por seguridad.
+
+ 👨‍💻 Autor
 Desarrollado por Sergio Daniel Romero
 📧 sistemas_automatizados@sromeroink.com
 🔗 GitHub
+
 
 

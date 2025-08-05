@@ -52,17 +52,17 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
 
 
-    Route::get('/productos/codigos', [ProductoController::class, 'getCodigosProducto']);
+    Route::get('/productos/codigos', [ProductoController::class, 'getCodigosProducto'])->name('productos.codigos');
 
     // Rutas para obtener categorías y subcategorías
     Route::get('/productos/categorias', [ProductoController::class, 'getCategorias'])->name('productos.categorias');
-    Route::get('/productos/subcategorias', [ProductoController::class, 'getSubcategoriasPorFamilia'])->name('productos.subcategorias');
+    Route::get('/productos/subcategorias', [ProductoController::class, 'getSubcategorias'])->name('productos.subcategorias');
+    Route::get('/productos/codigos', [ProductoController::class, 'getCodigosProducto'])->name('productos.codigos');
     Route::get('/productos/grupos', [ProductoController::class, 'getGruposPorSubcategoria'])->name('productos.grupos');
     Route::get('productos/familias', [ProductoController::class, 'getFamilias'])->name('productos.Familias');
     Route::get('/productos/tipos', [ProductoController::class, 'getTipos'])->name('productos.Tipos');
     Route::get('/productos/unique-filters', [ProductoController::class, 'getUniqueFilters'])->name('productos.getUniqueFilters');
     Route::get('/productos/clientes', [ProductoController::class, 'getClientes'])->name('productos.Clientes');
-
 
     
     Route::get('/materia_prima/{mp_id}/codigo', [PedidoClienteController::class, 'getCodigoMp']);
@@ -79,6 +79,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/mp_egresos/data', [MpEgresoController::class, 'getData'])->name('mp_egresos.data');
     Route::get('/mp_egresos', [MpEgresoController::class, 'index'])->name('mp_egresos.index');
     Route::get('/mp_ingresos/ultimo_nro_ingreso', [MpIngresoController::class, 'getUltimoNroIngreso'])->name('mp_ingresos.ultimo_nro_ingreso');
+    Route::get('/mp_ingresos/resumen', [MpIngresoController::class, 'resumenIngresos'])->name('mp_ingresos.resumen');
 
     // Otras rutas relacionadas
     Route::get('/productos_categoria', [ProductoCategoriaController::class, 'index'])->name('productos_categoria.index');
@@ -130,6 +131,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('fechas_of', FechasOfController::class);
     Route::resource('proveedores', ProveedorController::class);
     Route::resource('marcas_insumos', MarcasInsumosController::class);
+
 
 
 

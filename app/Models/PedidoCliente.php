@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes; // Importa la clase SoftDeletes
 use App\Models\Producto;
 use App\Models\ProductoCategoria;
+use App\Models\ProductoSubCategoria;
 use App\Models\Ingreso_mp;
 
 class PedidoCliente extends Model
@@ -19,10 +20,13 @@ class PedidoCliente extends Model
         "Nro_OF",
         "Producto_Id",
         "Fecha_del_Pedido",
-        "Cant_Fabricacion"
+        "Cant_Fabricacion",
+        "reg_Status",
+        "created_by",
+        "updated_by"
     ];
     
-    public $timestamps = false;
+    public $timestamps = true; // Habilita los timestamps created_at y updated_at
 
     // Relación con Producto
     public function producto()
@@ -34,7 +38,7 @@ class PedidoCliente extends Model
     public function categoria()
     {
         return $this->hasOneThrough(
-            Categoria::class,
+            ProductoCategoria::class,
             Producto::class,
             'Id_Producto',       // Foreign key en Producto
             'Id_Categoria',      // Primary key en Categoria
@@ -43,17 +47,28 @@ class PedidoCliente extends Model
         );
     }
 
-       /* // Relación con Subcategoria a través de Producto
+        // Relación con Subcategoria a través de Producto
         public function Subcategoria()
         {
             return $this->hasOneThrough(
-                SubCategoria::class,
+                ProductoSubCategoria::class,
                 Producto::class,
                 'Id_Producto',       // Foreign key en Producto
                 'Id_Categoria',      // Primary key en Categoria
                 'Producto_Id',       // Foreign key en Listado_OF
                 'Id_Prod_Clase_Familia' // Foreign key en Producto
             );
-        }*/
+        }
+
+            public function creator()
+{
+    return $this->belongsTo(User::class, 'created_by');
+}
+
+public function updater()
+{
+    return $this->belongsTo(User::class, 'updated_by');
+}
+
 
 }
