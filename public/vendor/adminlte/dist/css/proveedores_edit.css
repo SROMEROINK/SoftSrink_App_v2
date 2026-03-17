@@ -1,29 +1,64 @@
-/* public\vendor\adminlte\dist\css\proveedores_edit.css */
-.form-control {
-    position: relative;
-    border: 1px solid #ddd;
-    transition: border-color 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+.proveedor-edit-card {
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+    border: 1px solid #e5e9ef;
 }
 
-.form-control:focus {
-    border-color: #2196F3; /* Color azul */
-    box-shadow: 0 0 10px rgba(33, 150, 243, 0.5); /* Brillo azul de neón */
-    outline: none;
+.proveedor-edit-card .card-header {
+    background: linear-gradient(135deg, #f8f9fa 0%, #eef2f6 100%);
+    border-bottom: 1px solid #e5e9ef;
+    padding: 1rem 1.25rem;
 }
 
-.title-container {
-    background-color: #f8f9fa;
-    border: 1px solid #dee2e6;
-    border-radius: 5px;
-    padding: 3px;
-    margin-bottom: 3px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+.proveedor-edit-card .card-title {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #2f3a45;
 }
 
-.page-title {
-    margin: 0;
-    font-size: 24px;
-    font-weight: bold;
+.proveedor-edit-card .card-body {
+    padding: 1.5rem;
+}
+
+.proveedor-edit-card .form-group label {
+    font-weight: 700;
+    color: #343a40;
+    margin-bottom: 0.45rem;
+}
+
+.proveedor-edit-card .form-control {
+    border-radius: 8px;
+    min-height: 42px;
+}
+
+.proveedor-edit-card .form-control:focus {
+    box-shadow: 0 0 0 0.15rem rgba(0, 123, 255, 0.15);
+}
+
+.proveedor-edit-card .card-footer {
+    background-color: #fff;
+    border-top: 1px solid #e9ecef;
+    padding: 1rem 1.25rem;
+}
+
+.proveedor-edit-card .btn {
+    min-width: 120px;
+    border-radius: 8px;
+    font-weight: 600;
+}
+
+@media (max-width: 768px) {
+    .proveedor-edit-card .card-body {
+        padding: 1rem;
+    }
+
+    .proveedor-edit-card .card-footer.text-right {
+        text-align: left !important;
+    }
+
+    .proveedor-edit-card .btn {
+        display: block;
+        width: 100%;
+        margin-bottom: 8px;
+    }
 }

@@ -23,7 +23,7 @@
         </div>
     @endif
 
-    <form action="{{ route('mp_materia_prima.update', $materiaBase->Id_Materia_Prima) }}" method="POST">
+    <form action="{{ route('mp_materia_prima.update', $materiaBase->Id_Materia_Prima) }}" method="POST" data-edit-check="true" data-exclude-fields="_token,_method">
         @csrf
         @method('PUT')
         <div class="form-group">
@@ -49,62 +49,5 @@
 
 @section('js')
 <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script>
-    $(document).ready(function() {
-        const originalValues = {
-            Nombre_Materia: $('#Nombre_Materia').val(),
-            reg_Status: $('#reg_Status').val()
-        };
-
-        $('form').on('submit', function(e) {
-            e.preventDefault();
-
-            var hasChanges = false;
-            for (const key in originalValues) {
-                if (originalValues[key] !== $('#' + key).val()) {
-                    hasChanges = true;
-                    break;
-                }
-            }
-
-            if (!hasChanges) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Sin cambios',
-                    text: 'No se detectaron cambios en el formulario.',
-                    showConfirmButton: true,
-                });
-                return;
-            }
-
-            var formData = $(this).serialize();
-            $.ajax({
-                url: $(this).attr('action'),
-                type: 'POST',
-                data: formData,
-                success: function(response) {
-                    Swal.fire({
-                        position: 'center',
-                        icon: 'success',
-                        title: 'Materia Base actualizada correctamente',
-                        showConfirmButton: false,
-                        timer: 1500
-                    });
-                    setTimeout(function() {
-                        window.location.href = "{{ route('mp_materia_prima.index') }}";
-                    }, 1500);
-                },
-                error: function(response) {
-                    Swal.fire({
-                        position: 'center',
-                        icon: 'error',
-                        title: 'Ocurrió un error al actualizar la Materia Base',
-                        showConfirmButton: false,
-                        timer: 1500
-                    });
-                }
-            });
-        });
-    });
-</script>
+<script src="{{ asset('js/form-edit-check.js') }}"></script>
 @stop

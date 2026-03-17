@@ -7,20 +7,34 @@
 @stop
 
 @section('content')
-    <form action="{{ route('marcas_insumos.update', $marca->Id_Marca) }}" method="POST">
+
+    @include('partials.navigation')
+    <form action="{{ route('marcas_insumos.update', $marca->Id_Marca) }}"
+          method="POST"
+          data-ajax="true"
+          data-edit-check="true"
+          data-exclude-fields="_token,_method"
+          data-redirect-url="{{ route('marcas_insumos.index') }}"
+          data-success-message="Marca de insumo actualizada correctamente">
         @csrf
         @method('PUT')
         
         <div class="form-group">
             <label for="Nombre_marca">Nombre de Marca:</label>
-            <input type="text" class="form-control" id="Nombre_marca" name="Nombre_marca" value="{{ $marca->Nombre_marca }}" required>
+            <input type="text"
+                   class="form-control"
+                   id="Nombre_marca"
+                   name="Nombre_marca"
+                   value="{{ $marca->Nombre_marca }}"
+                   required>
         </div>
 
         <div class="form-group">
             <label for="Id_Proveedor">Proveedor:</label>
             <select name="Id_Proveedor" id="Id_Proveedor" class="form-control">
                 @foreach ($proveedores as $proveedor)
-                    <option value="{{ $proveedor->Prov_Id }}" {{ $marca->Id_Proveedor == $proveedor->Prov_Id ? 'selected' : '' }}>
+                    <option value="{{ $proveedor->Prov_Id }}"
+                        {{ $marca->Id_Proveedor == $proveedor->Prov_Id ? 'selected' : '' }}>
                         {{ $proveedor->Prov_Nombre }}
                     </option>
                 @endforeach
@@ -42,69 +56,10 @@
 
 @section('css')
     <link rel="stylesheet" href="{{ asset('vendor/adminlte/dist/css/marcas_insumos_edit.css') }}">
-@endsection
+@stop
 
 @section('js')
-<script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script>
-$(document).ready(function() {
-    // Almacenar los valores originales de los campos al cargar la página
-    const originalValues = {
-        Nombre_marca: $('#Nombre_marca').val(),
-        Id_Proveedor: $('#Id_Proveedor').val(),
-        reg_Status: $('#reg_Status').val()
-    };
-
-    // Detectar cambios antes de enviar el formulario
-    $('form').on('submit', function(e) {
-        e.preventDefault();
-
-        let hasChanges = false;
-        for (const key in originalValues) {
-            if (originalValues[key] !== $('#' + key).val()) {
-                hasChanges = true;
-                break;
-            }
-        }
-
-        if (!hasChanges) {
-            Swal.fire({
-                icon: 'warning',
-                title: 'Sin cambios',
-                text: 'No se detectaron cambios en el formulario.',
-                showConfirmButton: true,
-            });
-            return;
-        }
-
-        // Enviar datos vía AJAX si hubo cambios
-        var formData = $(this).serialize();
-        $.ajax({
-            url: $(this).attr('action'),
-            type: 'POST',
-            data: formData,
-            success: function(response) {
-                Swal.fire({
-                    position: 'center',
-                    icon: 'success',
-                    title: 'Marca de insumo actualizada correctamente',
-                    showConfirmButton: false,
-                    timer: 1500
-                });
-                setTimeout(function() {
-                    window.location.href = "{{ route('marcas_insumos.index') }}";
-                }, 1500);
-            },
-            error: function(response) {
-                Swal.fire({
-                    position: 'center',
-                    icon: 'error',
-                    title: 'Ocurrió un error al actualizar la marca de insumo',
-                    showConfirmButton: true,
-                });
-            }
-        });
-    });
-});
-</script>
+    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="{{ asset('js/form-edit-check.js') }}"></script>
+    <script src="{{ asset('js/form-ajax-submit.js') }}"></script>
 @stop

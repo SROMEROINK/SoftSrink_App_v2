@@ -1,9 +1,26 @@
-/* public/vendor/adminlte/dist/css/fechas_of.css */
+/* public\vendor\adminlte\dist\css\fechas_of_index.css */
 
 /* Ajustes para la tabla */
 .table-responsive {
-    max-width: 100%; /* Asegura que la tabla no se desborde */
-    margin: 0 auto; /* Centra la tabla */
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow-x: auto;
+}
+
+/* Reglas para DataTables */
+.dataTables_wrapper,
+.dataTables_scroll,
+.dataTables_scrollHead,
+.dataTables_scrollBody,
+.dataTables_scrollHeadInner {
+    width: 100% !important;
+}
+
+.dataTables_scrollHeadInner table,
+.dataTables_scrollBody table {
+    width: 100% !important;
 }
 
 /* Estilos para el card del título */

@@ -1,0 +1,35 @@
+#tabla_estados_planificacion {
+    width: 100% !important;
+    table-layout: auto;
+}
+
+#tabla_estados_planificacion th,
+#tabla_estados_planificacion td {
+    text-align: center;
+    vertical-align: middle;
+    white-space: nowrap;
+    padding: 5px;
+}
+
+#tabla_estados_planificacion td:last-child {
+    white-space: nowrap;
+}
+
+#tabla_estados_planificacion td:last-child .btn {
+    margin: 0 2px;
+}
+
+#tabla_estados_planificacion tbody tr:hover td {
+    background-color: #00e002 !important;
+    color: #000 !important;
+    font-weight: 700 !important;
+    transition: background-color 0.15s ease-in-out;
+}
+
+#tabla_estados_planificacion tbody tr:hover td:first-child {
+    box-shadow: inset 4px 0 0 #5d00e0;
+}
+
+#tabla_estados_planificacion tbody tr {
+    cursor: pointer;
+}

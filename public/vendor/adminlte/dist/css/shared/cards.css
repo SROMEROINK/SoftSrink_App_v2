@@ -1,0 +1,54 @@
+.card {
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    border: 1px solid #e9ecef;
+}
+
+.card-header {
+    background-color: #f4f6f9;
+    font-weight: 600;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.card-title-header {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #f8f9fa;
+    padding: 1rem;
+    border-radius: 0.25rem;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.card-title-header h4 {
+    font-size: 27px;
+    font-weight: bold;
+    color: #343a40;
+    margin: 0;
+}
+
+.info-section {
+    display: flex;
+    align-items: center;
+    flex-grow: 1;
+    justify-content: flex-start;
+}
+
+.titulo-cantidad {
+    font-weight: bold;
+    color: #0a0000;
+    font-size: 1.3rem;
+    margin: 0;
+    line-height: 1.5;
+    margin-top: 8px;
+}
+
+.total-numero {
+    padding: 3px 7px;
+    background-color: #007bff;
+    color: white;
+    border-radius: 3px;
+    font-size: 1rem;
+    margin-top: 3px;
+    margin-left: 10px;
+}

@@ -12,9 +12,13 @@ use App\Models\PedidoCliente;
 use App\Models\Producto;
 use App\Models\ProductoCategoria;
 use App\Models\ProductoSubCategoria;
+use App\Models\EstadoPlanificacion;
+use App\Http\Controllers\Traits\CheckForChanges;
+
 
 class PedidoClienteController extends Controller
 {
+    use CheckForChanges;
 
         public function __construct()
     {
@@ -30,19 +34,22 @@ public function getData(Request $request)
 {
     try {
         if ($request->ajax()) {
-            $pedido_cliente = PedidoCliente::with(['producto.categoria', 'creator', 'updater'])
+            $pedido_cliente = PedidoCliente::with([
+                    'producto.categoria', 'creator', 'updater', 'estadoPlanificacion'
+                ])
                 ->select(
                     'Id_OF',
                     'Nro_OF',
                     'Producto_Id',
                     'Fecha_del_Pedido',
                     'Cant_Fabricacion',
+                    'Estado_Plani_Id',
                     'created_at',
                     'updated_at',
                     'created_by',
                     'updated_by'
-                    
-                )->orderBy('Nro_OF', 'desc'); // Cambiar a descendente;
+                )
+                ->orderBy('Id_OF', 'desc');  // o ->latest('Id_OF')
 
             // Filtros
             if ($request->filled('filtro_nro_of')) {
@@ -69,6 +76,10 @@ public function getData(Request $request)
             if ($request->filled('filtro_cant_fabricacion')) {
                 $pedido_cliente->where('Cant_Fabricacion', $request->filtro_cant_fabricacion);
             }
+            // Filtro por estado de planificación (ID)
+            if ($request->filled('filtro_estado_plani')) {
+                $pedido_cliente->where('Estado_Plani_Id', $request->filtro_estado_plani);
+            }
 
             return DataTables::eloquent($pedido_cliente)
                 ->addColumn('Producto_Nombre', fn($of) => $of->producto->Prod_Codigo ?? '')
@@ -78,16 +89,41 @@ public function getData(Request $request)
                 ->addColumn('updater', fn($of) => $of->updater->name ?? '')
                 ->editColumn('created_at', fn($of) => $of->created_at?->format('Y-m-d H:i:s'))
                 ->editColumn('updated_at', fn($of) => $of->updated_at?->format('Y-m-d H:i:s'))
-                ->addColumn('Estado', function ($pedido) {
-    $tieneFabricacion = DB::table('registro_de_fabricacion')
-        ->where('Nro_OF', $pedido->Nro_OF)
-        ->exists();
 
-    return $tieneFabricacion
-        ? '<span class="badge bg-success">Fabricado</span>'
-        : '<span class="badge bg-secondary">Sin fabricación</span>';
-})
-->rawColumns(['Estado']) // <- MUY IMPORTANTE para que se renderice el HTML
+                // Estado de fabricación (tu columna existente)
+                ->addColumn('Estado', function ($pedido) {
+                    $tieneFabricacion = DB::table('registro_de_fabricacion')
+                        ->where('Nro_OF', $pedido->Nro_OF)
+                        ->exists();
+
+                    return $tieneFabricacion
+                        ? '<span class="badge bg-success">Fabricado</span>'
+                        : '<span class="badge bg-secondary">Sin fabricación</span>';
+                })
+
+                // NUEVO: estado de planificación (badge) + nombre en texto
+                ->addColumn('Plan_Estado', function ($of) {
+                    $nombre = $of->estadoPlanificacion->Nombre_Estado ?? '—';
+                    $id     = (int)($of->Estado_Plani_Id ?? 0);
+
+                    $map = [
+                        1 => 'secondary', // SIN REALIZAR
+                        2 => 'warning',   // EN PROCESO
+                        3 => 'success',   // FINALIZADA
+                        4 => 'danger',    // SUSPENDIDA
+                        5 => 'info',      // A.G
+                        6 => 'primary',   // LIBERACION CONJUNTO
+                        7 => 'dark',      // LIBRE
+                        8 => 'danger',    // INTERRUMPIDA
+                    ];
+                    $color = $map[$id] ?? 'secondary';
+
+                    return '<span class="badge bg-' . $color . '">' . e($nombre) . '</span>';
+                })
+                ->addColumn('Estado_Nombre', fn($of) => $of->estadoPlanificacion->Nombre_Estado ?? '—')
+
+                // HTML permitido SOLO en estas columnas
+                ->rawColumns(['Estado', 'Plan_Estado'])
 
                 ->toJson();
         }
@@ -99,9 +135,12 @@ public function getData(Request $request)
         return response()->json(['error' => 'Error al obtener datos'], 500);
     }
 }
+
 public function index()
 {
-    return view('pedido_cliente.index');
+       $estados = EstadoPlanificacion::orderBy('Estado_Plani_Id')
+                ->get(['Estado_Plani_Id','Nombre_Estado']);
+    return view('pedido_cliente.index', compact('estados'));
 }
     
     
@@ -120,8 +159,8 @@ public function create()
     
     // Obtener las subcategorías si querés precargarlas (opcional)
     $subcategorias = ProductoSubCategoria::select('Id_Subcategoria as id', 'Nombre_Subcategoria as nombre')->get();
-    
-    return view('pedido_cliente.create', compact('categorias'));
+
+    return view('pedido_cliente.create', compact('categorias', 'subcategorias'));
 }
 
 
@@ -131,71 +170,89 @@ public function create()
  * Store a newly created resource in storage.
 */
 public function store(Request $request)
-    {
-        
-        $pedido = new PedidoCliente();
-        $pedido->created_by = Auth::id();
-        $pedido->updated_by = Auth::id(); // <- Agregalo también acá
-        
-        $messages = [
-            'nro_of.*.required' => 'El número de OF es obligatorio.',
-    'nro_of.*.unique' => 'El número de OF ya ha sido registrado.',
-    'producto_id.*.required' => 'El ID de producto es obligatorio.',
-    'producto_id.*.numeric' => 'El ID de producto debe ser un número.',
-    'fecha_del_pedido.*.required' => 'La fecha del pedido es obligatoria.',
-    'fecha_del_pedido.*.date' => 'La fecha del pedido no tiene un formato válido.',
-    'cant_fabricacion.*.required' => 'La cantidad de fabricación es obligatoria.',
-    'cant_fabricacion.*.numeric' => 'La cantidad de fabricación debe ser un número.'
-        ];
-        
-        $validated = $request->validate([
-            'nro_of.*' => 'required|numeric|unique:pedido_cliente,Nro_OF',
-            'producto_id.*' => 'required|numeric',
-            'fecha_del_pedido.*' => 'required|date',
-            'cant_fabricacion.*' => 'required|numeric'
-        ], $messages);
-        
-        $duplicatedRows = [];
-        if (!empty($request->nro_of)) {
-            try {
-                DB::beginTransaction();
-                
-                foreach ($request->nro_of as $index => $nro_of) {
-                    if (isset($request->producto_id[$index], $request->fecha_del_pedido[$index], $request->cant_fabricacion[$index])) {
-                        
-                        $registroExistente = PedidoCliente::where('Nro_OF', $nro_of)->first();
-                        
-                        if ($registroExistente) {
-                            $duplicatedRows[] = $index + 1; // Sumar 1 para alinearlo con los números de fila en la tabla
-                        } else {
-                            PedidoCliente::create([
-                                'Nro_OF' => $nro_of,
-                                'Producto_Id' => $request->producto_id[$index],
-                                'Fecha_del_Pedido' => $request->fecha_del_pedido[$index],
-                                'Cant_Fabricacion' => $request->cant_fabricacion[$index],
-                                'created_by' => Auth::id(),
-                                'updated_by' => Auth::id()
-                            ]);
-                        }
+{
+    $pedido = new PedidoCliente();
+    $pedido->created_by = Auth::id();
+    $pedido->updated_by = Auth::id();
+
+    $messages = [
+        'nro_of.*.required' => 'El número de OF es obligatorio.',
+        'nro_of.*.unique' => 'El número de OF ya ha sido registrado.',
+        'producto_id.*.required' => 'El ID de producto es obligatorio.',
+        'producto_id.*.numeric' => 'El ID de producto debe ser un número.',
+        'fecha_del_pedido.*.required' => 'La fecha del pedido es obligatoria.',
+        'fecha_del_pedido.*.date' => 'La fecha del pedido no tiene un formato válido.',
+        'cant_fabricacion.*.required' => 'La cantidad de fabricación es obligatoria.',
+        'cant_fabricacion.*.numeric' => 'La cantidad de fabricación debe ser un número.',
+    ];
+
+    $validated = $request->validate([
+        'nro_of.*' => 'required|numeric|unique:pedido_cliente,Nro_OF',
+        'producto_id.*' => 'required|numeric',
+        'fecha_del_pedido.*' => 'required|date',
+        'cant_fabricacion.*' => 'required|numeric',
+    ], $messages);
+
+    $duplicatedRows = [];
+
+    if (!empty($request->nro_of)) {
+        try {
+            DB::beginTransaction();
+
+            foreach ($request->nro_of as $index => $nro_of) {
+                if (isset($request->producto_id[$index], $request->fecha_del_pedido[$index], $request->cant_fabricacion[$index])) {
+
+                    $registroExistente = PedidoCliente::where('Nro_OF', $nro_of)->first();
+
+                    if ($registroExistente) {
+                        $duplicatedRows[] = $index + 1;
+                    } else {
+                        PedidoCliente::create([
+                            'Nro_OF' => $nro_of,
+                            'Producto_Id' => $request->producto_id[$index],
+                            'Fecha_del_Pedido' => $request->fecha_del_pedido[$index],
+                            'Cant_Fabricacion' => $request->cant_fabricacion[$index],
+                            'created_by' => Auth::id(),
+                            'updated_by' => Auth::id(),
+                        ]);
                     }
                 }
-                
-                if (!empty($duplicatedRows)) {
-                    DB::rollBack();
-                    return response()->json(['success' => false, 'message' => 'Algunas filas tienen errores de validación.', 'duplicatedRows' => $duplicatedRows], 400);
-                }
-                
-                DB::commit();
-                return response()->json(['success' => true, 'message' => 'Órdenes de fabricación creadas correctamente.']);
-            } catch (\Exception $e) {
-                DB::rollBack();
-                Log::error('Error al guardar las órdenes de fabricación: ' . $e->getMessage());
-                return response()->json(['success' => false, 'message' => 'Ocurrió un error al intentar guardar las órdenes de fabricación.'], 500);
             }
-        } else {
-            return response()->json(['success' => false, 'message' => 'El número de OF es obligatorio.'], 400);
+
+            if (!empty($duplicatedRows)) {
+                DB::rollBack();
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Algunas filas tienen errores de validación.',
+                    'duplicatedRows' => $duplicatedRows
+                ], 400);
+            }
+
+            DB::commit();
+
+            // ✅ Cambio clave: agregamos redirect para el JS global
+            return response()->json([
+                'success'  => true,
+                'message'  => 'Órdenes de fabricación creadas correctamente.',
+                'redirect' => route('pedido_cliente.index'),
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error al guardar las órdenes de fabricación: ' . $e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Ocurrió un error al intentar guardar las órdenes de fabricación.',
+            ], 500);
         }
     }
+
+    return response()->json([
+        'success' => false,
+        'message' => 'El número de OF es obligatorio.',
+    ], 400);
+}
 
     /**
      * Display the specified resource.
@@ -208,78 +265,58 @@ public function store(Request $request)
     /**
      * Show the form for editing the specified resource.
     */
-    public function edit($id)
-    
-    {
-        
-        $productos = Producto::where('reg_Status', 1)
-        ->select('Id_Producto', 'Prod_Codigo', 'Prod_Descripcion', 'Id_Prod_Clase_Familia', 'Id_Prod_Sub_Familia')
-        ->get();
-        
-        $pedido = PedidoCliente::findOrFail($id);
-        $productos = Producto::where('reg_Status', 1)->get();
-        $categorias = ProductoCategoria::all(); // Si lo necesitás en un select
-        $subcategorias = ProductoSubCategoria::all();
-        
-        return view('pedido_cliente.edit', [
-            'pedido' => $pedido,
-            'productos' => $productos,
-            'categorias' => $categorias,
-            'subcategorias' => $subcategorias,
-        ]);
-        
-    }
+   public function edit($id)
+{
+    $pedido      = PedidoCliente::findOrFail($id);
+    $productos   = Producto::where('reg_Status', 1)
+                    ->select('Id_Producto','Prod_Codigo','Prod_Descripcion',
+                             'Id_Prod_Clase_Familia','Id_Prod_Sub_Familia')
+                    ->get();
+    $categorias  = ProductoCategoria::all();
+    $subcategorias = ProductoSubCategoria::all();
+
+    return view('pedido_cliente.edit', compact('pedido','productos','categorias','subcategorias'));
+}
+
     
     
     /**
      * Update the specified resource in storage.
     */
     public function update(Request $request, $id)
+{
+    $pedido = PedidoCliente::findOrFail($id);
 
-    
-    {
-        
-        
-        $pedido = PedidoCliente::findOrFail($id);
-    $pedido->updated_by = Auth::id();
-    
-    
     Log::info('Intentando actualizar Pedido Cliente', [
         'id' => $id,
         'usuario' => Auth::id(),
         'request_data' => $request->all()
     ]);
-    
+
     $validatedData = $request->validate([
         'Nro_OF' => [
             'required',
             'integer',
             Rule::unique('pedido_cliente', 'Nro_OF')
-            ->ignore($id, 'Id_OF')
-            ->whereNull('deleted_at'),
+                ->ignore($id, 'Id_OF')
+                ->whereNull('deleted_at'),
         ],
         'Producto_Id' => 'required|exists:productos,Id_Producto',
         'Fecha_del_Pedido' => 'required|date',
         'Cant_Fabricacion' => 'required|integer|min:1',
         'reg_Status' => 'required|in:0,1',
     ]);
-    
-    DB::beginTransaction();
-    
-    $pedido->fill($validatedData);
-    
-    if ($pedido->isDirty()) {
-        $pedido->updated_by = Auth::id();
-        $pedido->save();
-        DB::commit();
-        
-        return redirect()->route('pedido_cliente.index')->with('success', 'Pedido actualizado correctamente.');
-    } else {
-        DB::rollBack();
-        return back()->with('warning', 'No se detectaron cambios.');
-    }
-}
 
+    // ✅ usa tu Trait (isDirty + JSON para AJAX + redirect para normal)
+    return $this->updateIfChanged($pedido, $validatedData, [
+        'success_redirect'   => route('pedido_cliente.index'),
+        'success_message'    => 'Pedido actualizado correctamente.',
+        'no_changes_message' => 'No se detectaron cambios.',
+        'set_updated_by'     => true,
+        'use_transaction'    => true,
+        'normalize_data'     => false,
+    ]);
+}
 
 
 

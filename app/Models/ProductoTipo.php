@@ -2,17 +2,39 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes; // Importa la clase SoftDeletes
+use Illuminate\Database\Eloquent\SoftDeletes;
 
-
-// app\Models\ProductoTipo.php
 class ProductoTipo extends Model
 {
-    use HasFactory;
+    use SoftDeletes;
+
     protected $table = 'producto_tipo';
     protected $primaryKey = 'Id_Tipo';
-    protected $fillable = ['Nombre_Tipo'];
-    public $timestamps = false;
+    public $incrementing = true;
+    protected $keyType = 'int';
+    public $timestamps = true;
+
+    protected $fillable = [
+        'Nombre_Tipo',
+        'reg_Status',
+        'created_by',
+        'updated_by',
+        'deleted_by',
+    ];
+
+    protected $casts = [
+        'reg_Status' => 'integer',
+    ];
+
+    /*
+    |--------------------------------------------------------------------------
+    | Relaciones
+    |--------------------------------------------------------------------------
+    */
+
+    public function productos()
+    {
+        return $this->hasMany(Producto::class, 'Id_Prod_Tipo', 'Id_Tipo');
+    }
 }

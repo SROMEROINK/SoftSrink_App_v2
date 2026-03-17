@@ -1,0 +1,7 @@
+/* public/vendor/adminlte/dist/css/estado_planificacion_show.css */
+
+/* Ajustes exclusivos de Estado de Planificación */
+
+.estado-planificacion-show .detail-value {
+    text-transform: uppercase;
+}

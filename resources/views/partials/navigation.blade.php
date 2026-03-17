@@ -11,6 +11,7 @@
     </div>
 </div>
 
+
 <!-- Botón Materia Prima con sub-botonera desplegable -->
 <div class="btn-group">
     <button type="button" class="btn btn-success dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
@@ -21,6 +22,17 @@
         <button class="dropdown-item" onclick="window.location.href='{{ route('materia_prima.diametro.index') }}'">Diámetro MP</button>
         <button class="dropdown-item" onclick="window.location.href='{{ route('mp_ingresos.index') }}'">Ingreso de Materia Prima</button>
         <button class="dropdown-item" onclick="window.location.href='{{ route('mp_egresos.index') }}'">Egreso de Materia Prima</button>
+    </div>
+</div>
+
+<div class="btn-group">
+    <button type="button" class="btn btn-secondary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+        Configuración
+    </button>
+    <div class="dropdown-menu">
+        <button class="dropdown-item" onclick="window.location.href='{{ route('estado_planificacion.index') }}'">
+            Estados de Planificación
+        </button>
     </div>
 </div>
 

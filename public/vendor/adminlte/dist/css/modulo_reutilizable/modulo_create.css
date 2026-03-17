@@ -1,0 +1,45 @@
+/* ==========================
+   CRUD SIMPLE - CREATE BASE
+   ========================== */
+
+.form-group label {
+    font-weight: 600;
+    color: #343a40;
+    margin-bottom: 6px;
+}
+
+.form-control {
+    border-radius: 6px;
+    min-height: 40px;
+}
+
+.alert-info {
+    border-radius: 8px;
+    font-size: 14px;
+}
+
+.card-body {
+    padding: 20px;
+}
+
+.card-footer {
+    background-color: #fff;
+    border-top: 1px solid #e9ecef;
+}
+
+.btn {
+    min-width: 120px;
+    border-radius: 6px;
+}
+
+@media (max-width: 768px) {
+    .card-footer.text-right {
+        text-align: left !important;
+    }
+
+    .card-footer .btn {
+        display: block;
+        width: 100%;
+        margin-bottom: 8px;
+    }
+}

@@ -5,7 +5,7 @@
 @section('title', 'Crear Nueva Orden de Fabricación')
 
 @section('content_header')
-    <h1>Crear Nueva Orden de Fabricación</h1>
+    <h1>Crear Nuevo Pedido del Cliente</h1>
 @stop
 
 @section('css')
@@ -13,7 +13,11 @@
 @stop
 
 @section('content')
-<form method="post" action="{{ route('pedido_cliente.store') }}">
+<form method="POST"
+      action="{{ route('pedido_cliente.store') }}"
+      data-ajax="true"
+      data-redirect-url="{{ route('pedido_cliente.index') }}">
+
     @csrf
     <table class="table table-bordered custom-font centered-form" id="tablaListadoOF">
         <thead>
@@ -44,6 +48,7 @@
 @section('js')
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="{{ asset('js/form-ajax-submit.js') }}"></script>
 <script>
 $(document).ready(function() {
     var filaCounter = 1;
@@ -214,33 +219,7 @@ $(document).ready(function() {
     });
 
 
-    $('form').submit(function(event) {
-        event.preventDefault();
-        var formData = $(this).serialize();
-
-        $.ajax({
-            type: 'POST',
-            url: $(this).attr('action'),
-            data: formData,
-            dataType: 'json',
-            success: function(response) {
-                Swal.fire({
-                    title: response.success ? 'Éxito' : 'Error',
-                    text: response.message,
-                    icon: response.success ? 'success' : 'error',
-                    confirmButtonText: 'OK'
-                }).then(function() {
-                    if (response.success) {
-                        location.reload();
-                    }
-                });
-            },
-            error: function(xhr) {
-                var response = JSON.parse(xhr.responseText);
-                Swal.fire('Error', response.message, 'error');
-            }
-        });
-    });
+   
 });
 
 

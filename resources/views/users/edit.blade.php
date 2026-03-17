@@ -8,7 +8,7 @@
 
 @section('content')
     <div class="container">
-        <form action="{{ route('users.update', $user->id) }}" method="POST" enctype="multipart/form-data">
+        <form action="{{ route('users.update', $user->id) }}" method="POST" enctype="multipart/form-data" data-edit-check="true" data-exclude-fields="_token,_method">
             @csrf
             @method('PUT')
             <div class="form-group">
@@ -75,4 +75,9 @@
             <button type="submit" class="btn btn-primary">Actualizar Usuario</button>
         </form>
     </div>
+@stop
+
+@section('js')
+<script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="{{ asset('js/form-edit-check.js') }}"></script>
 @stop

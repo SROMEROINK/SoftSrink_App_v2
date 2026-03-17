@@ -25,7 +25,7 @@
 
 @section('content')
 
-    <form action="{{ route('mp_ingresos.update', $ingreso->Id_MP) }}" method="POST">
+    <form action="{{ route('mp_ingresos.update', $ingreso->Id_MP) }}" method="POST" data-edit-check="true" data-exclude-fields="_token,_method">
         @csrf
         @method('PUT')
         
@@ -141,78 +141,10 @@
 
 @section('js')
 <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="{{ asset('js/form-edit-check.js') }}"></script>
 <script>
 $(document).ready(function() {
-    // Almacenar los valores originales de los campos al cargar la página
-    const originalValues = {
-        Nro_Ingreso_MP: $('#Nro_Ingreso_MP').val(),
-        Nro_Pedido: $('#Nro_Pedido').val(),
-        Nro_Remito: $('#Nro_Remito').val(),
-        Fecha_Ingreso: $('#Fecha_Ingreso').val(),
-        Nro_OC: $('#Nro_OC').val(),
-        Id_Proveedor: $('#Id_Proveedor').val(),
-        Id_Materia_Prima: $('#Id_Materia_Prima').val(),
-        Id_Diametro_MP: $('#Id_Diametro_MP').val(),
-        Codigo_MP: $('#Codigo_MP').val(),
-        Unidades_MP: $('#Unidades_MP').val(),
-        Longitud_Unidad_MP: $('#Longitud_Unidad_MP').val(),
-        Mts_Totales: $('#Mts_Totales').val(),
-        Kilos_Totales: $('#Kilos_Totales').val(),
-        Nro_Certificado_MP: $('#Nro_Certificado_MP').val(),
-        Detalle_Origen_MP: $('#Detalle_Origen_MP').val(),
-        reg_Status: $('#reg_Status').val()
-    };
-
-    // Detectar cambios antes de enviar el formulario
-    $('form').on('submit', function(e) {
-        e.preventDefault();
-
-        let hasChanges = false;
-        for (const key in originalValues) {
-            if (originalValues[key] !== $('#' + key).val()) {
-                hasChanges = true;
-                break;
-            }
-        }
-
-        if (!hasChanges) {
-            Swal.fire({
-                icon: 'warning',
-                title: 'Sin cambios',
-                text: 'No se detectaron cambios en el formulario.',
-                showConfirmButton: true,
-            });
-            return;
-        }
-
-        // Enviar datos vía AJAX si hubo cambios
-        var formData = $(this).serialize();
-        $.ajax({
-            url: $(this).attr('action'),
-            type: 'POST',
-            data: formData,
-            success: function(response) {
-                Swal.fire({
-                    position: 'center',
-                    icon: 'success',
-                    title: 'Ingreso de materia prima actualizado correctamente',
-                    showConfirmButton: false,
-                    timer: 1500
-                });
-                setTimeout(function() {
-                    window.location.href = "{{ route('mp_ingresos.index') }}";
-                }, 1500);
-            },
-            error: function(response) {
-                Swal.fire({
-                    position: 'center',
-                    icon: 'error',
-                    title: 'Ocurrió un error al actualizar el ingreso de materia prima',
-                    showConfirmButton: true,
-                });
-            }
-        });
-    });
+    // El script form-edit-check.js maneja la detección de cambios y el submit
 
     // Función para concatenar "Materia Prima" y "Diámetro" en "Código de Materia Prima"
     function updateConcatenatedField() {

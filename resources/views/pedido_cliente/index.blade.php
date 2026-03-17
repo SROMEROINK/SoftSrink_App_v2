@@ -18,7 +18,7 @@
 <div class="container-fluid">
     <div class="row">
         <div class="col-12">
-            <div class="table-responsive">
+            <div>
                 <table id="pedido_cliente" class="table table-striped table-bordered" style="width:100%">
                     <thead>
                         <tr>
@@ -28,6 +28,7 @@
                             <th style="text-align: center;">Nombre_Categoria</th>
                             <th style="text-align: center;">Fecha_del_Pedido</th>
                             <th style="text-align: center;">Cant_Fabricacion</th>
+                            <th style="text-align: center;">Planificación</th>
                             <th>Creado</th>
                             <th>Por</th>
                             <th>Actualizado</th>
@@ -43,12 +44,7 @@
                             <th><select id="filtro_nombre_categoria" class="form-control filtro-select"><option value="">Todos</option></select></th>
                             <th><input type="text" id="filtro_fecha_pedido" placeholder="Filtrar Fecha_del_Pedido" class="form-control filtro-texto" /></th>
                             <th><input type="text" id="filtro_cant_fabricacion" placeholder="Filtrar Cant_Fabricacion" class="form-control filtro-texto" /></th>
-                           <th></th> <!-- created_at -->
-                           <th></th> <!-- creator -->
-                           <th></th> <!-- updated_at -->
-                           <th></th> <!-- updater -->
-                           <th></th> <!-- estado -->
-                           <th></th> <!-- acciones -->
+                        </tr>
                     </thead>
                 </table>
             </div>
@@ -161,10 +157,12 @@ $(document).ready(function() {
     ajax: {
         url: "{{ route('pedido_cliente.data') }}",
         type: 'GET',
+        cache: false,              // ← evita cache de la request
+        //headers: { 'Cache-Control': 'no-cache' }
         data: function (d) {
             d.filtro_nro_of = $('#filtro_nro_of').val();
             d.filtro_producto = $('#filtro_producto').val();
-            d.filtro_Descripción = $('#filtro_descripción').val();
+            d.filtro_descripción = $('#filtro_descripción').val();
             d.filtro_nombre_categoria = $('#filtro_nombre_categoria').val();
             d.filtro_fecha_pedido = $('#filtro_fecha_pedido').val();
             d.filtro_cant_fabricacion = $('#filtro_cant_fabricacion').val();
@@ -178,11 +176,11 @@ $(document).ready(function() {
     { data: 'Nombre_Categoria', name: 'Nombre_Categoria' },
     { data: 'Fecha_del_Pedido', name: 'Fecha_del_Pedido' },
     { data: 'Cant_Fabricacion', name: 'Cant_Fabricacion' },
+    // Mostrar badge de planificación (HTML)
     { data: 'created_at', name: 'created_at' },
     { data: 'creator', name: 'creator' },
     { data: 'updated_at', name: 'updated_at' },
     { data: 'updater', name: 'updater' },
-    { data: 'Estado', name: 'Estado', orderable: false, searchable: false },
 
     {
         data: 'Id_OF',

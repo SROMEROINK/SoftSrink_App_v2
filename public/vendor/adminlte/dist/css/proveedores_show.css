@@ -1,0 +1,117 @@
+.show-header h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #2f3a45;
+}
+
+.show-header p {
+    font-size: 0.95rem;
+}
+
+.show-card {
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.show-card-header {
+    background: linear-gradient(135deg, #f8f9fa 0%, #eef2f6 100%);
+    border-bottom: 1px solid #e5e9ef;
+    padding: 1rem 1.25rem;
+}
+
+.show-card-header .card-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #2f3a45;
+}
+
+.show-card .card-body {
+    padding: 1.5rem;
+}
+
+.detail-item {
+    background-color: #f8fafc;
+    border: 1px solid #e7ecf1;
+    border-radius: 10px;
+    padding: 14px 16px;
+    min-height: 92px;
+    margin-bottom: 18px;
+    transition: all 0.2s ease;
+}
+
+.detail-item:hover {
+    background-color: #f1f5f9;
+    border-color: #d8e0e8;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.04);
+}
+
+.detail-label {
+    display: block;
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: #6c7a89;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    margin-bottom: 8px;
+}
+
+.detail-value {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #2f3a45;
+    word-break: break-word;
+}
+
+.detail-divider {
+    height: 1px;
+    background-color: #e9ecef;
+    margin: 8px 0 22px 0;
+}
+
+.detail-badge {
+    font-size: 0.9rem;
+    padding: 0.5em 0.8em;
+    border-radius: 0.45rem;
+    font-weight: 700;
+}
+
+.show-card-footer {
+    background-color: #fff;
+    border-top: 1px solid #e9ecef;
+    padding: 1rem 1.25rem;
+}
+
+.show-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.show-actions .btn {
+    min-width: 120px;
+    border-radius: 8px;
+    font-weight: 600;
+}
+
+@media (max-width: 768px) {
+    .show-header h1 {
+        font-size: 1.5rem;
+    }
+
+    .show-card .card-body {
+        padding: 1rem;
+    }
+
+    .detail-item {
+        min-height: auto;
+    }
+
+    .show-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .show-actions .btn {
+        width: 100%;
+    }
+}

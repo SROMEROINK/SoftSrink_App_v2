@@ -6,6 +6,8 @@ use Illuminate\Http\Request;
 use App\Models\MpMateriaPrima;
 use Yajra\DataTables\Facades\DataTables;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class MpMateriaPrimaController extends Controller
 {
@@ -15,8 +17,8 @@ class MpMateriaPrimaController extends Controller
             $query = MpMateriaPrima::select('Id_Materia_Prima', 'Nombre_Materia', 'reg_Status')->orderBy('Id_Materia_Prima', 'asc');
 
             // Filtros dinámicos
-            if ($request->filled('filtro_materia')) {
-                $query->where('Nombre_Materia', 'like', '%' . $request->filtro_materia . '%');
+            if ($request->filled('filtro_nombre')) {
+                $query->where('Nombre_Materia', 'like', '%' . $request->filtro_nombre . '%');
             }
             if ($request->filled('filtro_estado')) {
                 $query->where('reg_Status', $request->filtro_estado);
@@ -54,14 +56,14 @@ class MpMateriaPrimaController extends Controller
         ]);
 
         try {
-            \DB::beginTransaction();
+            DB::beginTransaction();
             $validatedData['created_by'] = Auth::id();
             MpMateriaPrima::create($validatedData);
-            \DB::commit();
+            DB::commit();
             return response()->json(['success' => true, 'message' => 'Materia prima creada exitosamente.']);
         } catch (\Exception $e) {
-            \DB::rollBack();
-            \Log::error('Error al crear la materia prima:', ['error' => $e->getMessage()]);
+            DB::rollBack();
+            Log::error('Error al crear la materia prima:', ['error' => $e->getMessage()]);
             return response()->json(['success' => false, 'message' => 'Error al crear la materia prima: ' . $e->getMessage()], 400);
         }
     }
@@ -106,7 +108,7 @@ class MpMateriaPrimaController extends Controller
     
             return response()->json(['success' => 'Materia prima eliminada correctamente']);
         } catch (\Exception $e) {
-            \Log::error('Error al eliminar la materia prima:', ['error' => $e->getMessage()]);
+            Log::error('Error al eliminar la materia prima:', ['error' => $e->getMessage()]);
             return response()->json(['error' => 'Error al eliminar la materia prima'], 400);
         }
     }
@@ -120,7 +122,7 @@ class MpMateriaPrimaController extends Controller
     
             return redirect()->route('mp_materia_prima.index')->with('success', 'Materia prima restaurada con éxito');
         } catch (\Exception $e) {
-            \Log::error('Error al restaurar la materia prima:', ['error' => $e->getMessage()]);
+            Log::error('Error al restaurar la materia prima:', ['error' => $e->getMessage()]);
             return redirect()->route('mp_materia_prima.index')->with('error', 'Error al restaurar la materia prima');
         }
     }

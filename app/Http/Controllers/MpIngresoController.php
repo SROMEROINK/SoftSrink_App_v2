@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Validation\Rule; // al inicio del controlador
+use App\Http\Controllers\Traits\CheckForChanges;
 use Illuminate\Http\Request;
 use App\Models\MpIngreso;
 use App\Models\Proveedor;  // Asegúrate de importar el modelo Proveedor correctamente
@@ -10,15 +12,15 @@ use App\Models\MpMateriaPrima;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\Rule; // al inicio del controlador
+
+
 
 
 
 
 class MpIngresoController extends Controller
-
-
 {
+    use CheckForChanges;
 
     public function getUniqueFilters(Request $request)
 {
@@ -84,7 +86,6 @@ public function getUltimoNroIngreso()
 public function getData(Request $request)
 {
     try {
-        // Ajustar la consulta para unirse con las tablas relacionadas
         $ingresos_mp = MpIngreso::with(['proveedor'])
             ->leftJoin('mp_materia_prima', 'mp_ingreso.Id_Materia_Prima', '=', 'mp_materia_prima.Id_Materia_Prima')
             ->leftJoin('mp_diametro', 'mp_ingreso.Id_Diametro_MP', '=', 'mp_diametro.Id_Diametro')
@@ -95,8 +96,8 @@ public function getData(Request $request)
                 'mp_ingreso.Fecha_Ingreso',
                 'mp_ingreso.Nro_OC',
                 'mp_ingreso.Id_Proveedor',
-                'mp_materia_prima.Nombre_Materia AS Materia_Prima',  // Usar el alias correcto
-                'mp_diametro.Valor_Diametro AS Diametro_MP',         // Usar el alias correcto
+                'mp_materia_prima.Nombre_Materia as Materia_Prima',
+                'mp_diametro.Valor_Diametro as Diametro_MP',
                 'mp_ingreso.Codigo_MP',
                 'mp_ingreso.Nro_Certificado_MP',
                 'mp_ingreso.Detalle_Origen_MP',
@@ -104,57 +105,74 @@ public function getData(Request $request)
                 'mp_ingreso.Longitud_Unidad_MP',
                 'mp_ingreso.Mts_Totales',
                 'mp_ingreso.Kilos_Totales',
-                'mp_ingreso.created_at AS mp_ingreso_created_at',
-                'mp_ingreso.updated_at AS mp_ingreso_updated_at'
-            )->orderBy('Nro_Ingreso_MP', 'desc'); // Cambiar a descendente
+                'mp_ingreso.created_at as mp_ingreso_created_at',
+                'mp_ingreso.updated_at as mp_ingreso_updated_at'
+            )
+            ->orderBy('mp_ingreso.Nro_Ingreso_MP', 'desc');
 
-        // Aplicar los filtros basados en los campos del request
-        if ($request->filled('filtro_Nro_OC')) {
-            $ingresos_mp->where('mp_ingreso.Nro_OC', '=', $request->filtro_Nro_OC);
+        // Filtro Nro_Ingreso_MP
+        if ($request->filled('filtro_nro_ingreso')) {
+            $ingresos_mp->where('mp_ingreso.Nro_Ingreso_MP', 'like', '%' . $request->filtro_nro_ingreso . '%');
         }
 
+        // Filtro Fecha_Ingreso
+        if ($request->filled('filtro_fecha_ingreso')) {
+            $ingresos_mp->whereDate('mp_ingreso.Fecha_Ingreso','like', '%' . $request->filtro_fecha_ingreso . '%');
+        }
+
+        // Filtro Nro_OC  ✅ corregido
+        if ($request->filled('filtro_nro_oc')) {
+            $ingresos_mp->where('mp_ingreso.Nro_OC', 'like', '%' . $request->filtro_nro_oc . '%');
+        }
+
+        // Filtro Proveedor
         if ($request->filled('filtro_proveedor')) {
             $ingresos_mp->whereRaw('LOWER(proveedores.Prov_Nombre) = ?', [strtolower($request->filtro_proveedor)]);
         }
 
+        // Filtro Materia Prima
         if ($request->filled('filtro_materia_prima')) {
             $ingresos_mp->whereRaw('LOWER(mp_materia_prima.Nombre_Materia) = ?', [strtolower($request->filtro_materia_prima)]);
         }
 
+        // Filtro Diámetro
         if ($request->filled('filtro_diametro')) {
             $ingresos_mp->whereRaw('LOWER(mp_diametro.Valor_Diametro) = ?', [strtolower($request->filtro_diametro)]);
         }
 
+        // Filtro Código MP
         if ($request->filled('filtro_codigo_mp')) {
             $ingresos_mp->whereRaw('LOWER(mp_ingreso.Codigo_MP) = ?', [strtolower($request->filtro_codigo_mp)]);
         }
 
-        if ($request->filled('filtro_nro_ingreso')) {
-            $ingresos_mp->where('mp_ingreso.Nro_Ingreso_MP', '=', $request->filtro_nro_ingreso);
-        }
-
+        // Filtro Certificado  ✅ ahora parcial
         if ($request->filled('filtro_certificado')) {
-            $ingresos_mp->where('mp_ingreso.Nro_Certificado_MP', '=', $request->filtro_certificado);
+            $ingresos_mp->where('mp_ingreso.Nro_Certificado_MP', 'like', '%' . $request->filtro_certificado . '%');
         }
 
+        // Filtro Detalle Origen  ✅ ahora parcial
         if ($request->filled('filtro_detalle_origen')) {
-            $ingresos_mp->where('mp_ingreso.Detalle_Origen_MP', '=', $request->filtro_detalle_origen);
+            $ingresos_mp->where('mp_ingreso.Detalle_Origen_MP', 'like', '%' . $request->filtro_detalle_origen . '%');
         }
 
+        // Filtro Unidades
         if ($request->filled('filtro_unidades')) {
-            $ingresos_mp->where('mp_ingreso.Unidades_MP', '=', $request->filtro_unidades);
+            $ingresos_mp->where('mp_ingreso.Unidades_MP', 'like', '%' . $request->filtro_unidades . '%');
         }
 
+        // Filtro Longitud  ✅ parcial
         if ($request->filled('filtro_longitud')) {
-            $ingresos_mp->where('mp_ingreso.Longitud_Unidad_MP', '=', $request->filtro_longitud);
+            $ingresos_mp->where('mp_ingreso.Longitud_Unidad_MP', 'like', '%' . $request->filtro_longitud . '%');
         }
 
+        // Filtro Mts Totales  ✅ parcial
         if ($request->filled('filtro_mts_totales')) {
-            $ingresos_mp->where('mp_ingreso.Mts_Totales', '=', $request->filtro_mts_totales);
+            $ingresos_mp->where('mp_ingreso.Mts_Totales', 'like', '%' . $request->filtro_mts_totales . '%');
         }
 
+        // Filtro Kilos Totales  ✅ parcial
         if ($request->filled('filtro_kilos_totales')) {
-            $ingresos_mp->where('mp_ingreso.Kilos_Totales', '=', $request->filtro_kilos_totales);
+            $ingresos_mp->where('mp_ingreso.Kilos_Totales', 'like', '%' . $request->filtro_kilos_totales . '%');
         }
 
         return datatables()->of($ingresos_mp)
@@ -165,7 +183,10 @@ public function getData(Request $request)
 
     } catch (\Exception $e) {
         Log::error('Error en getData: ' . $e->getMessage());
-        return response()->json(['error' => 'Error al recuperar los datos.'], 500);
+
+        return response()->json([
+            'error' => 'Error al recuperar los datos.'
+        ], 500);
     }
 }
 
@@ -209,66 +230,130 @@ public function resumenIngresos()
      * Show the form for creating a new resource.
      */
     public function create()
-    {
-        // Obtener los datos de las tablas relacionadas
-        $proveedores = Proveedor::where('Es_Proveedor_MP', 1)->where('reg_Status', 1)->get();
-        $materiasPrimas = MpMateriaPrima::where('reg_Status', 1)->get();
-        $diametros = MpDiametro::where('reg_Status', 1)->get();
-    
-        // Tipos de proveedores
-        $tiposProveedores = [
-            'mp' => 'Materia Prima',
-            'herramientas' => 'Herramientas de Corte'
-        ];
-    
-        // Enviar los datos a la vista 'mp_ingresos.create'
-        return view('materia_prima.ingresos.create', compact('proveedores', 'materiasPrimas', 'diametros', 'tiposProveedores'));
-    }
+{
+    $proveedores = Proveedor::where('Es_Proveedor_MP', 1)
+        ->where('reg_Status', 1)
+        ->orderBy('Prov_Nombre', 'asc')
+        ->get();
 
-    public function store(Request $request)
-    {
-        try {
-            // Validación de los datos del formulario
-            $validatedData = $request->validate([
-                'Nro_Ingreso_MP' => 'required|integer',
-                'Nro_Pedido' => 'required|string|max:255',
-                'Nro_Remito' => 'required|string|max:255',
-                'Fecha_Ingreso' => 'required|date',
-                'Nro_OC' => 'required|string|max:255',
-                'Id_Proveedor' => 'required|exists:proveedores,Prov_Id',
-                'Id_Materia_Prima' => 'required|exists:mp_materia_prima,Id_Materia_Prima',
-                'Id_Diametro_MP' => 'required|exists:mp_diametro,Id_Diametro',
-                'Codigo_MP' => 'required|string|max:255',
-                'Unidades_MP' => 'required|integer',
-                'Longitud_Unidad_MP' => 'required|numeric',
-                'Mts_Totales' => 'required|numeric',
-                'Kilos_Totales' => 'required|numeric',
-                'Nro_Certificado_MP' => 'sometimes|string|max:255',
-                'Detalle_Origen_MP' => 'nullable|string|max:255',
+    $materiasPrimas = MpMateriaPrima::where('reg_Status', 1)
+        ->orderBy('Nombre_Materia', 'asc')
+        ->get();
+
+    $diametros = MpDiametro::where('reg_Status', 1)
+        ->orderBy('Valor_Diametro', 'asc')
+        ->get();
+
+    $ultimoIngreso = MpIngreso::orderBy('Nro_Ingreso_MP', 'desc')->first();
+    $proximoNroIngreso = $ultimoIngreso ? ((int) $ultimoIngreso->Nro_Ingreso_MP + 1) : 1;
+
+    return view('materia_prima.ingresos.create', compact(
+        'proveedores',
+        'materiasPrimas',
+        'diametros',
+        'ultimoIngreso',
+        'proximoNroIngreso'
+    ));
+}
+
+
+   public function store(Request $request)
+{
+    try {
+        $validatedData = $request->validate([
+            // Cabecera compartida
+            'Nro_Pedido' => 'required|string|max:255',
+            'Nro_Remito' => 'required|string|max:255',
+            'Fecha_Ingreso' => 'required|date',
+            'Nro_OC' => 'nullable|string|max:255',
+            'Id_Proveedor' => 'required|exists:proveedores,Prov_Id',
+
+            // Detalle por fila
+            'Nro_Ingreso_MP' => 'required|array|min:1',
+            'Nro_Ingreso_MP.*' => [
+            'required',
+            'integer',
+            'distinct',
+            Rule::unique('mp_ingreso', 'Nro_Ingreso_MP')->whereNull('deleted_at'),
+        ],
+
+            'Id_Materia_Prima' => 'required|array|min:1',
+            'Id_Materia_Prima.*' => 'required|exists:mp_materia_prima,Id_Materia_Prima',
+
+            'Id_Diametro_MP' => 'required|array|min:1',
+            'Id_Diametro_MP.*' => 'required|exists:mp_diametro,Id_Diametro',
+
+            'Codigo_MP' => 'required|array|min:1',
+            'Codigo_MP.*' => 'required|string|max:255',
+
+            'Nro_Certificado_MP' => 'nullable|array',
+            'Nro_Certificado_MP.*' => 'nullable|string|max:255',
+
+            'Detalle_Origen_MP' => 'nullable|array',
+            'Detalle_Origen_MP.*' => 'nullable|string|max:255',
+
+            'Unidades_MP' => 'required|array|min:1',
+            'Unidades_MP.*' => 'required|integer|min:1',
+
+            'Longitud_Unidad_MP' => 'required|array|min:1',
+            'Longitud_Unidad_MP.*' => 'required|numeric|min:0',
+
+            'Mts_Totales' => 'required|array|min:1',
+            'Mts_Totales.*' => 'required|numeric|min:0',
+
+            'Kilos_Totales' => 'nullable|array',
+            'Kilos_Totales.*' => 'nullable|numeric|min:0',
+        ]);
+
+        DB::beginTransaction();
+
+        foreach ($validatedData['Nro_Ingreso_MP'] as $index => $nroIngreso) {
+            MpIngreso::create([
+                'Nro_Ingreso_MP'      => $validatedData['Nro_Ingreso_MP'][$index],
+                'Nro_Pedido'          => $validatedData['Nro_Pedido'],
+                'Nro_Remito'          => $validatedData['Nro_Remito'],
+                'Fecha_Ingreso'       => $validatedData['Fecha_Ingreso'],
+                'Nro_OC'              => $validatedData['Nro_OC'] ?? null,
+                'Id_Proveedor'        => $validatedData['Id_Proveedor'],
+
+                'Id_Materia_Prima'    => $validatedData['Id_Materia_Prima'][$index],
+                'Id_Diametro_MP'      => $validatedData['Id_Diametro_MP'][$index],
+                'Codigo_MP'           => $validatedData['Codigo_MP'][$index],
+                'Nro_Certificado_MP'  => $validatedData['Nro_Certificado_MP'][$index] ?? null,
+                'Detalle_Origen_MP'   => $validatedData['Detalle_Origen_MP'][$index] ?? '',
+                'Unidades_MP'         => $validatedData['Unidades_MP'][$index],
+                'Longitud_Unidad_MP'  => $validatedData['Longitud_Unidad_MP'][$index],
+                'Mts_Totales'         => $validatedData['Mts_Totales'][$index],
+                'Kilos_Totales'       => $validatedData['Kilos_Totales'][$index] ?? null,
+
+                'created_by'          => Auth::id(),
+                'reg_Status'          => 1,
             ]);
-    
-            DB::beginTransaction();
-    
-            // Asigna el usuario y el estado al registro antes de guardarlo
-            $validatedData['created_by'] = Auth::id();
-            $validatedData['reg_Status'] = 1;
-            MpIngreso::create($validatedData);
-    
-            DB::commit();
-    
-            return response()->json(['success' => true, 'message' => 'Ingreso de materia prima creado exitosamente.']);
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            return response()->json(['success' => false, 'errors' => $e->errors()], 422);
-        } catch (\Exception $e) {
-            DB::rollBack();
-         Log::error('Error al crear ingreso de MP', [
+        }
+
+        DB::commit();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Ingresos de materia prima creados exitosamente.',
+            'redirect' => route('mp_ingresos.index'),
+        ]);
+    } catch (\Illuminate\Validation\ValidationException $e) {
+        return response()->json([
+            'success' => false,
+            'errors' => $e->errors()
+        ], 422);
+    } catch (\Exception $e) {
+        DB::rollBack();
+
+        Log::error('Error al crear ingresos de MP', [
             'error' => $e->getMessage(),
             'usuario' => Auth::id(),
         ]);
 
         return response()->json([
             'success' => false,
-            'message' => 'Error al crear el ingreso de materia prima: ' . $e->getMessage()
+            'message' => 'Error al crear los ingresos de materia prima: ' . $e->getMessage()
         ], 400);
     }
 }
@@ -346,64 +431,69 @@ Este si funciona 09/11/2024:
         'reg_Status' => 'required|in:0,1',
     ]);
 
-    DB::beginTransaction();
-
     Log::info('Datos validados correctamente para actualización:', $validatedData);
 
-// Normalización de datos para evitar errores en isDirty()
-$validatedData['Detalle_Origen_MP'] = $validatedData['Detalle_Origen_MP'] ?? '';
-$validatedData['Nro_Certificado_MP'] = $validatedData['Nro_Certificado_MP'] ?? '';
-$validatedData['Codigo_MP'] = trim($validatedData['Codigo_MP']);
-$validatedData['Kilos_Totales'] = number_format((float)$validatedData['Kilos_Totales'], 2, '.', '');
-$validatedData['Mts_Totales'] = number_format((float)$validatedData['Mts_Totales'], 2, '.', '');
-$validatedData['Longitud_Unidad_MP'] = number_format((float)$validatedData['Longitud_Unidad_MP'], 2, '.', '');
-$validatedData['Unidades_MP'] = (int) $validatedData['Unidades_MP'];
-$validatedData['Id_Proveedor'] = (int) $validatedData['Id_Proveedor'];
-$validatedData['Id_Materia_Prima'] = (int) $validatedData['Id_Materia_Prima'];
-$validatedData['Id_Diametro_MP'] = (int) $validatedData['Id_Diametro_MP'];
-$validatedData['reg_Status'] = (int) $validatedData['reg_Status'];
+    // Normalización específica de datos para evitar errores en isDirty()
+    $validatedData['Detalle_Origen_MP'] = $validatedData['Detalle_Origen_MP'] ?? '';
+    $validatedData['Nro_Certificado_MP'] = $validatedData['Nro_Certificado_MP'] ?? '';
+    $validatedData['Codigo_MP'] = trim($validatedData['Codigo_MP']);
+    $validatedData['Kilos_Totales'] = number_format((float)$validatedData['Kilos_Totales'], 2, '.', '');
+    $validatedData['Mts_Totales'] = number_format((float)$validatedData['Mts_Totales'], 2, '.', '');
+    $validatedData['Longitud_Unidad_MP'] = number_format((float)$validatedData['Longitud_Unidad_MP'], 2, '.', '');
+    $validatedData['Unidades_MP'] = (int) $validatedData['Unidades_MP'];
+    $validatedData['Id_Proveedor'] = (int) $validatedData['Id_Proveedor'];
+    $validatedData['Id_Materia_Prima'] = (int) $validatedData['Id_Materia_Prima'];
+    $validatedData['Id_Diametro_MP'] = (int) $validatedData['Id_Diametro_MP'];
+    $validatedData['reg_Status'] = (int) $validatedData['reg_Status'];
 
-    $ingreso->fill($validatedData);
-
-    if ($ingreso->isDirty()) {
-        Log::info('Campos modificados detectados', [
-            'campos_modificados' => $ingreso->getDirty()
-        ]);
-
-        $ingreso->updated_by = Auth::id();
-        $ingreso->save();
-        DB::commit();
-
-       
-        return redirect()->route('mp_ingresos.index')->with('success', 'Ingreso de materia prima actualizado correctamente.');
-    } else {
-        DB::rollBack();
-        Log::warning('No se realizaron cambios en el ingreso de MP', [
-            'id' => $id,
-            'datos_validados' => $validatedData
-        ]);
-
-        if ($request->ajax()) {
-    return response()->json(['success' => false, 'warning' => 'No se realizaron cambios.'], 200);
-}
-
-return back()->with('warning', 'No se realizaron cambios.');
-    }
+    return $this->updateIfChanged($ingreso, $validatedData, [
+        'success_redirect' => route('mp_ingresos.index'),
+        'success_message' => 'Ingreso de materia prima actualizado correctamente.',
+        'no_changes_message' => 'No se realizaron cambios.',
+        'set_updated_by' => true,
+        'use_transaction' => true,
+        'normalize_data' => false, // Ya normalizado arriba
+    ]);
 }
 
 public function destroy($id)
 {
-    $materia = MpMateriaPrima::findOrFail($id);
+    try {
+        $ingreso = MpIngreso::findOrFail($id);
 
-    $usadaEnFabricacion = $materia->registrosFabricacion()->exists();
+        // Ejemplo: verificar si este ingreso ya fue usado en egresos o consumos
+        $usadoEnMovimientos = false;
 
-    if ($usadaEnFabricacion) {
-        return back()->with('error', 'Esta materia prima ya fue usada en fabricación y no puede ser eliminada.');
+        // Reemplazar esta lógica por tu relación real
+        // $usadoEnMovimientos = $ingreso->egresos()->exists();
+
+        if ($usadoEnMovimientos) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Este ingreso de materia prima ya fue utilizado y no puede eliminarse.'
+            ], 400);
+        }
+
+        $ingreso->deleted_by = Auth::id();
+        $ingreso->save();
+        $ingreso->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Ingreso de materia prima eliminado correctamente.'
+        ]);
+    } catch (\Exception $e) {
+        Log::error('Error al eliminar ingreso de MP', [
+            'id' => $id,
+            'error' => $e->getMessage(),
+            'usuario' => Auth::id(),
+        ]);
+
+        return response()->json([
+            'success' => false,
+            'message' => 'No se pudo eliminar el ingreso de materia prima.'
+        ], 400);
     }
-
-    $materia->delete();
-
-    return back()->with('success', 'Materia prima eliminada correctamente.');
 }
 
 

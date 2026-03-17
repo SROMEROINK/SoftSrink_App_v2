@@ -8,7 +8,7 @@
 
 @section('content')
     <div class="container">
-        <form id="updateForm" action="{{ route('roles.update', $role->id) }}" method="POST">
+        <form id="updateForm" action="{{ route('roles.update', $role->id) }}" method="POST" data-edit-check="true" data-exclude-fields="_token,_method">
             @csrf
             @method('PUT')
             <div class="form-group">
@@ -42,40 +42,9 @@
 
 @section('js')
 <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="{{ asset('js/form-edit-check.js') }}"></script>
 <script>
     $(document).ready(function() {
-        $('#updateForm').on('submit', function(e) {
-            e.preventDefault();
-            var formData = $(this).serialize();
-
-            $.ajax({
-                url: $(this).attr('action'),
-                type: 'POST',
-                data: formData,
-                success: function(response) {
-                    Swal.fire({
-                        position: 'center',
-                        icon: 'success',
-                        title: 'Rol actualizado correctamente',
-                        showConfirmButton: false,
-                        timer: 1500
-                    }).then((result) => {
-                        if (result.dismiss === Swal.DismissReason.timer) {
-                            window.location.href = '{{ route('roles.index') }}';
-                        }
-                    });
-                },
-                error: function(response) {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: 'No se pudo actualizar el rol.',
-                        position: 'center'
-                    });
-                }
-            });
-        });
-
         @if ($errors->has('permissions'))
             Swal.fire({
                 icon: 'error',

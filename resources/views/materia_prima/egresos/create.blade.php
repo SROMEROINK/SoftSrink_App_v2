@@ -1,109 +1,133 @@
 @extends('adminlte::page')
-{{-- resources\views\materia_prima\ingresos\create.blade.php --}}
-@section('title', 'Registrar Ingreso de Materia Prima')
+{{-- resources/views/materia_prima/egresos/create.blade.php --}}
+
+@section('title', 'Registrar Salida de Materia Prima')
 
 @section('content_header')
-    <h1>Registrar Ingreso de Materia Prima</h1>
+    <h1>Registrar Salida de Materia Prima</h1>
 @stop
 
 @section('content')
-<form method="post" action="{{ route('mp_ingresos.store') }}">
+<form method="post" action="{{ route('mp_egresos.store') }}" id="form-egreso">
     @csrf
+
     <div class="card">
         <div class="card-body">
+
+            {{-- Id_Ingreso_MP (FK o identificador según tu tabla) --}}
             <div class="form-group">
-                <label for="Nro_Ingreso_MP">Número de Ingreso MP:</label>
-                <input type="number" name="Nro_Ingreso_MP" id="Nro_Ingreso_MP" class="form-control" required>
+                <label for="Id_Ingreso_MP">Ingreso de Materia Prima (Id_Ingreso_MP):</label>
+                <select name="Id_Ingreso_MP" id="Id_Ingreso_MP" class="form-control" required>
+                    <option value="">-- Seleccionar --</option>
+
+                    {{-- Esperado: $egresos (mp_salidas) --}}
+                    @foreach ($egresos as $egreso)
+
+                    @endforeach
+                </select>
             </div>
+
+            {{-- Id_OF_Salidas_MP --}}
             <div class="form-group">
-                <label for="Nro_Pedido">Número de Pedido:</label>
-                <input type="text" name="Nro_Pedido" id="Nro_Pedido" class="form-control" required>
-            </div>
-            <div class="form-group">
-                <label for="Nro_Remito">Número de Remito:</label>
-                <input type="text" name="Nro_Remito" id="Nro_Remito" class="form-control" required>
-            </div>
-            <div class="form-group">
-                <label for="Fecha_Ingreso">Fecha de Ingreso:</label>
-                <input type="date" name="Fecha_Ingreso" id="Fecha_Ingreso" class="form-control" value="{{ date('Y-m-d') }}" required>
-            </div>
-            <div class="form-group">
-                <label for="Nro_OC">Número de Orden de Compra:</label>
-                <input type="text" name="Nro_OC" id="Nro_OC" class="form-control">
-            </div>
-            <div class="form-group">
-                <label for="Id_Proveedor">Proveedor:</label>
-                <select name="Id_Proveedor" id="Id_Proveedor" class="form-control">
-                    @foreach ($proveedores as $proveedor)
-                        <option value="{{ $proveedor->Prov_Id }}" data-tipo="{{ $proveedor->Es_Proveedor_MP ? 'mp' : 'herramientas' }}">
-                            {{ $proveedor->Prov_Nombre }}
+                <label for="Id_OF_Salidas_MP">OF (Id_OF_Salidas_MP):</label>
+                <select name="Id_OF_Salidas_MP" id="Id_OF_Salidas_MP" class="form-control" required>
+                    <option value="">-- Seleccionar --</option>
+
+                    {{-- Esperado: $ordenes o $ofs --}}
+                    @foreach ($ordenes as $of)
+                        <option value="{{ $of->Nro_OF ?? $of->Id_OF ?? $of->Id_OF_Salidas_MP }}">
+                            {{ $of->Nro_OF ?? $of->Id_OF ?? '' }} - {{ $of->Descripcion ?? '' }}
                         </option>
                     @endforeach
                 </select>
             </div>
-            <div class="form-group">
-                <label for="Id_Materia_Prima">Materia Prima:</label>
-                <select name="Id_Materia_Prima" id="Id_Materia_Prima" class="form-control">
-                    @foreach ($materiasPrimas as $materia)
-                        <option value="{{ $materia->Id_Materia_Prima }}">{{ $materia->Nombre_Materia }}</option>
-                    @endforeach
-                </select>
-            </div>
-            <div class="form-group">
-                <label for="Id_Diametro_MP">Diámetro:</label>
-                <select name="Id_Diametro_MP" id="Id_Diametro_MP" class="form-control">
-                    @foreach ($diametros as $diametro)
-                        <option value="{{ $diametro->Id_Diametro }}">{{ $diametro->Valor_Diametro }}</option>
-                    @endforeach
-                </select>
-            </div>
 
-            <!-- Campo concatenado (Materia Prima + Diámetro) como solo lectura -->
+            {{-- Cantidades --}}
             <div class="form-group">
-                <label for="Codigo_MP">Código de Materia Prima:</label>
-                <input type="text" name="Codigo_MP" id="Codigo_MP" class="form-control" readonly>
+                <label for="Cantidad_Unidades_MP">Cantidad_Unidades_MP:</label>
+                <input type="number" name="Cantidad_Unidades_MP" id="Cantidad_Unidades_MP"
+                       class="form-control" step="1" min="0" required value="0">
             </div>
 
             <div class="form-group">
-                <label for="Nro_Certificado_MP">Número de Certificado:</label>
-                <input type="text" name="Nro_Certificado_MP" id="Nro_Certificado_MP" class="form-control">
-            </div>
-
-            <!-- Campo Detalle de Origen (protegido) -->
-            <div class="form-group">
-                <label for="Detalle_Origen_MP">Detalle de Origen:</label>
-                <input type="text" name="Detalle_Origen_MP" id="Detalle_Origen_MP" class="form-control" readonly>
+                <label for="Cantidad_Unidades_MP_Preparadas">Cantidad_Unidades_MP_Preparadas:</label>
+                <input type="number" name="Cantidad_Unidades_MP_Preparadas" id="Cantidad_Unidades_MP_Preparadas"
+                       class="form-control" step="1" min="0" required value="0">
             </div>
 
             <div class="form-group">
-                <label for="Unidades_MP">Unidades de Materia Prima:</label>
-                <input type="number" name="Unidades_MP" id="Unidades_MP" class="form-control" required>
+                <label for="Cantidad_MP_Adicionales">Cantidad_MP_Adicionales:</label>
+                <input type="number" name="Cantidad_MP_Adicionales" id="Cantidad_MP_Adicionales"
+                       class="form-control" step="1" min="0" required value="0">
             </div>
+
             <div class="form-group">
-                <label for="Longitud_Unidad_MP">Longitud por Unidad:</label>
-                <input type="number" name="Longitud_Unidad_MP" id="Longitud_Unidad_MP" class="form-control" step="0.01" required>
+                <label for="Cant_Devoluciones">Cant_Devoluciones:</label>
+                <input type="number" name="Cant_Devoluciones" id="Cant_Devoluciones"
+                       class="form-control" step="0.01" min="0" required value="0">
             </div>
+
+            {{-- Totales (calculados) --}}
             <div class="form-group">
-                <label for="Mts_Totales">Metros Totales:</label>
-                <input type="number" name="Mts_Totales" id="Mts_Totales" class="form-control" step="0.01" readonly>
+                <label for="Total_Salidas_MP">Total_Salidas_MP:</label>
+                <input type="number" name="Total_Salidas_MP" id="Total_Salidas_MP"
+                       class="form-control" step="0.01" readonly>
+                <small class="text-muted">Se calcula automáticamente (podemos ajustar fórmula según tu lógica real).</small>
             </div>
+
             <div class="form-group">
-                <label for="Kilos_Totales">Kilos Totales:</label>
-                <input type="number" name="Kilos_Totales" id="Kilos_Totales" class="form-control" step="0.01" value="0" required>
+                <label for="Total_Mtros_Utilizados">Total_Mtros_Utilizados:</label>
+                <input type="number" name="Total_Mtros_Utilizados" id="Total_Mtros_Utilizados"
+                       class="form-control" step="0.01" readonly>
+                <small class="text-muted">Usa Longitud_Unidad_MP del ingreso (si está disponible).</small>
+            </div>
+
+            {{-- Pedido / responsables --}}
+            <div class="form-group">
+                <label for="Fecha_del_Pedido_Produccion">Fecha_del_Pedido_Produccion:</label>
+                <input type="date" name="Fecha_del_Pedido_Produccion" id="Fecha_del_Pedido_Produccion"
+                       class="form-control" value="{{ date('Y-m-d') }}" required>
+            </div>
+
+            <div class="form-group">
+                <label for="Responsable_Pedido_Produccion">Responsable_Pedido_Produccion:</label>
+                <input type="text" name="Responsable_Pedido_Produccion" id="Responsable_Pedido_Produccion"
+                       class="form-control" value="{{ auth()->user()->name ?? '' }}" required>
+            </div>
+
+            <div class="form-group">
+                <label for="Nro_Pedido_MP">Nro_Pedido_MP:</label>
+                <input type="number" name="Nro_Pedido_MP" id="Nro_Pedido_MP"
+                       class="form-control" step="1" min="0">
+            </div>
+
+            {{-- Calidad --}}
+            <div class="form-group">
+                <label for="Fecha_de_Entrega_Pedido_Calidad">Fecha_de_Entrega_Pedido_Calidad:</label>
+                <input type="date" name="Fecha_de_Entrega_Pedido_Calidad" id="Fecha_de_Entrega_Pedido_Calidad"
+                       class="form-control">
+            </div>
+
+            <div class="form-group">
+                <label for="Responsable_de_entrega_Calidad">Responsable_de_entrega_Calidad:</label>
+                <input type="text" name="Responsable_de_entrega_Calidad" id="Responsable_de_entrega_Calidad"
+                       class="form-control">
             </div>
 
             <input type="hidden" name="reg_Status" value="1">
 
         </div>
     </div>
+
     <div class="btn-der">
-        <input type="submit" class="btn btn-primary" value="Registrar Ingreso">
+        <button type="submit" class="btn btn-primary">Registrar Salida</button>
     </div>
 </form>
 @stop
 
 @section('css')
-<link rel="stylesheet" href="{{ asset('vendor/adminlte/dist/css/mp_ingreso_create.css') }}">
+{{-- Si querés, creamos un css específico: mp_egreso_create.css --}}
+<link rel="stylesheet" href="{{ asset('vendor/adminlte/dist/css/mp_egreso_create.css') }}">
 @stop
 
 @section('js')
@@ -111,37 +135,59 @@
 
 <script>
 $(document).ready(function() {
-    // Configuración del formulario para envío con AJAX
-    $('form').on('submit', function(e) {
-        e.preventDefault(); // Evita la recarga de la página
-        var formData = $(this).serialize();
+
+    function toNum(v) {
+        let n = parseFloat(v);
+        return isNaN(n) ? 0 : n;
+    }
+
+    // Fórmula base (ajustable)
+    // Total_Salidas_MP = Cantidad_Unidades_MP + Cantidad_MP_Adicionales - Cant_Devoluciones
+    // (No sumo Preparadas porque normalmente "preparadas" es un estado, no un consumo real; si tu lógica es otra, lo ajustamos.)
+    function calcularTotales() {
+        const unidades = toNum($('#Cantidad_Unidades_MP').val());
+        const adicionales = toNum($('#Cantidad_MP_Adicionales').val());
+        const devol = toNum($('#Cant_Devoluciones').val());
+
+        const totalSalidas = Math.max((unidades + adicionales - devol), 0);
+        $('#Total_Salidas_MP').val(totalSalidas.toFixed(2));
+
+        // Metros usados = totalSalidas * longitud_unidad (tomada del ingreso seleccionado)
+        const longitud = toNum($('#Id_Ingreso_MP option:selected').data('longitud'));
+        const totalMetros = totalSalidas * longitud;
+        $('#Total_Mtros_Utilizados').val(totalMetros.toFixed(2));
+    }
+
+    $('#Cantidad_Unidades_MP, #Cantidad_MP_Adicionales, #Cant_Devoluciones, #Id_Ingreso_MP').on('input change', calcularTotales);
+    calcularTotales();
+
+    // Submit AJAX + SweetAlert
+    $('#form-egreso').on('submit', function(e) {
+        e.preventDefault();
 
         $.ajax({
             type: 'POST',
             url: $(this).attr('action'),
-            data: formData,
+            data: $(this).serialize(),
             dataType: 'json',
             success: function(response) {
                 if (response.success) {
                     Swal.fire({
                         position: 'center',
                         icon: 'success',
-                        title: 'Ingreso de materia prima creado exitosamente',
+                        title: 'Salida de materia prima creada exitosamente',
                         showConfirmButton: false,
                         timer: 1500
                     });
 
-                    // Redireccionar después de mostrar la alerta de éxito
                     setTimeout(function() {
-                        window.location.href = '{{ route('mp_ingresos.index') }}';
+                        window.location.href = "{{ route('mp_egresos.index') }}";
                     }, 1500);
                 }
             },
             error: function(xhr) {
-                var errors = xhr.responseJSON.errors || {};
-                var errorMessages = Object.values(errors).map(function(error) {
-                    return error.join('<br>');
-                });
+                const errors = xhr.responseJSON?.errors || {};
+                const errorMessages = Object.values(errors).map(e => e.join('<br>'));
 
                 Swal.fire({
                     icon: 'error',
@@ -153,49 +199,6 @@ $(document).ready(function() {
         });
     });
 
-    // Funciones adicionales para concatenar campos y calcular valores
-    function updateConcatenatedField() {
-        const materiaPrima = $('#Id_Materia_Prima option:selected').text();
-        const diametro = $('#Id_Diametro_MP option:selected').text();
-        const concatenatedText = `${materiaPrima}_${diametro}`;
-        $('#Codigo_MP').val(concatenatedText);
-    }
-
-    $('#Id_Materia_Prima, #Id_Diametro_MP').change(updateConcatenatedField);
-    updateConcatenatedField();
-
-    $('#Nro_Certificado_MP').on('input', function() {
-        const certificado = $(this).val();
-        if (certificado.startsWith('YT')) {
-            $('#Detalle_Origen_MP').val('CHINA');
-        } else {
-            $('#Detalle_Origen_MP').val('');
-        }
-    });
-
-    function calculateMetrosTotales() {
-        const unidades = parseFloat($('#Unidades_MP').val()) || 0;
-        const longitud = parseFloat($('#Longitud_Unidad_MP').val()) || 0;
-        const metrosTotales = (unidades * longitud).toFixed(2);
-        $('#Mts_Totales').val(metrosTotales);
-    }
-
-    $('#Unidades_MP, #Longitud_Unidad_MP').on('input', calculateMetrosTotales);
-
-    $.ajax({
-        url: "{{ route('mp_ingresos.ultimo_nro_ingreso') }}", 
-        type: 'GET',
-        success: function(response) {
-            if (response.success) {
-                $('#Nro_Ingreso_MP').val(response.nuevo_nro_ingreso);
-            } else {
-                console.error('Error al obtener el último número de ingreso.');
-            }
-        },
-        error: function() {
-            console.error('Error en la llamada AJAX para obtener el último número de ingreso.');
-        }
-    });
 });
 </script>
 @stop

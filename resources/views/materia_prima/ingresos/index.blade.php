@@ -57,8 +57,7 @@
 
     <div class="row">
         <div class="col-12">
-            <div class="table-responsive">
-                <table id="ingresos_materia_prima" class="table table-striped table-bordered" style="width:100%">
+                <table id="ingresos_materia_prima" class="table table-striped table-bordered w-100">
                     <thead>
                         <tr>
                        
@@ -102,7 +101,6 @@
                     <tbody>
                     </tbody>
                 </table>
-            </div>
         </div>
     </div>
 </div>
@@ -110,7 +108,11 @@
 
 @section('css')
 <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap5.min.css">
-<link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.2.9/css/responsive.bootstrap5.min.css">
+<link rel="stylesheet" href="{{ asset('vendor/adminlte/dist/css/shared/cards.css') }}">
+<link rel="stylesheet" href="{{ asset('vendor/adminlte/dist/css/shared/datatables.css') }}">
+<link rel="stylesheet" href="{{ asset('vendor/adminlte/dist/css/shared/filters.css') }}">
+<link rel="stylesheet" href="{{ asset('vendor/adminlte/dist/css/shared/buttons.css') }}">
+<link rel="stylesheet" href="{{ asset('vendor/adminlte/dist/css/shared/summary-boxes.css') }}">
 <link rel="stylesheet" href="{{ asset('vendor/adminlte/dist/css/mp_ingreso_index.css') }}">
 @stop
 
@@ -118,30 +120,18 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
 <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap5.min.js"></script>
-<script src="https://cdn.datatables.net/responsive/2.2.9/js/dataTables.responsive.min.js"></script>
 <script src="https://cdn.datatables.net/buttons/2.2.2/js/dataTables.buttons.min.js"></script>
 <script src="https://cdn.datatables.net/buttons/2.2.2/js/buttons.bootstrap5.min.js"></script>
-
-
-
-
-
-
-
 <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-
 <script>
-
-    // Cargar resumen de ingresos
 $.get("{{ route('mp_ingresos.resumen') }}", function (data) {
     $('#total-ingresos').text(data.total);
     $('#activos-ingresos').text(data.activos);
     $('#eliminados-ingresos').text(data.eliminados);
 });
 
-     // Función para eliminar un ingreso
-     function deleteIngreso(id) {
+function deleteIngreso(id) {
     Swal.fire({
         title: '¿Estás seguro?',
         text: "¡No podrás revertir esto!",
@@ -166,8 +156,14 @@ $.get("{{ route('mp_ingresos.resumen') }}", function (data) {
                         showConfirmButton: false,
                         timer: 1500
                     });
-                    // Recargar la tabla sin recargar toda la página
+
                     $('#ingresos_materia_prima').DataTable().ajax.reload(null, false);
+
+                    $.get("{{ route('mp_ingresos.resumen') }}", function (data) {
+                        $('#total-ingresos').text(data.total);
+                        $('#activos-ingresos').text(data.activos);
+                        $('#eliminados-ingresos').text(data.eliminados);
+                    });
                 },
                 error: function() {
                     Swal.fire('¡Error!', 'Ha ocurrido un error al intentar eliminar.', 'error');
@@ -177,20 +173,26 @@ $.get("{{ route('mp_ingresos.resumen') }}", function (data) {
     });
 }
 
-
 $(document).ready(function () {
-    var filtersLoaded = false;
+    let filtersLoaded = false;
 
-    // Inicialización de la tabla DataTables
-    var table = $('#ingresos_materia_prima').DataTable({
+    const table = $('#ingresos_materia_prima').DataTable({
         processing: true,
         serverSide: true,
-        
+        autoWidth: false,
+        scrollX: true,
+        scrollY: '60vh',
+        scrollCollapse: true,
+        responsive: false,
+        orderCellsTop: true,
+        searching: false,
+        paging: true,
+        pageLength: 10,
+        lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "All"]],
         ajax: {
             url: "{{ route('mp_ingresos.data') }}",
             type: 'GET',
             data: function (d) {
-
                 d.filtro_nro_ingreso = $('#filtro_nro_ingreso').val();
                 d.filtro_fecha_ingreso = $('#filtro_fecha_ingreso').val();
                 d.filtro_nro_oc = $('#filtro_nro_oc').val();
@@ -226,24 +228,15 @@ $(document).ready(function () {
                 data: 'Id_MP',
                 render: function (data) {
                     return `
-                            <a href="/mp_ingresos/${data}" class="btn btn-info btn-sm">Ver</a>
-                            <a href="/mp_ingresos/${data}/edit" class="btn btn-primary btn-sm">Editar</a>
-                            <button onclick="deleteIngreso(${data})" class="btn btn-danger btn-sm">Eliminar</button>
-                        `;
+                        <a href="/mp_ingresos/${data}" class="btn btn-info btn-sm">Ver</a>
+                        <a href="/mp_ingresos/${data}/edit" class="btn btn-primary btn-sm">Editar</a>
+                        <button onclick="deleteIngreso(${data})" class="btn btn-danger btn-sm">Eliminar</button>
+                    `;
                 },
                 orderable: false,
                 searchable: false
             }
         ],
-        scrollX: true,
-        scrollY: '60vh',
-        scrollCollapse: true,
-        searching: false,
-        paging: true,
-        fixedHeader: true,
-        responsive: true,
-        pageLength: 10,
-        lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "All"]],
         language: {
             lengthMenu: "Mostrar _MENU_ registros por página",
             zeroRecords: "No se encontraron resultados",
@@ -258,22 +251,18 @@ $(document).ready(function () {
                 previous: "Anterior"
             }
         },
-
-
-
-
         drawCallback: function () {
             if (!filtersLoaded) {
-                loadUniqueFilters(); // Cargar los filtros únicos solo una vez
+                loadUniqueFilters();
                 filtersLoaded = true;
             }
         }
     });
 
-     
+    $(window).on('resize', function () {
+        table.columns.adjust();
+    });
 
-
-    // Función para cargar los filtros únicos desde el servidor
     function loadUniqueFilters() {
         $.ajax({
             url: "{{ route('mp_ingresos.filters') }}",
@@ -285,13 +274,10 @@ $(document).ready(function () {
                 fillSelect('#filtro_codigo_mp', data.codigos);
             }
         });
-    };
+    }
 
-
-
-    // Función para rellenar los selectores con datos únicos
     function fillSelect(selector, data) {
-        var select = $(selector);
+        const select = $(selector);
         select.empty();
         select.append('<option value="">Todos</option>');
         data.forEach(function (value) {
@@ -299,26 +285,25 @@ $(document).ready(function () {
         });
     }
 
-    // Recargar la tabla al cambiar los selectores o campos de texto
-    $('.filtro-select, .filtro-texto').on('change keyup', function () {
+    $('.filtro-select').on('change', function () {
         table.ajax.reload(null, false);
     });
 
-    // Limpiar los filtros al hacer clic en el botón
+    $('.filtro-texto').on('keyup input', function () {
+        table.ajax.reload(null, false);
+    });
+
     $('#clearFilters').click(function () {
         $('.filtro-select').val('');
         $('.filtro-texto').val('');
         table.ajax.reload();
     });
 
-    
-    // Actualizar el contador de materias base
     table.on('xhr', function () {
-        var json = table.ajax.json();
-        var totalIngresos = json.recordsTotal;
+        const json = table.ajax.json();
+        const totalIngresos = json.recordsTotal;
         $('#totalCantPiezas').text(totalIngresos);
     });
-
 });
 </script>
 @stop

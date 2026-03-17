@@ -8,7 +8,7 @@
 @stop
 
 @section('content')
-<form action="{{ route('pedido_cliente.update', $pedido->Id_OF) }}" method="POST">
+<form action="{{ route('pedido_cliente.update', $pedido->Id_OF) }}" method="POST" data-edit-check="true" data-exclude-fields="_token,_method">
     @csrf
     @method('PUT')
 
@@ -49,7 +49,7 @@
         @foreach ($productos as $producto)
             <option value="{{ $producto->Id_Producto }}" 
                 data-categoria="{{ $producto->Id_Prod_Clase_Familia }}"
-                data-subcategoria="{{ $producto->Id_SubCategoria }}"
+                data-subcategoria="{{ $producto->Id_Prod_Sub_Familia }}"
                 {{ $pedido->Producto_Id == $producto->Id_Producto ? 'selected' : '' }}>
                 {{ $producto->Prod_Codigo }}
             </option>
@@ -88,211 +88,79 @@
 
 @section('js')
 <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
-
+<script src="{{ asset('js/form-edit-check.js') }}"></script>
 <script>
-    const productos = @json($productos);
-    const categoriaActual = "{{ $pedido->producto->Id_Prod_Clase_Familia }}";
-    const subcategoriaActual = "{{ $pedido->producto->Id_Prod_Sub_Familia }}";
-</script>
+const productos           = @json($productos);
+const categoriaActual     = @json($pedido->producto->Id_Prod_Clase_Familia);
+const subcategoriaActual  = @json($pedido->producto->Id_Prod_Sub_Familia);
+const productoActual      = @json($pedido->Producto_Id);
 
-<script>
-
-// Función para mostrar/ocultar productos según categoría y subcategoría
-function filtrarProductos(reset = false) {
-    const categoriaId = $('#categoria_id').val();
-    const subcategoriaId = $('#subcategoria_id').val();
-
-    $('#Producto_Id option').each(function () {
-        const prodCat = $(this).data('categoria');
-        const prodSub = $(this).data('subcategoria');
-
-        if (!categoriaId || !subcategoriaId) {
-            $(this).show();
-            return;
-        }
-
-        if (prodCat == categoriaId && prodSub == subcategoriaId) {
-            $(this).show();
-        } else {
-            $(this).hide();
-        }
-    });
-
-    if (reset) {
-        $('#Producto_Id').val('').trigger('change');
-    }
+// helpers que DEVUELVEN promesa
+function fetchSubcategorias(categoriaId) {
+  return $.get(`{{ route('productos.subcategorias') }}`, { categoria: categoriaId })
+          .then(resp => Array.isArray(resp) ? resp : resp.data);
+}
+function fetchProductos(categoriaId, subcategoriaId) {
+  return $.get('/productos/codigos', { categoria: categoriaId, subcategoria: subcategoriaId })
+          .then(resp => resp.data);
 }
 
-
-function cargarSubcategorias(categoriaId, subcategoriaSeleccionada = null) {
-    $.ajax({
-        url: `{{ route('productos.subcategorias') }}`,
-        method: 'GET',
-        data: { categoria: categoriaId },
-        success: function(data) {
-            const subcategoriaSelect = $('#subcategoria_id');
-            subcategoriaSelect.empty();
-            subcategoriaSelect.append('<option value="">Seleccione</option>');
-
-            data.forEach(sub => {
-                subcategoriaSelect.append(
-                    `<option value="${sub.id}" ${sub.id == subcategoriaSeleccionada ? 'selected' : ''}>${sub.nombre}</option>`
-                );
-            });
-
-            if (subcategoriaSeleccionada) {
-    subcategoriaSelect.val(subcategoriaSeleccionada).trigger('change');
+function cargarSubcategorias(categoriaId, seleccionada = null) {
+  return fetchSubcategorias(categoriaId).then(arr => {
+    const $s = $('#subcategoria_id');
+    $s.empty().append('<option value="">Seleccione</option>');
+    arr.forEach(sub => $s.append(`<option value="${sub.id}">${sub.nombre}</option>`));
+    if (seleccionada) $s.val(String(seleccionada));
+  });
 }
 
+function cargarProductos(categoriaId, subcategoriaId, seleccionado = null) {
+  return fetchProductos(categoriaId, subcategoriaId).then(arr => {
+    const $p = $('#Producto_Id');
+    $p.empty().append('<option value="">Seleccione</option>');
+    arr.forEach(prod => $p.append(`<option value="${prod.id}">${prod.codigo}</option>`));
+    if (seleccionado) $p.val(String(seleccionado));
+    // actualizar descripción
+    const found = productos.find(p => String(p.Id_Producto) === String($p.val()));
+    $('#Prod_Descripcion').val(found ? found.Prod_Descripcion : '');
+  });
+}
+
+$(function () {
+  // INIT: setear categoría y encadenar cargas respetando el orden
+  if (categoriaActual) {
+    $('#categoria_id').val(String(categoriaActual));
+    cargarSubcategorias(categoriaActual, subcategoriaActual)
+      .then(() => {
+        if (subcategoriaActual) {
+          return cargarProductos(categoriaActual, subcategoriaActual, productoActual);
         }
-    });
-}
+      });
+  }
 
+  // cambio de categoría -> recargar subcats y limpiar productos/desc
+  $('#categoria_id').on('change', function () {
+    const cat = $(this).val();
+    $('#Producto_Id').empty().append('<option value="">Seleccione</option>');
+    $('#Prod_Descripcion').val('');
+    if (cat) cargarSubcategorias(cat);
+  });
 
-$(document).ready(function() {
-    // Cargar subcategorías en base a categoría actual al iniciar
-    if (categoriaActual) {
-        $('#categoria_id').val(categoriaActual);
-        cargarSubcategorias(categoriaActual, subcategoriaActual);
-    }
+  // cambio de subcategoría -> recargar productos
+  $('#subcategoria_id').on('change', function () {
+    const cat = $('#categoria_id').val();
+    const sub = $(this).val();
+    $('#Prod_Descripcion').val('');
+    if (cat && sub) cargarProductos(cat, sub);
+  });
 
-    // Cargar productos si ya tenemos subcategoría
-    if (categoriaActual && subcategoriaActual) {
-        cargarProductos(categoriaActual, subcategoriaActual, "{{ $pedido->Producto_Id }}");
-    }
+  // cambio de producto -> actualizar descripción
+  $('#Producto_Id').on('change', function () {
+    const sel = productos.find(p => String(p.Id_Producto) === String($(this).val()));
+    $('#Prod_Descripcion').val(sel ? sel.Prod_Descripcion : '');
+  });
 
-    // Al cambiar categoría → cargar subcategorías
-    $('#categoria_id').on('change', function () {
-        const categoriaId = $(this).val();
-        $('#Producto_Id').empty().append('<option value="">Seleccione</option>'); // Reiniciar productos
-        cargarSubcategorias(categoriaId); // ← solo cargamos, sin selección
-    });
-
-    // Al cambiar subcategoría → cargar productos
-    $('#subcategoria_id').on('change', function () {
-        const categoriaId = $('#categoria_id').val();
-        const subcategoriaId = $(this).val();
-        cargarProductos(categoriaId, subcategoriaId);
-    });
-
-    // Al cambiar producto → actualizar descripción
-    $('#Producto_Id').on('change', function () {
-        const selectedId = parseInt($(this).val());
-        const producto = productos.find(p => p.Id_Producto === selectedId);
-        $('#Prod_Descripcion').val(producto ? producto.Prod_Descripcion : '');
-    });
+  // (tu lógica de submit con SweetAlert puede quedar igual)
 });
-
-
-<script>
-
-
-    
-    function cargarProductos(categoriaId, subcategoriaId, productoSeleccionado = null) {
-        $.ajax({
-            url: '/productos/codigos',
-            method: 'GET',
-            data: {
-                categoria: categoriaId,
-                subcategoria: subcategoriaId
-            },
-        success: function(response) {
-            const productoSelect = $('#Producto_Id');
-            productoSelect.empty();
-            productoSelect.append('<option value="">Seleccione</option>');
-            
-            response.data.forEach(producto => {
-                productoSelect.append(
-                    `<option value="${producto.id}" ${productoSeleccionado == producto.id ? 'selected' : ''}>
-                        ${producto.codigo}
-                        </option>`
-                    );
-                });
-                
-            // Actualiza descripción si ya hay un producto seleccionado
-            if (productoSeleccionado) {
-                $('#Producto_Id').trigger('change');
-            }
-        }
-    });
-}
-
-</script>
-
-
-<script>
-    $(document).ready(function() {
-        // Inicializar SweetAlert2
-        Swal.fire({
-            icon: 'info',
-            title: 'Editar Pedido del Cliente',
-            text: 'Asegúrese de que todos los campos estén correctamente llenos antes de enviar el formulario.',
-            showConfirmButton: true,
-            timer: 5000,
-            timerProgressBar: true
-        });                                                                                                                                                                                                                              
-
-
-        // Lógica para detectar cambios
-        const originalValues = {
-            Nro_OF: $('#Nro_OF').val(),
-            Producto_Id: $('#Producto_Id').val(),
-            Fecha_del_Pedido: $('#Fecha_del_Pedido').val(),
-            Cant_Fabricacion: $('#Cant_Fabricacion').val(),
-            reg_Status: $('#reg_Status').val(),
-        };
-
-        $('form').on('submit', function(e) {
-            e.preventDefault();
-
-            let hasChanges = false;
-            for (const key in originalValues) {
-                const original = String(originalValues[key]).trim();
-                const actual = String($('#' + key).val()).trim();
-
-                if (original !== actual) {
-                    hasChanges = true;
-                    break;
-                }
-            }
-
-            if (!hasChanges) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Sin cambios',
-                    text: 'No se detectaron cambios en el formulario.',
-                    showConfirmButton: true,
-                });
-                return;
-            }
-
-            // Enviar AJAX si hay cambios
-            var formData = $(this).serialize();
-            $.ajax({
-                url: $(this).attr('action'),
-                type: 'POST',
-                data: formData,
-                success: function() {
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Pedido actualizado correctamente',
-                        showConfirmButton: false,
-                        timer: 1500
-                    });
-                    setTimeout(function() {
-                        window.location.href = "{{ route('pedido_cliente.index') }}";
-                    }, 1500);
-                },
-                error: function() {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error al actualizar el pedido',
-                        showConfirmButton: true
-                    });
-                }
-            });
-        });
-    });
 </script>
 @stop

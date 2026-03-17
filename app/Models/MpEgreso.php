@@ -1,5 +1,5 @@
 <?php
-
+// app\Models\MpEgreso.php
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -13,7 +13,7 @@ class MpEgreso extends Model
     use HasFactory, SoftDeletes;
 
     protected $table = 'mp_salidas';
-    protected $primaryKey = 'Id_Ingreso_MP';
+    protected $primaryKey = 'Id_Egresos_MP';
 
     protected $fillable = [
         'Id_OF_Salidas_MP',

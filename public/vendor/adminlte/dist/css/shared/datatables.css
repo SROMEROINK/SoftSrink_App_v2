@@ -1,0 +1,42 @@
+/* public\vendor\adminlte\dist\css\shared\datatables.css*/
+
+.table-responsive {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow-x: auto;
+}
+
+.dataTables_wrapper,
+.dataTables_scroll,
+.dataTables_scrollHead,
+.dataTables_scrollBody,
+.dataTables_scrollHeadInner {
+    width: 100% !important;
+}
+
+.dataTables_scrollHeadInner table,
+.dataTables_scrollBody table {
+    width: 100% !important;
+}
+
+.table.dataTable th,
+.table.dataTable td {
+    vertical-align: middle;
+    text-align: center;
+}
+
+.dataTables_wrapper .dataTables_processing {
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    color: #333;
+    padding: 10px 18px;
+}
+
+.table-responsive .btn-sm {
+    padding: 3px 6px;
+    font-size: 12px;
+    margin-right: 2px;
+}

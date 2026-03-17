@@ -17,7 +17,7 @@
         </div>
     @endif
 
-    <form id="updateForm" method="POST">
+    <form id="updateForm" method="POST" data-edit-check="true" data-exclude-fields="_token,_method,id">
         @csrf
         @method('PUT')
         <div class="form-group">
@@ -76,6 +76,8 @@
 @stop
 
 @section('js')
+    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="{{ asset('js/form-edit-check.js') }}"></script>
     <script>
         function updateNroOFParcial() {
             var nroOF = document.getElementById('Nro_OF').value;
@@ -142,75 +144,6 @@
 
         updateOperarioOptions($('#Horario').val());
 
-        $(document).ready(function() {
-    // Datos originales para comparar
-    var originalData = {
-        Nro_Parcial: "{{ $registro_fabricacion->Nro_Parcial }}",
-        Cant_Piezas: "{{ $registro_fabricacion->Cant_Piezas }}",
-        Fecha_Fabricacion: "{{ $registro_fabricacion->Fecha_Fabricacion }}",
-        Horario: "{{ $registro_fabricacion->Horario }}",
-        Nombre_Operario: "{{ $registro_fabricacion->Nombre_Operario }}",
-        Turno: "{{ $registro_fabricacion->Turno }}",
-        Cant_Horas_Extras: "{{ $registro_fabricacion->Cant_Horas_Extras }}"
-    };
-
-    $('#updateForm').on('submit', function(e) {
-        e.preventDefault();
-        var formData = $(this).serializeArray();
-        var hasChanges = false;
-
-        formData.forEach(function(field) {
-            if (originalData[field.name] != field.value) {
-                hasChanges = true;
-            }
-        });
-
-        if (!hasChanges) {
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: 'No se realizaron cambios en el registro.',
-                position: 'center'
-            });
-            return;
-        }
-
-        $.ajax({
-            url: '{{ route('fabricacion.update', ['fabricacion' => $registro_fabricacion->Id_OF]) }}',
-            type: 'POST',
-            data: formData,
-            success: function(response) {
-                if (response.status === 'warning') {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: response.message,
-                        position: 'center'
-                    });
-                } else {
-                    Swal.fire({
-                        position: 'center',
-                        icon: 'success',
-                        title: response.message,
-                        showConfirmButton: false,
-                        timer: 1500
-                    }).then((result) => {
-                        if (result.dismiss === Swal.DismissReason.timer) {
-                            window.location = '{{ route('fabricacion.showByNroOF', ['nroOF' => $registro_fabricacion->Nro_OF]) }}';
-                        }
-                    });
-                }
-            },
-            error: function(response) {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: 'No se pudo actualizar el registro.',
-                    position: 'center'
-                });
-            }
-        });
-    });
-});
+        // El script form-edit-check.js maneja la detección de cambios y el submit
     </script>
 @stop

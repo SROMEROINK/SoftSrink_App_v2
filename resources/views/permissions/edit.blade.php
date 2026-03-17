@@ -22,7 +22,7 @@
             </script>
         @endif
 
-        <form id="updateForm" action="{{ route('permissions.update', $permission->id) }}" method="POST">
+        <form id="updateForm" action="{{ route('permissions.update', $permission->id) }}" method="POST" data-edit-check="true" data-exclude-fields="_token,_method">
             @csrf
             @method('PUT')
             <div class="form-group">
@@ -39,39 +39,5 @@
 
 @section('js')
 <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script>
-    $(document).ready(function() {
-        $('#updateForm').on('submit', function(e) {
-            e.preventDefault();
-            var formData = $(this).serialize();
-
-            $.ajax({
-                url: '{{ route('permissions.update', $permission->id) }}',
-                type: 'POST',
-                data: formData,
-                success: function(response) {
-                    Swal.fire({
-                        position: 'center',
-                        icon: 'success',
-                        title: 'Permiso actualizado correctamente',
-                        showConfirmButton: false,
-                        timer: 1500
-                    }).then((result) => {
-                        if (result.dismiss === Swal.DismissReason.timer) {
-                            window.location.href = '{{ route('permissions.index') }}';
-                        }
-                    });
-                },
-                error: function(response) {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: 'No se pudo actualizar el permiso.',
-                        position: 'center'
-                    });
-                }
-            });
-        });
-    });
-</script>
+<script src="{{ asset('js/form-edit-check.js') }}"></script>
 @endsection

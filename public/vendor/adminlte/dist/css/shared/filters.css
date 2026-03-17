@@ -1,0 +1,54 @@
+
+/*public\vendor\adminlte\dist\css\shared\filters.css*/
+
+.filtro-texto {
+    border: 2px solid #1E90FF;
+    padding-right: 24px;
+}
+
+.filtro-select {
+    border: 2px solid red;
+    padding-right: 24px;
+}
+
+.filtro-texto::placeholder {
+    color: black;
+}
+
+.filtro-texto::-ms-clear {
+    display: none;
+}
+
+.filtro-texto-clear {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    display: none;
+}
+
+.filtro-texto:valid + .filtro-texto-clear {
+    display: block;
+}
+
+.filtro-select-wrapper {
+    position: relative;
+}
+
+.filtro-select-wrapper .filtro-select {
+    padding-right: 24px;
+}
+
+.filtro-select-wrapper .filtro-select-clear {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    display: none;
+}
+
+.filtro-select:valid + .filtro-select-clear {
+    display: block;
+}

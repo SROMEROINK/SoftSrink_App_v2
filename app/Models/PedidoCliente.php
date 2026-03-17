@@ -1,74 +1,60 @@
 <?php
-
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes; // Importa la clase SoftDeletes
-use App\Models\Producto;
-use App\Models\ProductoCategoria;
-use App\Models\ProductoSubCategoria;
-use App\Models\Ingreso_mp;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class PedidoCliente extends Model
 {
-    use HasFactory;
-    protected $table = 'pedido_cliente'; // Alias para la nueva tabla
-    protected $primaryKey = 'Id_OF';
-    protected $fillable = [
-        "Id_OF",
-        "Nro_OF",
-        "Producto_Id",
-        "Fecha_del_Pedido",
-        "Cant_Fabricacion",
-        "reg_Status",
-        "created_by",
-        "updated_by"
-    ];
-    
-    public $timestamps = true; // Habilita los timestamps created_at y updated_at
+    use SoftDeletes;
 
-    // Relación con Producto
+    protected $table = 'pedido_cliente';
+    protected $primaryKey = 'Id_OF';
+    public $incrementing = true;
+    protected $keyType = 'int';
+    public $timestamps = true;
+
+    protected $fillable = [
+        'Nro_OF','Producto_Id','Fecha_del_Pedido','Cant_Fabricacion',
+        'Estado_Plani_Id', // lo agregamos en el paso 3
+        'reg_Status','created_by','updated_by','deleted_by',
+    ];
+
+    protected $casts = [
+        'reg_Status'        => 'boolean',
+        'Fecha_del_Pedido'  => 'date',
+        'Cant_Fabricacion'  => 'integer',
+        'Nro_OF'            => 'integer',
+        'Estado_Plani_Id'   => 'integer',
+    ];
+
+    // Relaciones
     public function producto()
     {
         return $this->belongsTo(Producto::class, 'Producto_Id', 'Id_Producto');
     }
 
-    // Relación con Categoria a través de Producto
-    public function categoria()
+    public function estadoPlanificacion()
     {
-        return $this->hasOneThrough(
-            ProductoCategoria::class,
-            Producto::class,
-            'Id_Producto',       // Foreign key en Producto
-            'Id_Categoria',      // Primary key en Categoria
-            'Producto_Id',       // Foreign key en Listado_OF
-            'Id_Prod_Clase_Familia' // Foreign key en Producto
-        );
+        return $this->belongsTo(EstadoPlanificacion::class, 'Estado_Plani_Id', 'Estado_Plani_Id');
     }
 
-        // Relación con Subcategoria a través de Producto
-        public function Subcategoria()
-        {
-            return $this->hasOneThrough(
-                ProductoSubCategoria::class,
-                Producto::class,
-                'Id_Producto',       // Foreign key en Producto
-                'Id_Categoria',      // Primary key en Categoria
-                'Producto_Id',       // Foreign key en Listado_OF
-                'Id_Prod_Clase_Familia' // Foreign key en Producto
-            );
-        }
-
-            public function creator()
+    public function fechas() // 1:1
 {
-    return $this->belongsTo(User::class, 'created_by');
+    return $this->hasOne(FechasOf::class, 'Id_OF', 'Id_OF');
 }
 
-public function updater()
-{
-    return $this->belongsTo(User::class, 'updated_by');
+    public function creator() { return $this->belongsTo(User::class, 'created_by'); }
+    public function updater() { return $this->belongsTo(User::class, 'updated_by'); }
+
+    // Helpers para usar directo en vistas/datatable
+    public function getCategoriaNombreAttribute()
+    {
+        return $this->producto->categoria->Nombre_Categoria ?? null;
+    }
+    public function getSubcategoriaNombreAttribute()
+    {
+        return $this->producto->subcategoria->Nombre_SubCategoria ?? null;
+    }
 }
 
-
-}

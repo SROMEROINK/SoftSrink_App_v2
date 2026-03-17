@@ -5,11 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes; // Importa la clase SoftDeletes
-use App\Models\Listado_OF;
+use App\Models\PedidoCliente;
 use App\Models\Producto;
 use App\Models\ProductoCategoria;
 
-class FechasOF extends Model
+class FechasOf extends Model
 {
     use HasFactory;
 
@@ -31,17 +31,16 @@ class FechasOF extends Model
         'updated_by'  // Si tienes los campos de auditoría
     ];
 
-    // Relación con Listado_OF (similar a RegistroDeFabricacion)
-    public function listadoOf()
-    {
-        return $this->belongsTo(Listado_OF::class, 'Nro_OF_fechas', 'Nro_OF');
-    }
+public function pedido()
+{
+    return $this->belongsTo(PedidoCliente::class, 'Id_OF', 'Id_OF');
+}
 
     // Relación con Producto a través de Listado_OF (hasOneThrough)
-    public function producto()
+    /*public function producto()
     {
         return $this->hasOneThrough(Producto::class, Listado_OF::class, 'Nro_OF', 'Id_Producto', 'Nro_OF_fechas', 'Producto_Id');
-    }
+    }*/
 
     // Relación con la Categoría del Producto (similar a RegistroDeFabricacion)
     public function categoria()

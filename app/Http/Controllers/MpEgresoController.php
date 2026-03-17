@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\MpEgreso;
-use App\Models\Proveedor;
 use Illuminate\Support\Facades\Auth;
 
 class MpEgresoController extends Controller
@@ -49,7 +48,7 @@ class MpEgresoController extends Controller
         try {
             $egresos_mp = MpEgreso::with(['proveedor'])
                 ->select(
-                    'Id_Ingreso_MP',
+                    'Id_Egresos_MP',
                     'Id_OF_Salidas_MP',
                     'Cantidad_Unidades_MP',
                     'Cantidad_Unidades_MP_Preparadas',
@@ -99,9 +98,9 @@ class MpEgresoController extends Controller
 
     public function create()
     {
-        $proveedores = Proveedor::where('Es_Proveedor_MP', 1)->where('reg_Status', 1)->get();
+        $egresos = MpEgreso::where('reg_Status', 1)->get();
 
-        return view('materia_prima.egresos.create', compact('proveedores'));
+        return view('materia_prima.egresos.create', compact('egresos'));
     }
 
     public function store(Request $request)

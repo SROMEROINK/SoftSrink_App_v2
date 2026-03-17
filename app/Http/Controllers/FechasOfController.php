@@ -7,7 +7,7 @@ use Yajra\DataTables\Facades\DataTables;
 use Illuminate\Support\Facades\Log;
 use App\Models\FechasOF;
 
-class FechasOFController extends Controller
+class FechasOfController extends Controller
 {
     public function __construct()
     {

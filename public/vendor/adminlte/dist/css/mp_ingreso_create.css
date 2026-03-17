@@ -1,26 +1,19 @@
-/*public\vendor\adminlte\dist\css\fabricacion_create.css*/
+/* public/vendor/adminlte/dist/css/mp_ingreso_create.css */
 
 :root {
-    --colorTextos: #49454567;
+    --colorTextos: #b8c2cc;
     --colorPrimario: #6A82FB;
     --colorSecundario: #FC5C7D;
+    --colorBorde: #dee2e6;
+    --colorHeader: #f4f6f9;
+    --colorCard: #ffffff;
+    --colorSombra: rgba(0, 0, 0, 0.08);
 }
 
 *,
 ::before,
 ::after {
-    margin: 0;
-    padding: 0;
     box-sizing: border-box;
-}
-
-body {
-    font-family: 'Poppins', sans-serif;
-    width: 100%;
-    height: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
 }
 
 h1 {
@@ -29,43 +22,88 @@ h1 {
     font-weight: 800;
 }
 
-form {
-    background: #fff;
-    width: 100%;
-    padding: 20px;
+.card {
+    background: var(--colorCard);
     border-radius: 10px;
-    box-shadow: 0 0 6px 0 rgba(255, 255, 255, 0.8);
+    box-shadow: 0 2px 8px var(--colorSombra);
+    border: 1px solid #e9ecef;
+    margin-bottom: 20px;
+}
+
+.card-header {
+    background-color: var(--colorHeader);
+    font-weight: 600;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.card-body {
+    padding: 20px;
+}
+
+.form-group label {
+    font-weight: 600;
+    color: #343a40;
+    margin-bottom: 6px;
+    display: block;
+}
+
+.form-control {
+    border-radius: 6px;
+    min-height: 40px;
+    border: 1px solid #ced4da;
+    box-shadow: none;
+}
+
+.form-control:focus {
+    border-color: var(--colorPrimario);
+    box-shadow: 0 0 0 0.2rem rgba(106, 130, 251, 0.15);
+}
+
+.table-responsive {
+    overflow-x: auto;
 }
 
 .table {
     width: 100%;
-    margin: 20px 0;
-    table-layout: fixed;
+    margin: 0;
+    table-layout: auto;
+    border-collapse: collapse;
 }
 
 .table th,
 .table td {
-    vertical-align: middle;
+    vertical-align: middle !important;
     text-align: center;
-    overflow: hidden;
+    padding: 10px 8px;
+    border: 1px solid var(--colorBorde);
     white-space: nowrap;
-    text-overflow: ellipsis;
-    padding: 10px;
-    font-weight: bold;
+}
+
+.table thead th {
+    background: #f8f9fa;
+    font-weight: 700;
+    font-size: 14px;
+}
+
+.table tbody td {
+    background: #fff;
 }
 
 .table input,
 .table select {
     background: none;
     color: #494545;
-    font-size: 16px;
-    padding: 10px 10px 10px 5px;
+    font-size: 14px;
     width: 100%;
+    min-width: 120px;
     border: none;
     border-bottom: 1px solid var(--colorTextos);
     transition: 0.3s ease all;
     text-align: center;
     line-height: 1.2;
+    padding: 8px 6px;
+    border-radius: 0;
+    box-shadow: none;
 }
 
 .table input:focus,
@@ -73,36 +111,35 @@ form {
     outline: none;
     color: rgb(94, 93, 93);
     border-bottom: 1px solid var(--colorPrimario);
+    box-shadow: none;
+}
+
+.table .codigo-mp,
+.table .detalle-origen,
+.table .nro-certificado {
+    min-width: 150px;
 }
 
 .table .btn {
     width: auto;
-    padding: 5px 10px;
-    border-radius: 4px;
-    font-size: 14px;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 13px;
     cursor: pointer;
     transition: background 0.3s ease;
     margin: 0 2px;
-}
-
-.table .btn-info {
-    background: var(--colorPrimario);
-    color: #fff;
-    min-width: 110px;
+    white-space: nowrap;
 }
 
 .table .btn-danger {
     background: var(--colorSecundario);
     color: #fff;
+    border: none;
     min-width: 110px;
 }
 
-.table .btn-info:hover {
-    background: var(--colorPrimario);
-}
-
 .table .btn-danger:hover {
-    background: var(--colorSecundario);
+    background: #e84b6a;
 }
 
 .btn-der {
@@ -110,40 +147,120 @@ form {
     display: flex;
     justify-content: flex-start;
     gap: 10px;
+    flex-wrap: wrap;
 }
 
 .btn-der .btn {
-    background: var(--colorPrimario);
-    color: #fff;
     border: none;
-    border-radius: 4px;
+    border-radius: 6px;
     padding: 10px 20px;
     cursor: pointer;
-    transition: background 0.3s ease;
+    transition: 0.3s ease;
+    min-width: 140px;
 }
 
 .btn-der .btn-success {
     background: var(--colorSecundario);
+    color: #fff;
 }
 
-.btn-der .btn-success:hover,
+.btn-der .btn-primary {
+    background: var(--colorPrimario);
+    color: #fff;
+}
+
+.btn-der .btn-secondary {
+    background: #6c757d;
+    color: #fff;
+}
+
+.btn-der .btn-success:hover {
+    background: #e84b6a;
+}
+
 .btn-der .btn-primary:hover {
-    background: var(--colorSecundario);
-    opacity: 1;
+    background: #5a72ea;
 }
 
-.table tbody tr.duplicated {
-    background-color: #f8d7da;
+.btn-der .btn-secondary:hover {
+    background: #5c636a;
 }
 
-.table th.col-nro-fila,
-.table td.col-nro-fila {
-    width: 100px;
-    text-align: center;
-    vertical-align: middle;
+.text-muted {
+    font-size: 12px;
+}
+
+.alert-info {
+    border-radius: 8px;
+    font-size: 14px;
+}
+
+.card-outline.card-info {
+    border-top: 3px solid #17a2b8;
+}
+
+#tablaIngresoMP tbody tr:hover {
+    background-color: #f9fbfd;
+}
+
+#tablaIngresoMP tbody tr td:first-child {
+    font-weight: 700;
+    min-width: 70px;
 }
 
 .swal2-popup .btn-info {
     margin-top: 10px;
 }
 
+/* Responsive */
+@media (max-width: 1200px) {
+    .table th,
+    .table td {
+        font-size: 13px;
+        padding: 8px 6px;
+    }
+
+    .table input,
+    .table select {
+        min-width: 100px;
+        font-size: 13px;
+    }
+}
+
+@media (max-width: 768px) {
+    h1 {
+        font-size: 24px;
+    }
+
+    .card-body {
+        padding: 15px;
+    }
+
+    .btn-der {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .btn-der .btn {
+        width: 100%;
+    }
+
+    .table th,
+    .table td {
+        font-size: 12px;
+        padding: 6px 4px;
+    }
+
+    .table input,
+    .table select {
+        min-width: 90px;
+        font-size: 12px;
+        padding: 6px 4px;
+    }
+
+    .table .btn-danger {
+        min-width: 90px;
+        font-size: 12px;
+        padding: 5px 8px;
+    }
+}

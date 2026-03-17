@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes; // Importa la clase SoftDeletes
 
-class ProductoSubCategoria extends Model
+class ProductoSubcategoria extends Model
 {
     protected $table = 'producto_subcategoria';
     protected $primaryKey = 'Id_SubCategoria';

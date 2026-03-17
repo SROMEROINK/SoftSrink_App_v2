@@ -1,149 +1,65 @@
-/*public\vendor\adminlte\dist\css\proveedores_create.css*/
 
-:root {
-    --colorTextos: #49454567;
-    --colorPrimario: #6A82FB;
-    --colorSecundario: #FC5C7D;
+.proveedor-create-card {
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+    border: 1px solid #e5e9ef;
 }
 
-*,
-::before,
-::after {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
+.proveedor-create-card .card-header {
+    background: linear-gradient(135deg, #f8f9fa 0%, #eef2f6 100%);
+    border-bottom: 1px solid #e5e9ef;
+    padding: 1rem 1.25rem;
 }
 
-body {
-    font-family: 'Poppins', sans-serif;
-    width: 100%;
-    height: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+.proveedor-create-card .card-title {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #2f3a45;
 }
 
-h1 {
-    text-align: center;
-    margin: 10px 0;
-    font-weight: 800;
+.proveedor-create-card .card-body {
+    padding: 1.5rem;
 }
 
-form {
-    background: #fff;
-    width: 100%;
-    padding: 20px;
-    border-radius: 10px;
-    box-shadow: 0 0 6px 0 rgba(255, 255, 255, 0.8);
+.proveedor-create-card .form-group label {
+    font-weight: 700;
+    color: #343a40;
+    margin-bottom: 0.45rem;
 }
 
-.table {
-    width: 100%;
-    margin: 20px 0;
-    table-layout: fixed;
+.proveedor-create-card .form-control {
+    border-radius: 8px;
+    min-height: 42px;
 }
 
-.table th,
-.table td {
-    vertical-align: middle;
-    text-align: center;
-    overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-    padding: 10px;
-    font-weight: bold;
+.proveedor-create-card .form-control:focus {
+    box-shadow: 0 0 0 0.15rem rgba(0, 123, 255, 0.15);
 }
 
-.table input,
-.table select {
-    background: none;
-    color: #494545;
-    font-size: 16px;
-    padding: 10px 10px 10px 5px;
-    width: 100%;
-    border: none;
-    border-bottom: 1px solid var(--colorTextos);
-    transition: 0.3s ease all;
-    text-align: center;
-    line-height: 1.2;
+.proveedor-create-card .card-footer {
+    background-color: #fff;
+    border-top: 1px solid #e9ecef;
+    padding: 1rem 1.25rem;
 }
 
-.table input:focus,
-.table select:focus {
-    outline: none;
-    color: rgb(94, 93, 93);
-    border-bottom: 1px solid var(--colorPrimario);
+.proveedor-create-card .btn {
+    min-width: 140px;
+    border-radius: 8px;
+    font-weight: 600;
 }
 
-.table .btn {
-    width: auto;
-    padding: 5px 10px;
-    border-radius: 4px;
-    font-size: 14px;
-    cursor: pointer;
-    transition: background 0.3s ease;
-    margin: 0 2px;
-}
+@media (max-width: 768px) {
+    .proveedor-create-card .card-body {
+        padding: 1rem;
+    }
 
-.table .btn-info {
-    background: var(--colorPrimario);
-    color: #fff;
-    min-width: 110px;
-}
+    .proveedor-create-card .card-footer.text-right {
+        text-align: left !important;
+    }
 
-.table .btn-danger {
-    background: var(--colorSecundario);
-    color: #fff;
-    min-width: 110px;
+    .proveedor-create-card .btn {
+        display: block;
+        width: 100%;
+        margin-bottom: 8px;
+    }
 }
-
-.table .btn-info:hover {
-    background: var(--colorPrimario);
-}
-
-.table .btn-danger:hover {
-    background: var(--colorSecundario);
-}
-
-.btn-der {
-    margin-top: 20px;
-    display: flex;
-    justify-content: flex-start;
-    gap: 10px;
-}
-
-.btn-der .btn {
-    background: var(--colorPrimario);
-    color: #fff;
-    border: none;
-    border-radius: 4px;
-    padding: 10px 20px;
-    cursor: pointer;
-    transition: background 0.3s ease;
-}
-
-.btn-der .btn-success {
-    background: var(--colorSecundario);
-}
-
-.btn-der .btn-success:hover,
-.btn-der .btn-primary:hover {
-    background: var(--colorSecundario);
-    opacity: 1;
-}
-
-.table tbody tr.duplicated {
-    background-color: #f8d7da;
-}
-
-.table th.col-nro-fila,
-.table td.col-nro-fila {
-    width: 100px;
-    text-align: center;
-    vertical-align: middle;
-}
-
-.swal2-popup .btn-info {
-    margin-top: 10px;
-}
-

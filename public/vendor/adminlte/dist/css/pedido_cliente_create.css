@@ -1,3 +1,6 @@
+/* public\vendor\adminlte\dist\css\pedido_cliente_create.css */
+
+
 :root {
     --colorTextos: #49454567;
     --colorPrimario: #6A82FB;
@@ -143,5 +146,11 @@ form {
 
 .swal2-popup .btn-info {
     margin-top: 10px;
+}
+
+/* Resaltar filas duplicadas */
+#tablaListadoOF tbody tr.row-dup {
+  outline: 2px solid #dc3545;
+  background: rgba(220, 53, 69, 0.12);
 }
 

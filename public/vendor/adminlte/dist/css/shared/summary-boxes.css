@@ -1,0 +1,78 @@
+/* public/vendor/adminlte/dist/css/shared/summary-boxes.css */
+
+.small-box {
+    position: relative;
+    overflow: hidden;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    transition: transform 0.22s ease, box-shadow 0.22s ease;
+}
+
+.small-box > .inner {
+    position: relative;
+    z-index: 1;
+}
+
+.small-box > .icon {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    z-index: 0;
+    pointer-events: none;
+}
+
+.small-box > .icon > i,
+.small-box > .icon > svg {
+    font-size: 55px;
+    color: rgba(0, 0, 0, 0.22);
+    opacity: 0.42;
+    transition: transform 0.25s ease, opacity 0.25s ease, filter 0.25s ease, color 0.25s ease;
+    transform-origin: center center;
+}
+
+.small-box .inner h3 {
+    font-weight: 700;
+}
+
+.small-box:hover {
+    transform: translateY(-2px);
+}
+
+/* INFO */
+.small-box.bg-info:hover {
+    box-shadow: 0 8px 20px rgba(23, 162, 184, 0.28);
+}
+
+.small-box.bg-info:hover > .icon > i,
+.small-box.bg-info:hover > .icon > svg {
+    transform: scale(1.08);
+    opacity: 0.55;
+    color: rgba(0, 0, 0, 0.28);
+    filter: brightness(1.05);
+}
+
+/* SUCCESS */
+.small-box.bg-success:hover {
+    box-shadow: 0 8px 20px rgba(40, 167, 69, 0.28);
+}
+
+.small-box.bg-success:hover > .icon > i,
+.small-box.bg-success:hover > .icon > svg {
+    transform: scale(1.08);
+    opacity: 0.55;
+    color: rgba(0, 0, 0, 0.28);
+    filter: brightness(1.05);
+}
+
+/* DANGER */
+.small-box.bg-danger:hover {
+    box-shadow: 0 8px 20px rgba(220, 53, 69, 0.28);
+}
+
+.small-box.bg-danger:hover > .icon > i,
+.small-box.bg-danger:hover > .icon > svg {
+    transform: scale(1.08);
+    opacity: 0.55;
+    color: rgba(0, 0, 0, 0.28);
+    filter: brightness(1.05);
+}

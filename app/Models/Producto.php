@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\SoftDeletes; // Importa la clase SoftDeletes
 
 class Producto extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes; // Aplica el trait SoftDeletes aquí;;
 
     protected $table = 'productos';
     protected $primaryKey = 'Id_Producto';

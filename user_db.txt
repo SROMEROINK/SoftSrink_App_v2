@@ -3,3 +3,8 @@ contraseña base de datos:
 18/6/2025
 root
 V@yneadc2025
+
+04/03/2026
+
+DB_USERNAME=SRINK
+DB_PASSWORD=V@yneadc2026
