@@ -36,44 +36,27 @@
 
 @section('js')
 <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="{{ asset('js/swal-utils.js') }}"></script>
 <script>
     $(document).ready(function() {
         $('form').on('submit', function(e) {
-            e.preventDefault(); // Detener la acción por defecto
+            e.preventDefault();
 
-            const form = this; // Guardar referencia al formulario
+            const form = this;
 
-            Swal.fire({
-                title: '¿Estás seguro?',
-                text: "¿Quieres restaurar este proveedor?",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#3085d6',
-                cancelButtonColor: '#d33',
-                confirmButtonText: 'Sí, restaurarlo!'
-            }).then((result) => {
+            SwalUtils.confirmRestore('El proveedor volvera al listado principal.').then((result) => {
                 if (result.isConfirmed) {
                     $.ajax({
                         url: $(form).attr('action'),
                         type: 'POST',
                         data: $(form).serialize(),
                         success: function(response) {
-                            Swal.fire(
-                                'Restaurado!',
-                                'El proveedor ha sido restaurado exitosamente.',
-                                'success'
-                            ).then((result) => {
-                                if (result.isConfirmed) {
-                                    window.location.href = "{{ route('proveedores.index') }}";
-                                }
+                            SwalUtils.restored(response.message || 'El proveedor ha sido restaurado exitosamente.').then(() => {
+                                window.location.href = "{{ route('proveedores.index') }}";
                             });
                         },
-                        error: function(response) {
-                            Swal.fire(
-                                'Error!',
-                                'No se pudo restaurar el proveedor.',
-                                'error'
-                            );
+                        error: function() {
+                            SwalUtils.error('No se pudo restaurar el proveedor.');
                         }
                     });
                 }

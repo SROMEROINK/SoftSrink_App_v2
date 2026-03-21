@@ -1,0 +1,38 @@
+.pedido-show-card {
+    border-radius: 14px;
+    overflow: hidden;
+}
+
+.pedido-show-subtitle {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #6c7a89;
+    margin-top: 4px;
+}
+
+.pedido-estado-badge {
+    background: #eef4ff;
+    color: #285ea8;
+    border: 1px solid #cfe0ff;
+    padding: 0.55rem 0.9rem;
+}
+
+.pedido-show-card .detail-item {
+    min-height: 102px;
+}
+
+.pedido-show-card .detail-value {
+    line-height: 1.45;
+}
+
+@media (max-width: 768px) {
+    .pedido-show-card .show-card-header {
+        gap: 12px;
+        align-items: flex-start !important;
+        flex-direction: column;
+    }
+
+    .pedido-estado-badge {
+        align-self: flex-start;
+    }
+}

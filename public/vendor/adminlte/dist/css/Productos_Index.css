@@ -1,169 +1,125 @@
-/* public\vendor\adminlte\dist\css\Productos_Index.css */
+/* public/vendor/adminlte/dist/css/Productos_Index.css */
 
-/* Ajustes para la tabla */
-.table-responsive {
-    width: 100% !important;
-    max-width: 100% !important;
-    margin: 0 !important;
-    padding: 0 !important;
+.table-responsive-productos {
+    width: 100%;
+    max-width: 100%;
     overflow-x: auto;
 }
 
-/* Reglas para DataTables */
-.dataTables_wrapper,
-.dataTables_scroll,
-.dataTables_scrollHead,
-.dataTables_scrollBody,
-.dataTables_scrollHeadInner {
+.table-responsive-productos .dataTables_wrapper,
+.table-responsive-productos .dataTables_scroll,
+.table-responsive-productos .dataTables_scrollHead,
+.table-responsive-productos .dataTables_scrollBody {
     width: 100% !important;
 }
 
-.dataTables_scrollHeadInner table,
-.dataTables_scrollBody table {
-    width: 100% !important;
+.table-responsive-productos .dataTables_scrollHeadInner {
+    width: auto !important;
 }
 
-/* Estilos para el card del título */
-.card-title-header {
-    display: flex;
-    justify-content: center; /* Centra el contenido horizontalmente */
-    align-items: center; /* Centra el contenido verticalmente */
-    background-color: #f8f9fa; /* Color de fondo del card */
-    padding: 1rem; /* Añade padding alrededor del contenido */
-    border-radius: 0.25rem; /* Bordes redondeados */
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Añade una sombra suave */
+.table-responsive-productos .dataTables_scrollHeadInner table,
+.table-responsive-productos .dataTables_scrollBody table,
+#listado_productos {
+    width: auto !important;
+    min-width: 100%;
+    table-layout: auto;
 }
 
-/* Estilos para el título principal */
-.card-title-header h4 {
-    font-size: 27px; /* Aumenta el tamaño de la fuente */
-    font-weight: bold; /* Negrita para destacar */
-    color: #343a40; /* Color más oscuro para el título */
-    margin: 0; /* Quita el margen */
+.table-responsive-productos.tabla-plegada .dataTables_scrollHeadInner table,
+.table-responsive-productos.tabla-plegada .dataTables_scrollBody table,
+.table-responsive-productos.tabla-plegada #listado_productos {
+    width: max-content !important;
+    min-width: 0 !important;
 }
 
-/* Estilos personalizados para el título */
-.titulo-cantidad {
-    font-weight: bold;
-    color: #0a0000; /* Un color más neutro y profesional */
-    font-size: 1.3rem; /* Aumenta el tamaño de la fuente */
-    margin: 0; /* Quita el margen */
-    line-height: 1.5; /* Alinea verticalmente */
-    margin-top: 8px; /* Añade margen superior para bajar el texto */
-}
-
-/* Estilos personalizados para el número */
-.total-numero {
-    padding: 3px 5px; /* Añade un poco de relleno */
-    background-color: #007bff; /* Color de fondo */
-    color: white; /* Color del texto */
-    border-radius: 3px; /* Agrega bordes redondeados */
-    font-size: 1.3rem; /* Tamaño de la fuente igual al del título */
-    margin-top: 3px; /* Añade margen superior para bajar el texto */
-    margin-left: 10px; /* Espacio entre el título y el número */
-}
-
-/* Estilos para la sección de información */
-.info-section {
-    display: flex;
-    align-items: center;
-}
-
-/* Estilos para el botón de crear registro */
-.card-header .btn.create-button {
-    background-color: #28a745; /* Color del botón */
-    border-color: #28a745; /* Color del borde */
-    color: white; /* Color del texto */
-    padding: 0.4rem 0.8rem; /* Aumenta el padding para hacer el botón más grande */
-    font-size: 18px; /* Aumenta el tamaño del texto */
-    border-radius: 0.35rem; /* Bordes redondeados */
-    text-align: center;
-    text-decoration: none; /* Sin subrayado */
-    display: inline-block;
-}
-
-/* Asegurar que el contenedor se alinee al inicio */
-.card-header {
-    justify-content: flex-start;
-}
-
-/* Asegurar que el botón se alinee al final */
-.card-header .create-button {
-    margin-left: auto;
-}
-
-/* Estilos para centrar los datos en DataTables */
 #listado_productos th,
 #listado_productos td {
-    text-align: center; /* Centra el contenido de las celdas */
+    text-align: center;
+    vertical-align: middle;
 }
 
-/* Estilos para los campos select */
-.filtro-select {
-    border: 2px solid red;
-    padding-right: 24px;
+#listado_productos thead tr:first-child th {
+    text-align: center !important;
 }
 
-/* Estilos para los campos de texto */
-.filtro-texto {
-    border: 2px solid #1E90FF; /* Azul Francia */
-    padding-right: 24px;
+.table-header-label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-height: 100%;
+    text-align: center;
+    font-weight: 700;
 }
 
-/* Estilos para los placeholders */
-.filtro-texto::placeholder {
-    color: black;
+#listado_productos tbody tr:hover td {
+    background-color: #00e002 !important;
+    color: #000 !important;
+    font-weight: 700 !important;
+    transition: background-color 0.15s ease-in-out;
 }
 
-/* Quitar el botón de limpiar en IE/Edge */
-.filtro-texto::-ms-clear {
-    display: none;
+#listado_productos tbody tr:hover td:first-child {
+    box-shadow: inset 4px 0 0 #5d00e0;
 }
 
-/* Botón de limpiar personalizado */
-.filtro-texto-clear {
-    position: absolute;
-    right: 8px;
-    top: 50%;
-    transform: translateY(-50%);
+#listado_productos tbody tr {
     cursor: pointer;
-    display: none;
 }
 
-.filtro-texto:valid + .filtro-texto-clear {
-    display: block;
+.table-fold-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    padding: 10px 12px;
+    border: 1px solid #d9e2ef;
+    border-radius: 8px;
+    background: linear-gradient(180deg, #f8fbff 0%, #eef5fc 100%);
 }
 
-/* Estilos para los select con un ícono de cerrar al lado */
-.filtro-select-wrapper {
-    position: relative;
+.table-fold-toolbar__label {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #43556b;
 }
 
-.filtro-select-wrapper .filtro-select {
-    padding-right: 24px;
+.table-fold-toggle {
+    border-width: 2px;
+    font-weight: 600;
+    white-space: nowrap;
 }
 
-.filtro-select-wrapper .filtro-select-clear {
-    position: absolute;
-    right: 8px;
-    top: 50%;
-    transform: translateY(-50%);
-    cursor: pointer;
-    display: none;
+.table-fold-toggle.active {
+    background-color: #495057;
+    border-color: #495057;
+    color: #fff;
 }
 
-.filtro-select:valid + .filtro-select-clear {
-    display: block;
+.acciones-grupo {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    flex-wrap: nowrap;
+    min-width: 150px;
 }
 
-/* Estilos para los botones de navegación */
-.btn-toolbar .btn-group {
-    margin-right: 10px; /* Espacia los grupos de botones */
+.columna-acciones,
+#listado_productos th:last-child,
+#listado_productos td:last-child {
+    white-space: nowrap !important;
+    min-width: 160px;
 }
 
-.btn-toolbar .btn {
-    margin: 5px; /* Añade margen alrededor de cada botón */
-    padding: 10px 20px; /* Añade espacio interno a los botones */
-    border-radius: 5px; /* Bordes redondeados */
-    transition: background-color 0.3s ease; /* Transición suave para el cambio de color de fondo */
+@media (max-width: 768px) {
+    .table-fold-toolbar {
+        align-items: stretch;
+    }
+
+    .table-fold-toggle {
+        width: 100%;
+    }
 }

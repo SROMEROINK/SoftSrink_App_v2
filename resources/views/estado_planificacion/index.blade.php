@@ -1,10 +1,10 @@
 @extends('adminlte::page')
 
-@section('title', 'Estados de Planificación')
+@section('title', 'Estados de Planificacion')
 
 @section('content_header')
-<x-header-card 
-    title="Estados de Planificación"
+<x-header-card
+    title="Estados de Planificacion"
     quantityTitle="Cantidad de estados:"
     quantity="{{ $totalEstados }}"
     buttonRoute="{{ route('estado_planificacion.create') }}"
@@ -59,7 +59,6 @@
             <table id="tabla_estados_planificacion" class="table table-bordered table-striped w-100">
                 <thead>
                     <tr>
-                        <th>ID</th>
                         <th>Nombre Estado</th>
                         <th>Status</th>
                         <th>Creado</th>
@@ -67,9 +66,6 @@
                         <th>Acciones</th>
                     </tr>
                     <tr class="filter-row">
-                        <th>
-                            <input type="text" id="filtro_id" class="form-control filtro-texto" placeholder="Filtrar ID">
-                        </th>
                         <th>
                             <input type="text" id="filtro_nombre" class="form-control filtro-texto" placeholder="Filtrar Estado">
                         </th>
@@ -105,6 +101,7 @@
 <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap5.min.js"></script>
 <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="{{ asset('js/swal-utils.js') }}"></script>
 
 <script>
 function cargarResumenEstados() {
@@ -131,16 +128,7 @@ function cargarFiltrosEstado() {
 }
 
 function deleteEstado(id) {
-    Swal.fire({
-        title: '¿Estás seguro?',
-        text: '¡No podrás revertir esto!',
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#3085d6',
-        cancelButtonColor: '#d33',
-        confirmButtonText: 'Sí, eliminarlo',
-        cancelButtonText: 'Cancelar'
-    }).then((result) => {
+    SwalUtils.confirmDelete('El estado de planificacion sera enviado a eliminados.').then((result) => {
         if (result.isConfirmed) {
             $.ajax({
                 url: `/estado_planificacion/${id}`,
@@ -151,19 +139,10 @@ function deleteEstado(id) {
                 success: function(response) {
                     $('#tabla_estados_planificacion').DataTable().ajax.reload(null, false);
                     cargarResumenEstados();
-
-                    Swal.fire(
-                        '¡Eliminado!',
-                        response.message || 'El estado de planificación ha sido eliminado.',
-                        'success'
-                    );
+                    SwalUtils.deleted(response.message || 'El estado de planificacion ha sido eliminado.');
                 },
                 error: function(xhr) {
-                    Swal.fire(
-                        '¡Error!',
-                        xhr.responseJSON?.message || xhr.responseJSON?.error || 'Ha ocurrido un error al intentar eliminar.',
-                        'error'
-                    );
+                    SwalUtils.error(xhr.responseJSON?.message || xhr.responseJSON?.error || 'Ha ocurrido un error al intentar eliminar.');
                 }
             });
         }
@@ -186,13 +165,11 @@ $(document).ready(function () {
         ajax: {
             url: "{{ route('estado_planificacion.data') }}",
             data: function (d) {
-                d.filtro_id = $('#filtro_id').val();
                 d.filtro_nombre = $('#filtro_nombre').val();
                 d.filtro_status = $('#filtro_status').val();
             }
         },
         columns: [
-            { data: 'Estado_Plani_Id', name: 'Estado_Plani_Id' },
             { data: 'Nombre_Estado', name: 'Nombre_Estado' },
             { data: 'Estado_Texto', name: 'Estado_Texto', orderable: false, searchable: false },
             { data: 'created_at', name: 'created_at' },
@@ -216,7 +193,7 @@ $(document).ready(function () {
         }
     });
 
-    $('#filtro_id, #filtro_nombre, #filtro_status').on('keyup change', function () {
+    $('#filtro_nombre, #filtro_status').on('keyup change', function () {
         table.ajax.reload(null, false);
     });
 

@@ -44,6 +44,7 @@
 
 @section('js')
 <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="{{ asset('js/swal-utils.js') }}"></script>
 <script>
 $(document).ready(function() {
     $('form').on('submit', function(e) {
@@ -51,34 +52,19 @@ $(document).ready(function() {
 
         const form = this;
 
-        Swal.fire({
-            title: '¿Estás seguro?',
-            text: "¿Querés restaurar este registro?",
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonText: 'Sí, restaurar',
-            cancelButtonText: 'Cancelar'
-        }).then((result) => {
+        SwalUtils.confirmRestore('El registro volvera al listado principal.').then((result) => {
             if (result.isConfirmed) {
                 $.ajax({
                     url: $(form).attr('action'),
                     type: 'POST',
                     data: $(form).serialize(),
-                    success: function(response) {
-                        Swal.fire(
-                            'Restaurado',
-                            'El registro fue restaurado correctamente.',
-                            'success'
-                        ).then(() => {
+                    success: function() {
+                        SwalUtils.restored('El registro fue restaurado correctamente.').then(() => {
                             window.location.href = "{{ route('modulo.index') }}";
                         });
                     },
                     error: function() {
-                        Swal.fire(
-                            'Error',
-                            'No se pudo restaurar el registro.',
-                            'error'
-                        );
+                        SwalUtils.error('No se pudo restaurar el registro.');
                     }
                 });
             }

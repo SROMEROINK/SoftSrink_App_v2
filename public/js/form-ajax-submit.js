@@ -5,41 +5,122 @@
     return el ? el.getAttribute('content') : null;
   }
 
+  function getSwalUtils() {
+    return typeof window !== 'undefined' ? window.SwalUtils || null : null;
+  }
+
+  function showValidation(html) {
+    const swalUtils = getSwalUtils();
+    if (swalUtils) {
+      return swalUtils.validation(html);
+    }
+
+    return Swal.fire({
+      icon: 'error',
+      title: 'Errores de validacion',
+      html: html,
+      confirmButtonText: 'Corregir'
+    });
+  }
+
+  function showError(text) {
+    const swalUtils = getSwalUtils();
+    if (swalUtils) {
+      return swalUtils.error(text);
+    }
+
+    return Swal.fire({
+      icon: 'error',
+      title: 'Error',
+      text: text,
+      confirmButtonText: 'OK'
+    });
+  }
+
+  function showSuccess(text) {
+    const swalUtils = getSwalUtils();
+    if (swalUtils) {
+      return swalUtils.created(text);
+    }
+
+    return Swal.fire({
+      icon: 'success',
+      title: 'Creado',
+      text: text,
+      confirmButtonText: 'OK'
+    });
+  }
+
+  function showNoChanges(text) {
+    const swalUtils = getSwalUtils();
+    if (swalUtils) {
+      return swalUtils.noChanges(text);
+    }
+
+    return Swal.fire({
+      icon: 'warning',
+      title: 'Sin cambios',
+      text: text,
+      confirmButtonText: 'OK'
+    });
+  }
+
   function highlightDuplicatedRows(form, duplicatedRows) {
-  if (!Array.isArray(duplicatedRows) || duplicatedRows.length === 0) return;
+    if (!Array.isArray(duplicatedRows) || duplicatedRows.length === 0) return;
 
-  // buscamos la tabla dentro del mismo form
-  const table = form.querySelector('#tablaListadoOF');
-  if (!table) return;
+    const table = form.querySelector('#tablaListadoOF');
+    if (!table) return;
 
-  // limpiamos marcas anteriores
-  table.querySelectorAll('tbody tr').forEach(tr => {
-    tr.classList.remove('row-dup');
-  });
+    table.querySelectorAll('tbody tr').forEach(tr => {
+      tr.classList.remove('row-dup');
+    });
 
-  // marcamos filas (tu backend manda 1-based: 1,2,3...)
-  duplicatedRows.forEach(n => {
-    const tr = table.querySelector(`tbody tr:nth-child(${n})`);
-    if (tr) tr.classList.add('row-dup');
-  });
+    duplicatedRows.forEach(n => {
+      const tr = table.querySelector(`tbody tr:nth-child(${n})`);
+      if (tr) tr.classList.add('row-dup');
+    });
 
-  // hacemos scroll a la primera fila duplicada
-  const first = duplicatedRows.slice().sort((a,b)=>a-b)[0];
-  const firstTr = table.querySelector(`tbody tr:nth-child(${first})`);
-  if (firstTr) firstTr.scrollIntoView({ behavior: 'smooth', block: 'center' });
-}
+    const first = duplicatedRows.slice().sort((a, b) => a - b)[0];
+    const firstTr = table.querySelector(`tbody tr:nth-child(${first})`);
+    if (firstTr) firstTr.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+
+  function highlightInvalidRows(form, invalidRows) {
+    if (!Array.isArray(invalidRows) || invalidRows.length === 0) return;
+
+    const table = form.querySelector('#tablaListadoOF');
+    if (!table) return;
+
+    invalidRows.forEach(n => {
+      const tr = table.querySelector(`tbody tr:nth-child(${n})`);
+      if (!tr) return;
+
+      tr.classList.add('row-invalid');
+      const quickInput = tr.querySelector('.input-busqueda-rapida');
+      if (quickInput) {
+        quickInput.classList.add('input-invalid');
+      }
+    });
+
+    const first = invalidRows.slice().sort((a, b) => a - b)[0];
+    const firstTr = table.querySelector(`tbody tr:nth-child(${first})`);
+    if (firstTr) {
+      firstTr.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      const quickInput = firstTr.querySelector('.input-busqueda-rapida');
+      if (quickInput) quickInput.focus();
+    }
+  }
 
   function formatDuplicatedRows(duplicatedRows) {
     if (!Array.isArray(duplicatedRows) || duplicatedRows.length === 0) return null;
 
-    // Ordena y elimina repetidos por las dudas
     const rows = [...new Set(duplicatedRows)].sort((a, b) => a - b);
 
     return `
       <div style="text-align:left">
         <b>Se encontraron filas duplicadas:</b><br>
         <span>Filas: ${rows.join(', ')}</span><br><br>
-        <small>Corregí esas filas y volvé a intentar.</small>
+        <small>Corregi esas filas y volve a intentar.</small>
       </div>
     `;
   }
@@ -47,18 +128,17 @@
   function formatValidationErrors(errors) {
     if (!errors || typeof errors !== 'object') return null;
 
-    // Convierte {campo: [msg1,msg2], ...} a lista HTML
     const lines = [];
     Object.keys(errors).forEach((field) => {
       const msgs = Array.isArray(errors[field]) ? errors[field] : [errors[field]];
-      msgs.forEach((m) => lines.push(`• ${m}`));
+      msgs.forEach((message) => lines.push(`- ${message}`));
     });
 
     if (!lines.length) return null;
 
     return `
       <div style="text-align:left">
-        <b>Revisá los siguientes puntos:</b><br><br>
+        <b>Revisa los siguientes puntos:</b><br><br>
         ${lines.join('<br>')}
       </div>
     `;
@@ -73,7 +153,6 @@
     const url = form.getAttribute('action');
     const method = (form.getAttribute('method') || 'POST').toUpperCase();
     const redirectUrl = form.dataset.redirectUrl || null;
-
     const fd = new FormData(form);
 
     try {
@@ -88,26 +167,15 @@
 
       const data = await res.json().catch(() => ({}));
 
-      // ✅ Validación 422 (Laravel)
       if (res.status === 422) {
-        const html = formatValidationErrors(data?.errors);
-        return Swal.fire({
-          icon: 'error',
-          title: 'Errores de validación',
-          html: html || (data?.message || 'Errores de validación.'),
-          confirmButtonText: 'Corregir'
-        });
+        const html = formatValidationErrors(data?.errors) || (data?.message || 'Errores de validacion.');
+        return showValidation(html);
       }
 
-      // ✅ Errores no OK (400/500/etc)
       if (!res.ok) {
-        // ⭐ Caso especial: filas duplicadas (tu store de pedido_cliente)
         const dupHtml = formatDuplicatedRows(data?.duplicatedRows);
         if (dupHtml) {
-
-          // ✅ MARCAR FILAS EN ROJO + SCROLL
           highlightDuplicatedRows(form, data?.duplicatedRows);
-
           return Swal.fire({
             icon: 'warning',
             title: 'Filas duplicadas',
@@ -116,42 +184,25 @@
           });
         }
 
-        return Swal.fire({
-          icon: 'error',
-          title: 'Error',
-          text: data?.message || 'Ocurrió un error.',
-          confirmButtonText: 'Entendido'
-        });
+        if (Array.isArray(data?.invalidRows) && data.invalidRows.length) {
+          highlightInvalidRows(form, data.invalidRows);
+        }
+
+        return showError(data?.message || 'Ocurrio un error.');
       }
 
-      // ✅ Caso especial: no_changes (por si un store/update lo usa)
       if (data?.type === 'no_changes') {
-        return Swal.fire({
-          icon: 'warning',
-          title: 'Sin cambios',
-          text: data?.message || 'No se detectaron cambios.',
-          confirmButtonText: 'OK'
-        });
+        return showNoChanges(data?.message || 'No se detectaron cambios.');
       }
 
-      // ✅ OK general
-      await Swal.fire({
-        icon: data?.success ? 'success' : 'error',
-        title: data?.success ? 'Éxito' : 'Error',
-        text: data?.message || (data?.success ? 'Operación realizada.' : 'Ocurrió un error.'),
-        confirmButtonText: 'OK'
-      });
+      await showSuccess(data?.message || 'Operacion realizada correctamente.');
 
       const goTo = data?.redirect || redirectUrl;
-      if (data?.success && goTo) window.location.href = goTo;
-
+      if (data?.success && goTo) {
+        window.location.href = goTo;
+      }
     } catch (err) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Error',
-        text: 'No se pudo conectar con el servidor.',
-        confirmButtonText: 'OK'
-      });
+      showError('No se pudo conectar con el servidor.');
     }
   });
 })();

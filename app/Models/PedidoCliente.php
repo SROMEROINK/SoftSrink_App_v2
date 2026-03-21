@@ -3,6 +3,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Models\EstadoPlanificacion;
 
 class PedidoCliente extends Model
 {
@@ -16,16 +17,15 @@ class PedidoCliente extends Model
 
     protected $fillable = [
         'Nro_OF','Producto_Id','Fecha_del_Pedido','Cant_Fabricacion',
-        'Estado_Plani_Id', // lo agregamos en el paso 3
-        'reg_Status','created_by','updated_by','deleted_by',
+        'Estado_Plani_Id','reg_Status','created_by','updated_by','deleted_by',
     ];
 
     protected $casts = [
+        'Estado_Plani_Id'   => 'integer',
         'reg_Status'        => 'boolean',
         'Fecha_del_Pedido'  => 'date',
         'Cant_Fabricacion'  => 'integer',
         'Nro_OF'            => 'integer',
-        'Estado_Plani_Id'   => 'integer',
     ];
 
     // Relaciones
@@ -37,6 +37,11 @@ class PedidoCliente extends Model
     public function estadoPlanificacion()
     {
         return $this->belongsTo(EstadoPlanificacion::class, 'Estado_Plani_Id', 'Estado_Plani_Id');
+    }
+
+    public function definicionMp()
+    {
+        return $this->hasOne(PedidoClienteMp::class, 'Id_OF', 'Id_OF');
     }
 
     public function fechas() // 1:1
@@ -54,7 +59,6 @@ class PedidoCliente extends Model
     }
     public function getSubcategoriaNombreAttribute()
     {
-        return $this->producto->subcategoria->Nombre_SubCategoria ?? null;
+        return $this->producto->subCategoria->Nombre_SubCategoria ?? null;
     }
 }
-

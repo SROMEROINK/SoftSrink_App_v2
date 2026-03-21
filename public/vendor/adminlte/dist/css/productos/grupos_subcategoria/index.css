@@ -1,0 +1,32 @@
+#tabla_grupo_subcategoria tbody tr:hover td {
+    background-color: #00e002 !important;
+    color: #000 !important;
+    font-weight: 700 !important;
+    transition: background-color 0.15s ease-in-out;
+}
+
+#tabla_grupo_subcategoria tbody tr:hover td:first-child {
+    box-shadow: inset 4px 0 0 #5d00e0;
+}
+
+#tabla_grupo_subcategoria tbody tr {
+    cursor: pointer;
+}
+#tabla_grupo_subcategoria {
+    width: 100% !important;
+}
+
+#tabla_grupo_subcategoria tbody tr:hover td {
+    background-color: #00e002 !important;
+    color: #000 !important;
+    font-weight: 700 !important;
+    transition: background-color 0.15s ease-in-out;
+}
+
+#tabla_grupo_subcategoria tbody tr:hover td:first-child {
+    box-shadow: inset 4px 0 0 #5d00e0;
+}
+
+#tabla_grupo_subcategoria tbody tr {
+    cursor: pointer;
+}

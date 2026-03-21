@@ -1,0 +1,79 @@
+.pedido-mp-mass-alert {
+    border-radius: 12px;
+    border: 1px solid #b7deff;
+    background: #eef8ff;
+    color: #24506b;
+}
+
+.pedido-mp-mass-table {
+    background: #fffef5;
+}
+
+.pedido-mp-mass-table th,
+.pedido-mp-mass-table td {
+    text-align: center;
+    vertical-align: middle;
+}
+
+.pedido-mp-mass-table .form-control[readonly] {
+    background-color: #e9eef4;
+    color: #495057;
+}
+
+.pedido-mp-mass-table .input-invalid {
+    border-color: #dc3545;
+    box-shadow: 0 0 0 .12rem rgba(220, 53, 69, .15);
+}
+
+.pedido-mp-mass-table tbody tr.row-active {
+    background: #e7f2ff;
+}
+
+.pedido-mp-mass-table tbody tr.row-complete {
+    background: #e7f8e7;
+}
+
+.pedido-mp-mass-table tbody tr.row-incomplete {
+    background: #fff8db;
+}
+
+.pedido-mp-mass-table tbody tr.row-invalid {
+    background: #fde6e6;
+}
+
+.pedido-mp-mass-table .col-fila {
+    width: 90px;
+}
+
+.pedido-mp-mass-table .col-of,
+.pedido-mp-mass-table .col-producto,
+.pedido-mp-mass-table .col-codigo,
+.pedido-mp-mass-table .col-ingreso,
+.pedido-mp-mass-table .col-pedido,
+.pedido-mp-mass-table .col-certificado,
+.pedido-mp-mass-table .col-barras,
+.pedido-mp-mass-table .col-estado,
+.pedido-mp-mass-table .col-maquina,
+.pedido-mp-mass-table .col-familia {
+    min-width: 150px;
+}
+
+.pedido-mp-mass-table .col-acciones {
+    min-width: 130px;
+}
+
+.pedido-mp-mass-table .btn-danger {
+    white-space: nowrap;
+}
+
+.pedido-mp-mass-table .form-control {
+    text-align: center;
+}
+
+.pedido-mp-mass-table select.form-control {
+    text-align-last: center;
+}
+
+.pedido-mp-mass-table input::placeholder {
+    text-align: center;
+}

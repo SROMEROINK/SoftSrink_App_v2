@@ -10,8 +10,6 @@
 @stop
 
 @section('content')
-    @include('partials.navigation')
-
     <div class="card mt-3 show-card estado-planificacion-show">
         <div class="card-header show-card-header d-flex justify-content-between align-items-center flex-wrap">
             <div>

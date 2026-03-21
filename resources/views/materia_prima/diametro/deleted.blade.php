@@ -2,11 +2,11 @@
 @extends('adminlte::page')
 @section('content')
 <div class="container">
-    <h1>Diámetros Eliminados</h1>
+    <h1>Diametros Eliminados</h1>
     <table class="table">
         <thead>
             <tr>
-                <th>Valor del Diámetro</th>
+                <th>Valor del Diametro</th>
                 <th>Estado</th>
                 <th>Acciones</th>
             </tr>
@@ -26,7 +26,7 @@
             @endforeach
         </tbody>
     </table>
-    <a href="{{ route('mp_diametro.index') }}" class="btn btn-return">Volver a Diámetros</a>
+    <a href="{{ route('mp_diametro.index') }}" class="btn btn-return">Volver a Diametros</a>
 </div>
 @endsection
 
@@ -36,44 +36,27 @@
 
 @section('js')
 <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="{{ asset('js/swal-utils.js') }}"></script>
 <script>
     $(document).ready(function() {
         $('form').on('submit', function(e) {
-            e.preventDefault(); // Detener la acción por defecto
+            e.preventDefault();
 
-            const form = this; // Guardar referencia al formulario
+            const form = this;
 
-            Swal.fire({
-                title: '¿Estás seguro?',
-                text: "¿Quieres restaurar este diámetro?",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#3085d6',
-                cancelButtonColor: '#d33',
-                confirmButtonText: 'Sí, restaurarlo!'
-            }).then((result) => {
+            SwalUtils.confirmRestore('El diametro volvera al listado principal.').then((result) => {
                 if (result.isConfirmed) {
                     $.ajax({
                         url: $(form).attr('action'),
                         type: 'POST',
                         data: $(form).serialize(),
                         success: function(response) {
-                            Swal.fire(
-                                'Restaurado!',
-                                'El diámetro ha sido restaurado exitosamente.',
-                                'success'
-                            ).then((result) => {
-                                if (result.isConfirmed) {
-                                    window.location.href = "{{ route('mp_diametro.index') }}";
-                                }
+                            SwalUtils.restored(response.message || 'El diametro ha sido restaurado exitosamente.').then(() => {
+                                window.location.href = "{{ route('mp_diametro.index') }}";
                             });
                         },
-                        error: function(response) {
-                            Swal.fire(
-                                'Error!',
-                                'No se pudo restaurar el diámetro.',
-                                'error'
-                            );
+                        error: function() {
+                            SwalUtils.error('No se pudo restaurar el diametro.');
                         }
                     });
                 }
@@ -82,4 +65,3 @@
     });
 </script>
 @stop
-

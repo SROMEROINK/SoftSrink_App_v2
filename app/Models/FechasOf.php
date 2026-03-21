@@ -45,7 +45,7 @@ public function pedido()
     // Relación con la Categoría del Producto (similar a RegistroDeFabricacion)
     public function categoria()
     {
-        return $this->hasOneThrough(ProductoCategoria::class, Producto::class, 'Id_Producto', 'Id_Categoria', 'Id_Producto', 'Id_Prod_Clase_Familia');
+        return $this->hasOneThrough(ProductoCategoria::class, Producto::class, 'Id_Producto', 'Id_Categoria', 'Id_Producto', 'Id_Prod_Categoria');
     }
 
     // Relación con usuarios (si usas los campos de auditoría)

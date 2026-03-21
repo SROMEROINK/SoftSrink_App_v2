@@ -7,8 +7,17 @@
 }
 
 .filtro-select {
+    background-color: #fff;
     border: 2px solid red;
+    color: #212529;
+    appearance: auto;
     padding-right: 24px;
+}
+
+.filtro-select:focus {
+    border-color: red !important;
+    box-shadow: 0 0 0 0.1rem rgba(255, 0, 0, 0.15);
+    outline: 0;
 }
 
 .filtro-texto::placeholder {

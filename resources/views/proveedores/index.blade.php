@@ -3,12 +3,12 @@
 @section('title', 'Listado de Proveedores')
 
 @section('content_header')
-<x-header-card 
-    title="Listado de Proveedores" 
-    buttonRoute="{{ route('proveedores.create') }}" 
-    buttonText="Crear Proveedor" 
+<x-header-card
+    title="Listado de Proveedores"
+    buttonRoute="{{ route('proveedores.create') }}"
+    buttonText="Crear Proveedor"
     deletedRouteUrl="{{ route('proveedores.deleted') }}"
-    deletedButtonText="Ver Proveedores Eliminados" 
+    deletedButtonText="Ver Proveedores Eliminados"
 />
 @stop
 
@@ -59,7 +59,6 @@
                 <table id="tabla_proveedores" class="table table-bordered table-striped w-100">
                     <thead>
                         <tr>
-                            <th>Id_Proveedor</th>
                             <th>Nombre</th>
                             <th>Detalle</th>
                             <th>Proveedor MP</th>
@@ -127,6 +126,7 @@
 <script src="https://cdn.datatables.net/buttons/2.2.2/js/dataTables.buttons.min.js"></script>
 <script src="https://cdn.datatables.net/buttons/2.2.2/js/buttons.bootstrap5.min.js"></script>
 <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="{{ asset('js/swal-utils.js') }}"></script>
 
 <script>
     function cargarResumen() {
@@ -138,16 +138,7 @@
     }
 
     function deleteProveedor(id) {
-        Swal.fire({
-            title: '¿Estás seguro?',
-            text: '¡No podrás revertir esto!',
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#3085d6',
-            cancelButtonColor: '#d33',
-            confirmButtonText: 'Sí, eliminarlo',
-            cancelButtonText: 'Cancelar'
-        }).then((result) => {
+        SwalUtils.confirmDelete('El proveedor sera enviado a eliminados.').then((result) => {
             if (result.isConfirmed) {
                 $.ajax({
                     url: `/proveedores/${id}`,
@@ -158,19 +149,10 @@
                     success: function(response) {
                         $('#tabla_proveedores').DataTable().ajax.reload(null, false);
                         cargarResumen();
-
-                        Swal.fire(
-                            '¡Eliminado!',
-                            response.message || 'El proveedor ha sido eliminado.',
-                            'success'
-                        );
+                        SwalUtils.deleted(response.message || 'El proveedor ha sido eliminado.');
                     },
                     error: function(xhr) {
-                        Swal.fire(
-                            '¡Error!',
-                            xhr.responseJSON?.message || 'No se pudo eliminar el proveedor.',
-                            'error'
-                        );
+                        SwalUtils.error(xhr.responseJSON?.message || 'No se pudo eliminar el proveedor.');
                     }
                 });
             }
@@ -204,7 +186,6 @@
                 }
             },
             columns: [
-                { data: 'Prov_Id', name: 'Prov_Id' },
                 { data: 'Prov_Nombre', name: 'Prov_Nombre' },
                 { data: 'Prov_Detalle', name: 'Prov_Detalle' },
                 { data: 'ProveedorMPTexto', name: 'Es_Proveedor_MP', orderable: false, searchable: false },
@@ -219,7 +200,7 @@
                     searchable: false,
                     render: function(data) {
                         return `
-                            <a href="/proveedores/${data}" class="btn btn-info btn-sm">Ver</a>                        
+                            <a href="/proveedores/${data}" class="btn btn-info btn-sm">Ver</a>
                             <a href="/proveedores/${data}/edit" class="btn btn-primary btn-sm">Editar</a>
                             <button onclick="deleteProveedor(${data})" class="btn btn-danger btn-sm">Eliminar</button>
                         `;
@@ -235,7 +216,7 @@
                 search: "Buscar:",
                 paginate: {
                     first: "Primero",
-                    last: "Último",
+                    last: "Ultimo",
                     next: "Siguiente",
                     previous: "Anterior"
                 },
@@ -259,7 +240,6 @@
             $('#filtro_estado').val('');
             table.draw();
         });
-
     });
 </script>
 @stop

@@ -69,6 +69,17 @@ form {
     line-height: 1.2;
 }
 
+.table input[type="number"]::-webkit-outer-spin-button,
+.table input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.table input[type="number"] {
+    -moz-appearance: textfield;
+    appearance: textfield;
+}
+
 .table input:focus,
 .table select:focus {
     outline: none;
@@ -135,6 +146,59 @@ form {
 
 .table tbody tr.duplicated {
     background-color: #f8d7da;
+}
+
+.modo-toolbar {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.modo-toolbar .btn.active {
+    box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.45);
+}
+
+#tablaListadoOF tbody tr.row-active td {
+    background: #e8f4ff;
+    box-shadow: inset 0 0 0 1px #7ab8ff;
+}
+
+#tablaListadoOF tbody tr.row-complete td {
+    background: #e8f8e8;
+}
+
+#tablaListadoOF tbody tr.row-incomplete td {
+    background: #fff8df;
+}
+
+#tablaListadoOF tbody tr.row-invalid td {
+    background: #fdeaea;
+}
+
+#tablaListadoOF tbody tr.row-active.row-complete td {
+    background: #dff4e0;
+}
+
+#tablaListadoOF tbody tr.row-active.row-incomplete td {
+    background: #fff1c7;
+}
+
+#tablaListadoOF tbody tr.row-active.row-invalid td {
+    background: #f8d7da;
+}
+
+#tablaListadoOF.modo-familia .col-busqueda-rapida,
+#tablaListadoOF.modo-familia td.col-busqueda-rapida {
+    display: none;
+}
+
+#tablaListadoOF.modo-rapido .input-busqueda-rapida {
+    border-bottom: 2px solid #dc3545;
+}
+
+.input-busqueda-rapida.input-invalid {
+    border-bottom: 2px solid #dc3545 !important;
+    background: #fff5f5;
 }
 
 .table th.col-nro-fila,

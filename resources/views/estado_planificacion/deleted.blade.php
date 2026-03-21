@@ -3,7 +3,7 @@
 @section('title', 'Estados Eliminados')
 
 @section('content_header')
-    <h1>Estados de Planificación Eliminados</h1>
+    <h1>Estados de Planificacion Eliminados</h1>
 @stop
 
 @section('content')
@@ -70,18 +70,13 @@
 @stop
 
 @section('js')
+    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="{{ asset('js/swal-utils.js') }}"></script>
     <script>
         $(document).on('click', '.btn-restaurar', function () {
             const id = $(this).data('id');
 
-            Swal.fire({
-                title: '¿Restaurar registro?',
-                text: 'El estado volverá a estar disponible.',
-                icon: 'question',
-                showCancelButton: true,
-                confirmButtonText: 'Sí, restaurar',
-                cancelButtonText: 'Cancelar'
-            }).then((result) => {
+            SwalUtils.confirmRestore('El estado volvera a estar disponible.').then((result) => {
                 if (result.isConfirmed) {
                     $.ajax({
                         url: `{{ url('estado_planificacion/restore') }}/${id}`,
@@ -90,22 +85,12 @@
                             _token: '{{ csrf_token() }}'
                         },
                         success: function (response) {
-                            Swal.fire({
-                                icon: 'success',
-                                title: 'Restaurado',
-                                text: response.message,
-                                timer: 1800,
-                                showConfirmButton: false
-                            }).then(() => {
+                            SwalUtils.restored(response.message).then(() => {
                                 window.location.reload();
                             });
                         },
                         error: function (xhr) {
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Error',
-                                text: xhr.responseJSON?.message || 'No se pudo restaurar el registro.'
-                            });
+                            SwalUtils.error(xhr.responseJSON?.message || 'No se pudo restaurar el registro.');
                         }
                     });
                 }

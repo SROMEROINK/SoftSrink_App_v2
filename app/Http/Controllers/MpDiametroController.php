@@ -37,9 +37,25 @@ class MpDiametroController extends Controller
         return view('materia_prima.diametro.index', compact('totalDiametros'));
     }
 
+    public function resumen()
+    {
+        return response()->json([
+            'total' => MpDiametro::count(),
+            'activos' => MpDiametro::where('reg_Status', 1)->count(),
+            'eliminados' => MpDiametro::onlyTrashed()->count(),
+        ]);
+    }
+
     public function create()
     {
         return view('materia_prima.diametro.create');
+    }
+
+    public function show($Id_Diametro)
+    {
+        $diametro = MpDiametro::withTrashed()->findOrFail($Id_Diametro);
+
+        return view('materia_prima.diametro.show', compact('diametro'));
     }
 
     public function store(Request $request)

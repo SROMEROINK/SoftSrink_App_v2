@@ -21,6 +21,10 @@ use App\Http\Controllers\MarcasInsumosController;
 use App\Http\Controllers\EstadoPlanificacionController;
 use App\Http\Controllers\ModuloController;
 use App\Http\Controllers\ProductoTipoController;
+use App\Http\Controllers\ProductoSubcategoriaController;
+use App\Http\Controllers\ProductoGrupoSubcategoriaController;
+use App\Http\Controllers\ProductoGrupoConjuntosController;
+use App\Http\Controllers\PedidoClienteMpController;
 
 // Ruta por defecto al iniciar la app
 Route::get('/', function () {
@@ -43,6 +47,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Ruta específica para DataTables y otras funcionalidades
     Route::get('productos/data', [ProductoController::class, 'getData'])->name('productos.data');
     Route::get('pedido_cliente/data', [PedidoClienteController::class, 'getData'])->name('pedido_cliente.data');
+    Route::get('pedido_cliente/resumen', [PedidoClienteController::class, 'resumen'])->name('pedido_cliente.resumen');
+    Route::get('pedido_cliente_mp/data', [PedidoClienteMpController::class, 'getData'])->name('pedido_cliente_mp.data');
+    Route::get('pedido_cliente_mp/resumen', [PedidoClienteMpController::class, 'resumen'])->name('pedido_cliente_mp.resumen');
+    Route::get('pedido_cliente_mp/planner', [PedidoClienteMpController::class, 'planner'])->name('pedido_cliente_mp.planner');
+    Route::get('pedido_cliente_mp/create-massive', [PedidoClienteMpController::class, 'createMassive'])->name('pedido_cliente_mp.createMassive');
+    Route::post('pedido_cliente_mp/store-massive', [PedidoClienteMpController::class, 'storeMassive'])->name('pedido_cliente_mp.storeMassive');
+    Route::get('pedido_cliente_mp/deleted', [PedidoClienteMpController::class, 'showDeleted'])->name('pedido_cliente_mp.deleted');
+    Route::post('pedido_cliente_mp/{id}/restore', [PedidoClienteMpController::class, 'restore'])->name('pedido_cliente_mp.restore');
     Route::get('fabricacion/data', [RegistroDeFabricacionController::class, 'getData'])->name('fabricacion.data');
     Route::get('fechas_of/data', [FechasOfController::class, 'getData'])->name('fechas_of.data');
     Route::get('/entregas_productos/data', [ListadoEntregaProductoController::class, 'getData'])->name('entregas_productos.data');
@@ -61,7 +73,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('productos/familias', [ProductoController::class, 'getFamilias'])->name('productos.Familias');
     Route::get('/productos/tipos', [ProductoController::class, 'getTipos'])->name('productos.Tipos');
     Route::get('/productos/unique-filters', [ProductoController::class, 'getUniqueFilters'])->name('productos.getUniqueFilters');
+    Route::get('/productos/dependent-filters', [ProductoController::class, 'getDependentFilters'])->name('productos.dependentFilters');
+    Route::get('/productos/form-dependencies', [ProductoController::class, 'getFormDependencies'])->name('productos.formDependencies');
+    Route::get('/productos/resumen', [ProductoController::class, 'resumen'])->name('productos.resumen');
+    Route::get('/productos/deleted', [ProductoController::class, 'showDeleted'])->name('productos.deleted');
+    Route::post('/productos/restore/{id}', [ProductoController::class, 'restore'])->name('productos.restore');
     Route::get('/productos/clientes', [ProductoController::class, 'getClientes'])->name('productos.Clientes');
+    Route::get('/productos/materiales-mp', [ProductoController::class, 'getMaterialesMP'])->name('productos.materiales_mp');
     
     
     Route::get('/materia_prima/{mp_id}/codigo', [PedidoClienteController::class, 'getCodigoMp']);
@@ -97,6 +115,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     
     Route::get('/materia_prima/diametro', [MpDiametroController::class, 'index'])->name('materia_prima.diametro.index');
     Route::get('mp_materia_prima/data', [MpMateriaPrimaController::class, 'getData'])->name('mp_materia_prima.data');
+    Route::get('mp_materia_prima/resumen', [MpMateriaPrimaController::class, 'resumen'])->name('mp_materia_prima.resumen');
+    Route::get('mp_diametro/resumen', [MpDiametroController::class, 'resumen'])->name('mp_diametro.resumen');
     
     Route::get('/mp_diametro/deleted', [MpDiametroController::class, 'showDeleted'])->name('mp_diametro.deleted');
     Route::post('/mp_diametro/{id}/restore', [MpDiametroController::class, 'restore'])->name('mp_diametro.restore');
@@ -134,6 +154,32 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('producto_tipo/deleted', [ProductoTipoController::class, 'showDeleted'])->name('producto_tipo.deleted');
     Route::post('producto_tipo/restore/{id}', [ProductoTipoController::class, 'restore'])->name('producto_tipo.restore');
 
+    // Rutas para ProductoCategoria
+    Route::get('producto_categoria/data', [ProductoCategoriaController::class, 'getData'])->name('producto_categoria.data');
+    Route::get('producto_categoria/filters', [ProductoCategoriaController::class, 'getUniqueFilters'])->name('producto_categoria.filters');
+    Route::get('producto_categoria/resumen', [ProductoCategoriaController::class, 'resumen'])->name('producto_categoria.resumen');
+    Route::get('producto_categoria/deleted', [ProductoCategoriaController::class, 'showDeleted'])->name('producto_categoria.deleted');
+    Route::post('producto_categoria/restore/{id}', [ProductoCategoriaController::class, 'restore'])->name('producto_categoria.restore');
+
+    // Rutas para ProductoSubcategoria
+    Route::get('producto_subcategoria/data', [ProductoSubcategoriaController::class, 'getData'])->name('producto_subcategoria.data');
+    Route::get('producto_subcategoria/filters', [ProductoSubcategoriaController::class, 'getUniqueFilters'])->name('producto_subcategoria.filters');
+    Route::get('producto_subcategoria/resumen', [ProductoSubcategoriaController::class, 'resumen'])->name('producto_subcategoria.resumen');
+    Route::get('producto_subcategoria/deleted', [ProductoSubcategoriaController::class, 'showDeleted'])->name('producto_subcategoria.deleted');
+    Route::post('producto_subcategoria/restore/{id}', [ProductoSubcategoriaController::class, 'restore'])->name('producto_subcategoria.restore');
+
+    Route::get('producto_grupo_subcategoria/data', [ProductoGrupoSubcategoriaController::class, 'getData'])->name('producto_grupo_subcategoria.data');
+    Route::get('producto_grupo_subcategoria/filters', [ProductoGrupoSubcategoriaController::class, 'getUniqueFilters'])->name('producto_grupo_subcategoria.filters');
+    Route::get('producto_grupo_subcategoria/resumen', [ProductoGrupoSubcategoriaController::class, 'resumen'])->name('producto_grupo_subcategoria.resumen');
+    Route::get('producto_grupo_subcategoria/deleted', [ProductoGrupoSubcategoriaController::class, 'showDeleted'])->name('producto_grupo_subcategoria.deleted');
+    Route::post('producto_grupo_subcategoria/restore/{id}', [ProductoGrupoSubcategoriaController::class, 'restore'])->name('producto_grupo_subcategoria.restore');
+
+    Route::get('producto_grupo_conjuntos/data', [ProductoGrupoConjuntosController::class, 'getData'])->name('producto_grupo_conjuntos.data');
+    Route::get('producto_grupo_conjuntos/filters', [ProductoGrupoConjuntosController::class, 'getUniqueFilters'])->name('producto_grupo_conjuntos.filters');
+    Route::get('producto_grupo_conjuntos/resumen', [ProductoGrupoConjuntosController::class, 'resumen'])->name('producto_grupo_conjuntos.resumen');
+    Route::get('producto_grupo_conjuntos/deleted', [ProductoGrupoConjuntosController::class, 'showDeleted'])->name('producto_grupo_conjuntos.deleted');
+    Route::post('producto_grupo_conjuntos/restore/{id}', [ProductoGrupoConjuntosController::class, 'restore'])->name('producto_grupo_conjuntos.restore');
+
 
     // Rutas para los recursos
     Route::resource('profile', ProfileController::class)->only(['index', 'edit', 'show', 'update', 'destroy']);
@@ -142,15 +188,19 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('mp_egresos', MpEgresoController::class);
     Route::resource('mp_diametro', MpDiametroController::class);
     Route::resource('mp_materia_prima', MpMateriaPrimaController::class);
-    Route::resource('categoria', ProductoCategoriaController::class);
+    Route::resource('producto_categoria', ProductoCategoriaController::class);
     Route::resource('fabricacion', RegistroDeFabricacionController::class);
     Route::resource('entregas_productos', ListadoEntregaProductoController::class);
     Route::resource('pedido_cliente', PedidoClienteController::class);
+    Route::resource('pedido_cliente_mp', PedidoClienteMpController::class);
     Route::resource('fechas_of', FechasOfController::class);
     Route::resource('proveedores', ProveedorController::class);
     Route::resource('marcas_insumos', MarcasInsumosController::class);
     Route::resource('estado_planificacion', EstadoPlanificacionController::class);
     Route::resource('producto_tipo', ProductoTipoController::class);
+    Route::resource('producto_subcategoria', ProductoSubcategoriaController::class);
+    Route::resource('producto_grupo_subcategoria', ProductoGrupoSubcategoriaController::class);
+    Route::resource('producto_grupo_conjuntos', ProductoGrupoConjuntosController::class);
 
 // 08/03/2026*
 // Rutas para el módulo de ejemplo (descomentar si se implementa el controlador y modelo correspondiente)

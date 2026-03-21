@@ -1,10 +1,10 @@
 @extends('adminlte::page')
 
-@section('title', 'Módulo Multifiла Reutilizable')
+@section('title', 'Modulo Multifila Reutilizable')
 
 @section('content_header')
-<x-header-card 
-    title="Módulo Multifiла Reutilizable"
+<x-header-card
+    title="Modulo Multifila Reutilizable"
     quantityTitle="Total de registros:"
     quantity="{{ $totalRegistros }}"
     buttonRoute="{{ route('modulo.create') }}"
@@ -93,6 +93,7 @@
 <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap5.min.js"></script>
 <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="{{ asset('js/swal-utils.js') }}"></script>
 
 <script>
 $.get("{{ route('modulo.resumen') }}", function (data) {
@@ -102,31 +103,18 @@ $.get("{{ route('modulo.resumen') }}", function (data) {
 });
 
 function deleteRegistro(id) {
-    Swal.fire({
-        title: '¿Estás seguro?',
-        text: "¡No podrás revertir esto!",
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonText: 'Sí, eliminarlo',
-        cancelButtonText: 'Cancelar'
-    }).then((result) => {
+    SwalUtils.confirmDelete('El registro sera enviado a eliminados.').then((result) => {
         if (result.isConfirmed) {
             $.ajax({
                 url: `/modulo/${id}`,
                 type: 'DELETE',
                 data: { _token: '{{ csrf_token() }}' },
                 success: function (response) {
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Eliminado',
-                        text: response.message || 'Registro eliminado correctamente.',
-                        timer: 1500,
-                        showConfirmButton: false
-                    });
+                    SwalUtils.deleted(response.message || 'Registro eliminado correctamente.');
                     $('#tabla_modulo_multifila').DataTable().ajax.reload(null, false);
                 },
                 error: function (xhr) {
-                    Swal.fire('Error', xhr.responseJSON?.message || 'No se pudo eliminar.', 'error');
+                    SwalUtils.error(xhr.responseJSON?.message || 'No se pudo eliminar.');
                 }
             });
         }
@@ -170,14 +158,14 @@ $(document).ready(function () {
         searching: false,
         pageLength: 10,
         language: {
-            lengthMenu: "Mostrar _MENU_ registros por página",
+            lengthMenu: "Mostrar _MENU_ registros por pagina",
             zeroRecords: "No se encontraron resultados",
-            info: "Mostrando página _PAGE_ de _PAGES_",
+            info: "Mostrando pagina _PAGE_ de _PAGES_",
             infoEmpty: "No hay registros disponibles",
             infoFiltered: "(filtrado de _MAX_ registros totales)",
             paginate: {
                 first: "Primero",
-                last: "Último",
+                last: "Ultimo",
                 next: "Siguiente",
                 previous: "Anterior"
             }
@@ -186,11 +174,6 @@ $(document).ready(function () {
 
     $('.filtro-texto').on('keyup change', function () {
         table.ajax.reload(null, false);
-    });
-
-    $('#clearFilters').click(function () {
-        $('.filtro-texto').val('');
-        table.ajax.reload();
     });
 });
 </script>

@@ -1,0 +1,7 @@
+.show-header h1 {
+    margin-bottom: 0.35rem;
+}
+
+.show-card .detail-value {
+    word-break: break-word;
+}

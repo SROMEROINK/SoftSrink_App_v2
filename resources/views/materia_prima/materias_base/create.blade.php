@@ -22,7 +22,6 @@
                     <option value="0">Inactivo</option>
                 </select>
             </div>
-            <!-- Agrega aquí otros campos específicos para Materia Prima, si los necesitas -->
         </div>
     </div>
     <div class="btn-der">
@@ -37,6 +36,7 @@
 
 @section('js')
 <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="{{ asset('js/swal-utils.js') }}"></script>
 <script>
     $(document).ready(function() {
         $('form').on('submit', function(e) {
@@ -48,14 +48,7 @@
                 data: formData,
                 dataType: 'json',
                 success: function(response) {
-                    Swal.fire({
-                        position: 'center',
-                        icon: 'success',
-                        title: response.message,
-                        showConfirmButton: false,
-                        timer: 1500
-                    }).then(() => {
-                        // Redirige a la vista index en caso de éxito
+                    SwalUtils.created(response.message).then(() => {
                         window.location.href = '{{ route('mp_materia_prima.index') }}';
                     });
                 },
@@ -67,12 +60,7 @@
                         errorMessages.push(xhr.responseJSON.message);
                     }
 
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Errores de validación',
-                        html: errorMessages.join('<br>'),
-                        confirmButtonText: 'Corregir'
-                    });
+                    SwalUtils.validation(errorMessages.join('<br>'));
                 }
             });
         });

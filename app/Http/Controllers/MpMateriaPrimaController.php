@@ -38,9 +38,25 @@ class MpMateriaPrimaController extends Controller
         return view('materia_prima.materias_base.index', compact('totalMaterias'));
     }
 
+    public function resumen()
+    {
+        return response()->json([
+            'total' => MpMateriaPrima::count(),
+            'activos' => MpMateriaPrima::where('reg_Status', 1)->count(),
+            'eliminados' => MpMateriaPrima::onlyTrashed()->count(),
+        ]);
+    }
+
     public function create()
     {
         return view('materia_prima.materias_base.create');
+    }
+
+    public function show($Id_Materia_Prima)
+    {
+        $materiaBase = MpMateriaPrima::withTrashed()->findOrFail($Id_Materia_Prima);
+
+        return view('materia_prima.materias_base.show', compact('materiaBase'));
     }
 
     public function store(Request $request)
@@ -135,5 +151,3 @@ class MpMateriaPrimaController extends Controller
         return view('materia_prima.materias_base.deleted', ['materiasPrimas' => $materiasPrimas]);
     }
 }
-
-

@@ -1,0 +1,60 @@
+#tabla_pedido_cliente_mp thead th {
+    text-align: center;
+    vertical-align: middle;
+}
+
+#tabla_pedido_cliente_mp tbody td,
+#tabla_eliminados_pedido_mp tbody td {
+    text-align: center;
+    vertical-align: middle;
+}
+
+#tabla_pedido_cliente_mp .btn,
+#tabla_eliminados_pedido_mp .btn {
+    margin: 0 2px;
+}
+
+.pedido-mp-index-alert {
+    border-radius: 12px;
+    border: 1px solid #b7deff;
+    background: #eef8ff;
+    color: #24506b;
+}
+
+.table-responsive {
+    overflow-x: auto;
+    overflow-y: visible;
+}
+
+table.dataTable.fixedHeader-floating {
+    background: #ffffff;
+}
+
+.fixedHeader-floating thead th {
+    text-align: center;
+    vertical-align: middle;
+    background: #ffffff;
+}
+
+
+#tabla_pedido_cliente_mp th:last-child,
+#tabla_pedido_cliente_mp td:last-child {
+    min-width: 150px;
+    text-align: center;
+}
+
+#tabla_pedido_cliente_mp .acciones-grupo,
+#tabla_eliminados_pedido_mp .acciones-grupo {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: nowrap;
+}
+
+#tabla_pedido_cliente_mp .acciones-grupo .btn,
+#tabla_eliminados_pedido_mp .acciones-grupo .btn {
+    margin: 0;
+    white-space: nowrap;
+}

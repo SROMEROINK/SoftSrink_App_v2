@@ -1,51 +1,84 @@
-{{-- resources\views\pedido_cliente\index.blade.php --}}
 @extends('adminlte::page')
-@section('title', 'Programación de la Producción - Pedido del Cliente')
+
+@section('title', 'Programacion de la Produccion - Pedido del Cliente')
 
 @section('content_header')
-<x-header-card 
-    title="Programación de la Producción - Pedido del Cliente" 
-    quantityTitle="Cantidad de piezas solicitadas:" 
-    buttonRoute="{{ route('pedido_cliente.create') }}" 
-    buttonText="Crear registro" 
+<x-header-card
+    title="Programacion de la Produccion - Pedido del Cliente"
+    buttonRoute="{{ route('pedido_cliente.create') }}"
+    buttonText="Crear Pedido"
 />
 @stop
 
-
-
-
 @section('content')
 <div class="container-fluid">
-    <div class="row">
-        <div class="col-12">
-            <div>
-                <table id="pedido_cliente" class="table table-striped table-bordered" style="width:100%">
+    <div class="row mt-3">
+        <div class="col-md-4">
+            <div class="small-box bg-info">
+                <div class="inner">
+                    <h3 id="total-pedidos">0</h3>
+                    <p>Total de pedidos</p>
+                </div>
+                <div class="icon">
+                    <i class="fas fa-clipboard-list"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="small-box bg-success">
+                <div class="inner">
+                    <h3 id="total-piezas">0</h3>
+                    <p>Piezas solicitadas</p>
+                </div>
+                <div class="icon">
+                    <i class="fas fa-layer-group"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="small-box bg-danger">
+                <div class="inner">
+                    <h3 id="eliminados-pedidos">0</h3>
+                    <p>Pedidos eliminados</p>
+                </div>
+                <div class="icon">
+                    <i class="fas fa-trash"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card mt-3">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table id="tabla_pedido_cliente" class="table table-bordered table-striped w-100">
                     <thead>
                         <tr>
-                            <th style="text-align: center;">Nro_OF</th>
-                            <th style="text-align: center;">Producto</th>
-                            <th style="text-align: center;">Descripción</th>
-                            <th style="text-align: center;">Nombre_Categoria</th>
-                            <th style="text-align: center;">Fecha_del_Pedido</th>
-                            <th style="text-align: center;">Cant_Fabricacion</th>
-                            <th style="text-align: center;">Planificación</th>
-                            <th>Creado</th>
-                            <th>Por</th>
-                            <th>Actualizado</th>
-                            <th>Por</th>
-                            <th style="text-align: center;">Estado</th>
-                            <th style="text-align: center;">Acciones</th>
-
+                            <th>Nro OF</th>
+                            <th>Producto</th>
+                            <th>Descripcion</th>
+                            <th>Categoria</th>
+                            <th>Fecha del Pedido</th>
+                            <th>Cant. Fabricacion</th>
+                            <th>Estado Pedido</th>
+                            <th>Acciones</th>
                         </tr>
                         <tr class="filter-row">
-                            <th><input type="text" id="filtro_nro_of" placeholder="Filtrar Nro_OF" class="form-control filtro-texto" /></th>
-                            <th><input type="text" id="filtro_producto" placeholder="Filtrar Producto" class="form-control filtro-texto" /></th>
-                            <th><input type="text" id="filtro_descripción" placeholder="Filtrar descripción" class="form-control filtro-texto" /></th>
+                            <th><input type="text" id="filtro_nro_of" class="form-control filtro-texto" placeholder="Filtrar OF"></th>
+                            <th><input type="text" id="filtro_producto" class="form-control filtro-texto" placeholder="Filtrar Producto"></th>
+                            <th><input type="text" id="filtro_descripcion" class="form-control filtro-texto" placeholder="Filtrar Descripcion"></th>
                             <th><select id="filtro_nombre_categoria" class="form-control filtro-select"><option value="">Todos</option></select></th>
-                            <th><input type="text" id="filtro_fecha_pedido" placeholder="Filtrar Fecha_del_Pedido" class="form-control filtro-texto" /></th>
-                            <th><input type="text" id="filtro_cant_fabricacion" placeholder="Filtrar Cant_Fabricacion" class="form-control filtro-texto" /></th>
+                            <th><input type="date" id="filtro_fecha_pedido" class="form-control filtro-texto"></th>
+                            <th><input type="text" id="filtro_cant_fabricacion" class="form-control filtro-texto" placeholder="Filtrar Cantidad"></th>
+                            <th>
+                                <select id="filtro_estado_pedido" class="form-control filtro-select"><option value="">Todos</option></select>
+                            </th>
+                            <th></th>
                         </tr>
                     </thead>
+                    <tbody></tbody>
                 </table>
             </div>
         </div>
@@ -54,213 +87,172 @@
 @stop
 
 @section('css')
-<link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap5.min.css">
-<link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.2.9/css/responsive.bootstrap5.min.css">
-<link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.2.2/css/buttons.bootstrap5.min.css">
-
-
-
+<link rel="stylesheet" href="{{ asset('vendor/adminlte/dist/css/shared/cards.css') }}">
+<link rel="stylesheet" href="{{ asset('vendor/adminlte/dist/css/shared/datatables.css') }}">
+<link rel="stylesheet" href="{{ asset('vendor/adminlte/dist/css/shared/filters.css') }}">
+<link rel="stylesheet" href="{{ asset('vendor/adminlte/dist/css/shared/buttons.css') }}">
+<link rel="stylesheet" href="{{ asset('vendor/adminlte/dist/css/shared/summary-boxes.css') }}">
 <link rel="stylesheet" href="{{ asset('vendor/adminlte/dist/css/pedido_cliente_index.css') }}">
-@endsection
+@stop
 
 @section('js')
-<!-- jQuery -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-<!-- Bootstrap -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
-<!-- DataTables -->
 <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap5.min.js"></script>
-<!-- Responsive Extension -->
-<script src="https://cdn.datatables.net/responsive/2.2.9/js/dataTables.responsive.min.js"></script>
-<script src="https://cdn.datatables.net/responsive/2.2.9/js/responsive.bootstrap5.min.js"></script>
-<!-- Buttons Extension -->
-<script src="https://cdn.datatables.net/buttons/2.2.2/js/dataTables.buttons.min.js"></script>
-<script src="https://cdn.datatables.net/buttons/2.2.2/js/buttons.bootstrap5.min.js"></script>
-
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
+<script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="{{ asset('js/swal-utils.js') }}"></script>
 
 <script>
+function formatearNumeroEntero(valor) {
+    const numero = Number(valor || 0);
+    return numero.toLocaleString('es-AR');
+}
+
+function cargarResumenPedidos() {
+    $.get("{{ route('pedido_cliente.resumen') }}", function (data) {
+        $('#total-pedidos').text(formatearNumeroEntero(data.total));
+        $('#total-piezas').text(formatearNumeroEntero(data.piezas));
+        $('#eliminados-pedidos').text(formatearNumeroEntero(data.eliminados));
+    });
+}
+
 function deletePedido(id) {
-    Swal.fire({
-        title: '¿Estás seguro?',
-        text: 'Este pedido se eliminará permanentemente si no tiene piezas fabricadas.',
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#d33',
-        cancelButtonColor: '#3085d6',
-        confirmButtonText: 'Sí, eliminar',
-        cancelButtonText: 'Cancelar'
-    }).then((result) => {
+    SwalUtils.confirmDelete('El pedido sera enviado a eliminados si no tiene fabricacion asociada.').then((result) => {
         if (result.isConfirmed) {
-            const form = document.createElement('form');
-            form.method = 'POST';
-            form.action = `/pedido_cliente/${id}`;
-
-            const method = document.createElement('input');
-            method.type = 'hidden';
-            method.name = '_method';
-            method.value = 'DELETE';
-
-            const csrf = document.createElement('input');
-            csrf.type = 'hidden';
-            csrf.name = '_token';
-            csrf.value = '{{ csrf_token() }}';
-
-            form.appendChild(method);
-            form.appendChild(csrf);
-            document.body.appendChild(form);
-            form.submit();
+            $.ajax({
+                url: `/pedido_cliente/${id}`,
+                type: 'DELETE',
+                data: {
+                    _token: '{{ csrf_token() }}'
+                },
+                success: function (response) {
+                    $('#tabla_pedido_cliente').DataTable().ajax.reload(null, false);
+                    cargarResumenPedidos();
+                    SwalUtils.deleted(response.message || 'Pedido eliminado correctamente.');
+                },
+                error: function (xhr) {
+                    SwalUtils.error(xhr.responseJSON?.message || 'No se pudo eliminar el pedido.');
+                }
+            });
         }
     });
 }
-</script>
 
- 
+$(document).ready(function () {
+    cargarResumenPedidos();
 
-@if(session('success'))
-<script>
-    Swal.fire({
-        title: '¡Éxito!',
-        text: '{{ session('success') }}',
-        icon: 'success',
-        confirmButtonText: 'OK',
-        timer: 3000,
-        timerProgressBar: true
-    });
-</script>
-@endif
+    const table = $('#tabla_pedido_cliente').DataTable({
+        processing: true,
+        serverSide: true,
+        deferRender: true,
+        autoWidth: false,
+        scrollX: true,
+        responsive: false,
+        orderCellsTop: true,
+        pageLength: 25,
+        ajax: {
+            url: "{{ route('pedido_cliente.data') }}",
+            data: function (d) {
+                d.filtro_nro_of = $('#filtro_nro_of').val();
+                d.filtro_producto = $('#filtro_producto').val();
+                d.filtro_descripcion = $('#filtro_descripcion').val();
+                d.filtro_nombre_categoria = $('#filtro_nombre_categoria').val();
+                d.filtro_fecha_pedido = $('#filtro_fecha_pedido').val();
+                d.filtro_cant_fabricacion = $('#filtro_cant_fabricacion').val();
+                d.filtro_estado_pedido = $('#filtro_estado_pedido').val();
+            }
+        },
+        columns: [
+            { data: 'Nro_OF', name: 'Nro_OF' },
+            { data: 'Producto_Nombre', name: 'Producto_Nombre', orderable: false, searchable: false },
+            { data: 'Descripcion', name: 'Descripcion', orderable: false, searchable: false },
+            { data: 'Nombre_Categoria', name: 'Nombre_Categoria', orderable: false, searchable: false },
+            { data: 'Fecha_del_Pedido', name: 'Fecha_del_Pedido' },
+            {
+                data: 'Cant_Fabricacion',
+                name: 'Cant_Fabricacion',
+                render: function (data, type) {
+                    if (type === 'display' || type === 'filter') {
+                        return formatearNumeroEntero(data);
+                    }
 
-@if(session('error'))
-<script>
-    Swal.fire({
-        title: 'Error',
-        text: '{{ session('error') }}',
-        icon: 'error',
-        confirmButtonText: 'Entendido',
-        timer: 4000,
-        timerProgressBar: true
-    });
-@endif
-
-</script>  
-
-
-<script>
-$(document).ready(function() {
-    var table = $('#pedido_cliente').DataTable({
-    processing: true,
-    serverSide: true,
-    deferRender: true, // Optimiza la carga inicial
-    searching: false,  // Deshabilita la búsqueda instantánea
-    ajax: {
-        url: "{{ route('pedido_cliente.data') }}",
-        type: 'GET',
-        cache: false,              // ← evita cache de la request
-        //headers: { 'Cache-Control': 'no-cache' }
-        data: function (d) {
-            d.filtro_nro_of = $('#filtro_nro_of').val();
-            d.filtro_producto = $('#filtro_producto').val();
-            d.filtro_descripción = $('#filtro_descripción').val();
-            d.filtro_nombre_categoria = $('#filtro_nombre_categoria').val();
-            d.filtro_fecha_pedido = $('#filtro_fecha_pedido').val();
-            d.filtro_cant_fabricacion = $('#filtro_cant_fabricacion').val();
-            d.filtro_estado = $('#filtro_estado').val();
+                    return data;
+                }
+            },
+            { data: 'Estado_Pedido', name: 'Estado_Pedido', orderable: false, searchable: false },
+            {
+                data: 'Id_OF',
+                orderable: false,
+                searchable: false,
+                render: function (data) {
+                    return `
+                        <a href="/pedido_cliente/${data}" class="btn btn-info btn-sm">Ver</a>
+                        <a href="/pedido_cliente/${data}/edit" class="btn btn-primary btn-sm">Editar</a>
+                        <button type="button" onclick="deletePedido(${data})" class="btn btn-danger btn-sm">Eliminar</button>
+                    `;
+                }
+            }
+        ],
+        order: [[0, 'desc']],
+        language: {
+            url: "{{ asset('Spanish.json') }}"
         }
-    },
-    columns: [
-    { data: 'Nro_OF', name: 'Nro_OF' },
-    { data: 'Producto_Nombre', name: 'Producto_Nombre' },
-    { data: 'Descripción', name: 'Descripción' },
-    { data: 'Nombre_Categoria', name: 'Nombre_Categoria' },
-    { data: 'Fecha_del_Pedido', name: 'Fecha_del_Pedido' },
-    { data: 'Cant_Fabricacion', name: 'Cant_Fabricacion' },
-    // Mostrar badge de planificación (HTML)
-    { data: 'created_at', name: 'created_at' },
-    { data: 'creator', name: 'creator' },
-    { data: 'updated_at', name: 'updated_at' },
-    { data: 'updater', name: 'updater' },
-
-    {
-        data: 'Id_OF',
-        className: 'acciones',
-        orderable: false,
-        searchable: false,
-        render: function (data, type, row, meta) {
-    let eliminarBtn = row.Estado.includes('Fabricado')
-        ? `<button class="btn btn-secondary btn-sm" disabled>🔒</button>`
-        : `<button onclick="deletePedido(${data})" class="btn btn-danger btn-sm">Eliminar</button>`;
-
-    return `
-        <a href="/pedido_cliente/${data}" class="btn btn-info btn-sm">Ver</a>
-        <a href="/pedido_cliente/${data}/edit" class="btn btn-primary btn-sm">Editar</a>
-        ${eliminarBtn}
-    `;
-}
-
-    }
-],
-
-
-
-    scrollX: true,
-    scrollY: '60vh',
-    scrollCollapse: true,
-    paging: true,
-    fixedHeader: true,
-    responsive: true,
-    pageLength: 50,
-    lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "All"]],
-    language: {
-        url: "{{ asset('Spanish.json') }}"
-    }
-});
-
-
-
-    // Llenar los selects con valores únicos de las columnas especificadas
-    table.on('xhr', function () {
-        var json = table.ajax.json();
-        var uniqueValues = {
-            'Nombre_Categoria': new Set()
-        };
-
-        var totalCantPiezas = 0;
-
-        $.each(json.data, function (index, item) {
-
-            uniqueValues['Nombre_Categoria'].add(item.Nombre_Categoria);
-
-            totalCantPiezas += parseFloat(item.Cant_Fabricacion);
-        });
-
-        $('#totalCantPiezas').text(totalCantPiezas.toString().replace(/\B(?=(\d{3})+(?!\d))/g, "."));
-
-        // Llenar los selectores con los valores únicos
-
-        fillSelect('#filtro_nombre_categoria', uniqueValues['Nombre_Categoria']);
     });
 
-    function fillSelect(selector, data) {
-        var select = $(selector);
-        select.empty();
-        select.append('<option value="">Todos</option>');
-        data.forEach(function (value) {
-            select.append('<option value="' + value + '">' + value + '</option>');
-        });
-    }
+    table.on('xhr.dt', function () {
+        const json = table.ajax.json();
+        const categorias = new Set();
+        const estadosPedido = new Map();
 
-    // Recargar la tabla al cambiar los selectores y campos de texto
-    $('.filtro-select, .filtro-texto').on('change keyup', function () {
-        table.ajax.reload(null, false); // El segundo parámetro asegura que la tabla no se resetee
+        if (!json || !json.data) {
+            return;
+        }
+
+        json.data.forEach(function (item) {
+            if (item.Nombre_Categoria) {
+                categorias.add(item.Nombre_Categoria);
+            }
+            if (item.Estado_Plani_Id && item.Estado_Pedido) {
+                estadosPedido.set(String(item.Estado_Plani_Id), item.Estado_Pedido);
+            }
+        });
+
+        const selectCategoria = $('#filtro_nombre_categoria');
+        const selectEstadoPedido = $('#filtro_estado_pedido');
+        const actual = selectCategoria.val();
+        const actualEstadoPedido = selectEstadoPedido.val();
+
+        selectCategoria.empty().append('<option value="">Todos</option>');
+        categorias.forEach(function (categoria) {
+            selectCategoria.append(`<option value="${categoria}">${categoria}</option>`);
+        });
+
+        selectEstadoPedido.empty().append('<option value="">Todos</option>');
+        estadosPedido.forEach(function (nombre, id) {
+            selectEstadoPedido.append(`<option value="${id}">${nombre}</option>`);
+        });
+
+        if (actual && selectCategoria.find(`option[value="${actual}"]`).length) {
+            selectCategoria.val(actual);
+        }
+        if (actualEstadoPedido && selectEstadoPedido.find(`option[value="${actualEstadoPedido}"]`).length) {
+            selectEstadoPedido.val(actualEstadoPedido);
+        }
     });
 
-    // Funcionalidad para limpiar filtros
-    $('#clearFilters').click(function() {
-        $('.filtro-select').val('');
+    $('#filtro_nro_of, #filtro_producto, #filtro_descripcion, #filtro_fecha_pedido, #filtro_cant_fabricacion').on('keyup change', function () {
+        table.ajax.reload(null, false);
+    });
+
+    $('#filtro_nombre_categoria, #filtro_estado_pedido').on('change', function () {
+        table.ajax.reload(null, false);
+    });
+
+    $('#clearFilters').on('click', function () {
         $('.filtro-texto').val('');
-        table.ajax.reload();
+        $('.filtro-select').val('');
+        table.ajax.reload(null, false);
     });
 });
 </script>

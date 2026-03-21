@@ -49,5 +49,6 @@
 
 @section('js')
 <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="{{ asset('js/swal-utils.js') }}"></script>
 <script src="{{ asset('js/form-edit-check.js') }}"></script>
 @stop

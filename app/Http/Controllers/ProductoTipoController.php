@@ -21,7 +21,7 @@ class ProductoTipoController extends Controller
     {
         $totalTipos = ProductoTipo::count();
 
-        return view('producto_tipo.index', compact('totalTipos'));
+        return view('productos.tipos.index', compact('totalTipos'));
     }
 
     /**
@@ -123,7 +123,7 @@ class ProductoTipoController extends Controller
     {
         $ultimoTipo = ProductoTipo::orderBy('Id_Tipo', 'desc')->first();
 
-        return view('producto_tipo.create', compact('ultimoTipo'));
+        return view('productos.tipos.create', compact('ultimoTipo'));
     }
 
     /**
@@ -183,7 +183,7 @@ class ProductoTipoController extends Controller
     {
         $producto_tipo = ProductoTipo::findOrFail($id);
 
-        return view('producto_tipo.show', compact('producto_tipo'));
+        return view('productos.tipos.show', compact('producto_tipo'));
     }
 
     /**
@@ -193,7 +193,7 @@ class ProductoTipoController extends Controller
     {
         $tipo = ProductoTipo::findOrFail($id);
 
-        return view('producto_tipo.edit', compact('tipo'));
+        return view('productos.tipos.edit', compact('tipo'));
     }
 
     /**
@@ -266,7 +266,7 @@ class ProductoTipoController extends Controller
             ->orderBy('deleted_at', 'desc')
             ->get();
 
-        return view('producto_tipo.deleted', compact('tiposEliminados'));
+        return view('productos.tipos.deleted', compact('tiposEliminados'));
     }
 
     /**

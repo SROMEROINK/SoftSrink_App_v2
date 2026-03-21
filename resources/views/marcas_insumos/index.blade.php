@@ -72,15 +72,15 @@
                         </tr>
                         <tr>
                             <th>
-                                <input type="text" id="filtro_nombre_marca" class="form-control form-control-sm" placeholder="Buscar Marca">
+                                <input type="text" id="filtro_nombre_marca" class="form-control form-control-sm filtro-texto" placeholder="Buscar Marca">
                             </th>
                             <th>
-                                <select id="filtro_proveedor" class="form-control form-control-sm">
+                                <select id="filtro_proveedor" class="form-control form-control-sm filtro-select">
                                     <option value="">Todos</option>
                                 </select>
                             </th>
                             <th>
-                                <select id="filtro_estado" class="form-control form-control-sm">
+                                <select id="filtro_estado" class="form-control form-control-sm filtro-select">
                                     <option value="">Todos</option>
                                     <option value="1">Habilitado</option>
                                     <option value="0">Deshabilitado</option>
