@@ -63,6 +63,7 @@
                             <th>Fecha del Pedido</th>
                             <th>Cant. Fabricacion</th>
                             <th>Estado Pedido</th>
+                            <th>Estado MP</th>
                             <th>Acciones</th>
                         </tr>
                         <tr class="filter-row">
@@ -75,6 +76,7 @@
                             <th>
                                 <select id="filtro_estado_pedido" class="form-control filtro-select"><option value="">Todos</option></select>
                             </th>
+                            <th></th>
                             <th></th>
                         </tr>
                     </thead>
@@ -181,12 +183,18 @@ $(document).ready(function () {
                 }
             },
             { data: 'Estado_Pedido', name: 'Estado_Pedido', orderable: false, searchable: false },
+            { data: 'Estado_MP', name: 'Estado_MP', orderable: false, searchable: false },
             {
                 data: 'Id_OF',
                 orderable: false,
                 searchable: false,
-                render: function (data) {
+                render: function (data, type, row) {
+                    const mpAction = row.Id_Pedido_MP
+                        ? `<a href="/pedido_cliente_mp/${row.Id_Pedido_MP}/edit" class="btn btn-success btn-sm">Cargar MP</a>`
+                        : `<a href="/pedido_cliente_mp/create?of=${data}" class="btn btn-success btn-sm">Cargar MP</a>`;
+
                     return `
+                        ${mpAction}
                         <a href="/pedido_cliente/${data}" class="btn btn-info btn-sm">Ver</a>
                         <a href="/pedido_cliente/${data}/edit" class="btn btn-primary btn-sm">Editar</a>
                         <button type="button" onclick="deletePedido(${data})" class="btn btn-danger btn-sm">Eliminar</button>

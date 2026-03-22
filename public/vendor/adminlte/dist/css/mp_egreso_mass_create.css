@@ -1,0 +1,68 @@
+.pedido-egreso-mass-alert {
+    border-radius: 12px;
+    border: 1px solid #b7deff;
+    background: #eef8ff;
+    color: #24506b;
+}
+
+.pedido-egreso-mass-table {
+    background: #fffef5;
+}
+
+.pedido-egreso-mass-table th,
+.pedido-egreso-mass-table td {
+    text-align: center;
+    vertical-align: middle;
+}
+
+.pedido-egreso-mass-table .form-control[readonly] {
+    background-color: #e9eef4;
+    color: #495057;
+}
+
+.pedido-egreso-mass-table .input-invalid {
+    border-color: #dc3545;
+    box-shadow: 0 0 0 .12rem rgba(220, 53, 69, .15);
+}
+
+.pedido-egreso-mass-table tbody tr.row-active {
+    background: #e7f2ff;
+}
+
+.pedido-egreso-mass-table tbody tr.row-complete {
+    background: #e7f8e7;
+}
+
+.pedido-egreso-mass-table tbody tr.row-incomplete {
+    background: #fff8db;
+}
+
+.pedido-egreso-mass-table tbody tr.row-invalid,
+.pedido-egreso-mass-table tbody tr.row-dup {
+    background: #fde6e6;
+}
+
+.pedido-egreso-mass-table .col-fila { width: 90px; }
+.pedido-egreso-mass-table .col-of,
+.pedido-egreso-mass-table .col-producto,
+.pedido-egreso-mass-table .col-ingreso,
+.pedido-egreso-mass-table .col-codigo,
+.pedido-egreso-mass-table .col-maquina,
+.pedido-egreso-mass-table .col-barras,
+.pedido-egreso-mass-table .col-fecha,
+.pedido-egreso-mass-table .col-barras-ent,
+.pedido-egreso-mass-table .col-estado {
+    min-width: 140px;
+}
+
+.pedido-egreso-mass-table .col-acciones {
+    min-width: 130px;
+}
+
+.pedido-egreso-mass-table .form-control {
+    text-align: center;
+}
+
+.pedido-egreso-mass-table input::placeholder {
+    text-align: center;
+}

@@ -1,0 +1,33 @@
+.filter-row th {
+    vertical-align: middle;
+}
+
+#tabla_salidas_iniciales th,
+#tabla_salidas_iniciales td {
+    text-align: center;
+    vertical-align: middle;
+}
+
+#tabla_salidas_iniciales .acciones-grupo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    flex-wrap: nowrap;
+}
+
+#tabla_salidas_iniciales th:last-child,
+#tabla_salidas_iniciales td:last-child {
+    min-width: 170px;
+}
+
+.small-box .inner h3 {
+    white-space: nowrap;
+}
+
+
+.ajuste-stock-alert {
+    border-radius: 10px;
+    margin-bottom: 18px;
+    font-size: 0.95rem;
+}

@@ -168,7 +168,6 @@ $(document).ready(function () {
 
     function fillIngresoSeleccionado(ingreso) {
         $nroIngresoMp.val(ingreso.Nro_Ingreso_MP ?? '');
-        $pedidoMaterialNro.val(ingreso.Pedido_Material_Nro ?? '');
         $nroCertificadoMp.val(ingreso.Nro_Certificado_MP ?? '');
 
         if (ingreso.Longitud_Unidad_MP !== undefined && ingreso.Longitud_Unidad_MP !== null && ingreso.Longitud_Unidad_MP !== '') {

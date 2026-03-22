@@ -1,0 +1,19 @@
+﻿.movimiento-stock-alert {
+    border: 1px solid #8ec5ff;
+    background: #edf7ff;
+    color: #20496f;
+}
+
+#tabla_movimientos_adicionales th,
+#tabla_movimientos_adicionales td {
+    text-align: center;
+    vertical-align: middle;
+}
+
+#tabla_movimientos_adicionales .acciones-grupo {
+    display: flex;
+    gap: 6px;
+    justify-content: center;
+    align-items: center;
+    min-width: 180px;
+}

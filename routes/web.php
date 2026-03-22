@@ -9,6 +9,7 @@ use App\Http\Controllers\RolePermissionController;
 use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\MpIngresoController;
 use App\Http\Controllers\MpEgresoController;
+use App\Http\Controllers\MpSalidaInicialController;
 use App\Http\Controllers\MpDiametroController;
 use App\Http\Controllers\MpMateriaPrimaController;
 use App\Http\Controllers\PedidoClienteController;
@@ -25,6 +26,7 @@ use App\Http\Controllers\ProductoSubcategoriaController;
 use App\Http\Controllers\ProductoGrupoSubcategoriaController;
 use App\Http\Controllers\ProductoGrupoConjuntosController;
 use App\Http\Controllers\PedidoClienteMpController;
+use App\Http\Controllers\MpMovimientoAdicionalController;
 
 // Ruta por defecto al iniciar la app
 Route::get('/', function () {
@@ -37,14 +39,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
         return view('home');
     })->name('dashboard');
 
-    // Rutas protegidas por roles específicos (Administrador)
+    // Rutas protegidas por roles especÃƒÂ­ficos (Administrador)
     Route::middleware(['role:Administrador'])->group(function () {
         Route::resource('users', UserController::class);
         Route::resource('roles', RolePermissionController::class);
         Route::resource('permissions', PermissionController::class);
     });
 
-    // Ruta específica para DataTables y otras funcionalidades
+    // Ruta especÃƒÂ­fica para DataTables y otras funcionalidades
     Route::get('productos/data', [ProductoController::class, 'getData'])->name('productos.data');
     Route::get('pedido_cliente/data', [PedidoClienteController::class, 'getData'])->name('pedido_cliente.data');
     Route::get('pedido_cliente/resumen', [PedidoClienteController::class, 'resumen'])->name('pedido_cliente.resumen');
@@ -65,7 +67,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     
     Route::get('/productos/codigos', [ProductoController::class, 'getCodigosProducto'])->name('productos.codigos');
     
-    // Rutas para obtener categorías y subcategorías
+    // Rutas para obtener categorÃƒÂ­as y subcategorÃƒÂ­as
     Route::get('/productos/categorias', [ProductoController::class, 'getCategorias'])->name('productos.categorias');
     Route::get('/productos/subcategorias', [ProductoController::class, 'getSubcategorias'])->name('productos.subcategorias');
     Route::get('/productos/codigos', [ProductoController::class, 'getCodigosProducto'])->name('productos.codigos');
@@ -87,7 +89,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/productos/{id}/descripcion', [ProductoController::class, 'getDescripcionProducto']);
     
     // Rutas para las funcionalidades de Materia Prima
-    // Rutas para los controladores de Materia Prima y Diámetros
+    // Rutas para los controladores de Materia Prima y DiÃƒÂ¡metros
     Route::get('/mp_diametros', [MpDiametroController::class, 'index'])->name('mp_diametros.index');
     Route::get('/mp_materias_primas', [MpMateriaPrimaController::class, 'index'])->name('mp_materias_primas.index');
     Route::get('/mp_ingresos', [MpIngresoController::class, 'index'])->name('mp_ingresos.index');
@@ -95,6 +97,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/mp_ingresos/data', [MpIngresoController::class, 'getData'])->name('mp_ingresos.data');
     Route::get('/mp_egresos/data', [MpEgresoController::class, 'getData'])->name('mp_egresos.data');
     Route::get('/mp_egresos', [MpEgresoController::class, 'index'])->name('mp_egresos.index');
+    Route::get('/mp_salidas_iniciales/data', [MpSalidaInicialController::class, 'getData'])->name('mp_salidas_iniciales.data');
+    Route::get('/mp_movimientos_adicionales/data', [MpMovimientoAdicionalController::class, 'getData'])->name('mp_movimientos_adicionales.data');
+    Route::get('/mp_movimientos_adicionales/deleted', [MpMovimientoAdicionalController::class, 'showDeleted'])->name('mp_movimientos_adicionales.deleted');
+    Route::post('/mp_movimientos_adicionales/{id}/restore', [MpMovimientoAdicionalController::class, 'restore'])->name('mp_movimientos_adicionales.restore');
+    Route::post('/mp_movimientos_adicionales/import-csv', [MpMovimientoAdicionalController::class, 'importLegacyCsv'])->name('mp_movimientos_adicionales.importCsv');
+    Route::post('/mp_egresos/import-historico', [MpEgresoController::class, 'importHistoricCsv'])->name('mp_egresos.importHistoricCsv');
+    Route::get('/mp_salidas_iniciales/deleted', [MpSalidaInicialController::class, 'showDeleted'])->name('mp_salidas_iniciales.deleted');
+    Route::post('/mp_salidas_iniciales/{id}/restore', [MpSalidaInicialController::class, 'restore'])->name('mp_salidas_iniciales.restore');
     Route::get('/mp_ingresos/ultimo_nro_ingreso', [MpIngresoController::class, 'getUltimoNroIngreso'])->name('mp_ingresos.ultimo_nro_ingreso');
     Route::get('/mp_ingresos/resumen', [MpIngresoController::class, 'resumenIngresos'])->name('mp_ingresos.resumen');
     
@@ -103,7 +113,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/entregas_productos', [ListadoEntregaProductoController::class, 'index'])->name('entregas_productos.index');
     Route::get('/pedido-cliente/get-id-producto/{nroOf}', [PedidoClienteController::class, 'getIdProductoPorNroOf']);
     
-    // Rutas para fabricación
+    // Rutas para fabricaciÃƒÂ³n
     Route::get('fabricacion/show/{nroOF}', [RegistroDeFabricacionController::class, 'showByNroOF'])->name('fabricacion.showByNroOF');
     
     // Rutas para proveedores
@@ -185,7 +195,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('profile', ProfileController::class)->only(['index', 'edit', 'show', 'update', 'destroy']);
     Route::resource('productos', ProductoController::class);
     Route::resource('mp_ingresos', MpIngresoController::class);
+    Route::get('/mp_egresos/create-massive', [MpEgresoController::class, 'createMassive'])->name('mp_egresos.createMassive');
+    Route::post('/mp_egresos/store-massive', [MpEgresoController::class, 'storeMassive'])->name('mp_egresos.storeMassive');
+    Route::get('/mp_egresos/deleted', [MpEgresoController::class, 'showDeleted'])->name('mp_egresos.deleted');
+    Route::post('/mp_egresos/{id}/restore', [MpEgresoController::class, 'restore'])->name('mp_egresos.restore');
     Route::resource('mp_egresos', MpEgresoController::class);
+    Route::resource('mp_salidas_iniciales', MpSalidaInicialController::class);
+    Route::resource('mp_movimientos_adicionales', MpMovimientoAdicionalController::class);
     Route::resource('mp_diametro', MpDiametroController::class);
     Route::resource('mp_materia_prima', MpMateriaPrimaController::class);
     Route::resource('producto_categoria', ProductoCategoriaController::class);
@@ -203,7 +219,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('producto_grupo_conjuntos', ProductoGrupoConjuntosController::class);
 
 // 08/03/2026*
-// Rutas para el módulo de ejemplo (descomentar si se implementa el controlador y modelo correspondiente)
+// Rutas para el mÃƒÂ³dulo de ejemplo (descomentar si se implementa el controlador y modelo correspondiente)
 
 Route::get('modulo/data', [ModuloController::class, 'getData'])->name('modulo.data');
 Route::get('modulo/filters', [ModuloController::class, 'getUniqueFilters'])->name('modulo.filters');
@@ -214,5 +230,8 @@ Route::resource('modulo', ModuloController::class);
 
 });
 
-// Incluye las rutas de autenticación (si existe un archivo auth.php)
+// Incluye las rutas de autenticaciÃƒÂ³n (si existe un archivo auth.php)
 require __DIR__ . '/auth.php';
+
+
+

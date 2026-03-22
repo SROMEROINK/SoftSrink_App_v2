@@ -55,6 +55,7 @@ class PedidoClienteMpController extends Controller
                 'prod.Prod_Codigo',
                 'cat.Nombre_Categoria',
                 'pm.Id_Pedido_MP',
+                'pm.Pedido_Material_Nro',
                 'pm.Codigo_MP',
                 'pm.Materia_Prima',
                 'pm.Diametro_MP',
@@ -81,6 +82,10 @@ class PedidoClienteMpController extends Controller
 
         if ($request->filled('filtro_materia_prima')) {
             $query->where('pm.Materia_Prima', $request->filtro_materia_prima);
+        }
+
+        if ($request->filled('filtro_pedido_material')) {
+            $query->where('pm.Pedido_Material_Nro', 'like', '%' . $request->filtro_pedido_material . '%');
         }
 
         return DataTables::of($query)
@@ -339,10 +344,13 @@ class PedidoClienteMpController extends Controller
 
         $maquinas = DB::table('maquinas_produc')
             ->select('id_maquina', 'Nro_maquina', 'familia_maquina', 'scrap_maquina')
+            ->where('Status', 1)
             ->orderBy('Nro_maquina')
             ->get();
 
-        return compact('pedidos', 'estadosPlanificacion', 'materiasPrimas', 'diametros', 'maquinas', 'legacyMaxNroOf');
+        $nextPedidoMaterialNro = $this->nextPedidoMaterialNro();
+
+        return compact('pedidos', 'estadosPlanificacion', 'materiasPrimas', 'diametros', 'maquinas', 'legacyMaxNroOf', 'nextPedidoMaterialNro');
     }
 
     protected function massiveCreateData(): array
@@ -381,6 +389,7 @@ class PedidoClienteMpController extends Controller
 
         $maquinasCatalogo = DB::table('maquinas_produc')
             ->select('id_maquina', 'Nro_maquina', 'familia_maquina', 'scrap_maquina')
+            ->where('Status', 1)
             ->orderBy('Nro_maquina')
             ->get()
             ->map(fn ($maquina) => [
@@ -405,7 +414,6 @@ class PedidoClienteMpController extends Controller
             ])
             ->map(fn ($ingreso) => [
                 'Nro_Ingreso_MP' => (int) $ingreso->Nro_Ingreso_MP,
-                'Pedido_Material_Nro' => $ingreso->Nro_Pedido,
                 'Codigo_MP' => $ingreso->Codigo_MP,
                 'Nro_Certificado_MP' => $ingreso->Nro_Certificado_MP,
                 'Longitud_Unidad_MP' => $ingreso->Longitud_Unidad_MP !== null ? (float) $ingreso->Longitud_Unidad_MP : null,
@@ -417,7 +425,9 @@ class PedidoClienteMpController extends Controller
             ->orderBy('Estado_Plani_Id')
             ->get(['Estado_Plani_Id', 'Nombre_Estado']);
 
-        return compact('pedidosCatalogo', 'maquinasCatalogo', 'ingresosCatalogo', 'estadosPlanificacion');
+        $nextPedidoMaterialNro = $this->nextPedidoMaterialNro();
+
+        return compact('pedidosCatalogo', 'maquinasCatalogo', 'ingresosCatalogo', 'estadosPlanificacion', 'nextPedidoMaterialNro');
     }
 
     protected function legacyPendingSummary(): array
@@ -437,6 +447,17 @@ class PedidoClienteMpController extends Controller
             'pendingMinNroOf' => (clone $baseQuery)->min('Nro_OF'),
             'pendingMaxNroOf' => (clone $baseQuery)->max('Nro_OF'),
         ];
+    }
+
+    protected function nextPedidoMaterialNro(): int
+    {
+        $maxPedidoDefinido = (int) (PedidoClienteMp::withTrashed()
+            ->selectRaw('MAX(CAST(Pedido_Material_Nro AS UNSIGNED)) as max_pedido')
+            ->value('max_pedido') ?? 0);
+
+        $maxPedidoEgreso = (int) (DB::table('mp_salidas')->max('Nro_Pedido_MP') ?? 0);
+
+        return max($maxPedidoDefinido, $maxPedidoEgreso, 0) + 1;
     }
 
     protected function validateData(Request $request, $id = null): array
@@ -488,18 +509,13 @@ class PedidoClienteMpController extends Controller
         $codigo = trim((string) ($validated['Codigo_MP'] ?? ''));
         $codigoIngresado = $codigo !== '' ? $codigo : ($materia !== '' && $diametro !== '' ? "{$materia}_{$diametro}" : '');
 
-        if ($productoCodigoMp !== '' && $codigoIngresado !== $productoCodigoMp) {
-            throw \Illuminate\Validation\ValidationException::withMessages([
-                'Materia_Prima' => 'La materia prima debe coincidir con el Codigo MP definido en el producto.',
-                'Diametro_MP' => 'El diametro debe coincidir con el Codigo MP definido en el producto.',
-            ]);
-        }
+        [$productoMateriaComparada, $productoDiametroComparado] = $this->resolveMateriaDiametroForComparison($productoCodigoMp, $productoMateria, $productoDiametro);
+        [$ingresoMateriaComparada, $ingresoDiametroComparado] = $this->resolveMateriaDiametroForComparison($codigoIngresado, $materia, $diametro);
 
-        if ($productoCodigoMp === '' && (($productoMateria !== '' && $materia !== $productoMateria)
-            || ($productoDiametro !== '' && $diametro !== $productoDiametro))) {
+        if (!$this->isCompatibleMpSelection($productoMateriaComparada, $productoDiametroComparado, $ingresoMateriaComparada, $ingresoDiametroComparado)) {
             throw \Illuminate\Validation\ValidationException::withMessages([
                 'Materia_Prima' => 'La materia prima debe coincidir con la compatibilidad definida en el producto.',
-                'Diametro_MP' => 'El diametro debe coincidir con la compatibilidad definida en el producto.',
+                'Diametro_MP' => 'El diametro del ingreso debe ser igual o mayor al requerido por el producto.',
             ]);
         }
 
@@ -507,6 +523,7 @@ class PedidoClienteMpController extends Controller
             $maquina = DB::table('maquinas_produc')
                 ->select('id_maquina', 'Nro_maquina', 'familia_maquina', 'scrap_maquina')
                 ->where('id_maquina', $validated['Id_Maquina'])
+                ->where('Status', 1)
                 ->first();
 
             if (!$maquina) {
@@ -523,6 +540,11 @@ class PedidoClienteMpController extends Controller
             $validated['Familia_Maquina'] = null;
             $validated['Scrap_Maquina'] = null;
         }
+
+        $pedidoMaterialNro = trim((string) ($validated['Pedido_Material_Nro'] ?? ''));
+        $validated['Pedido_Material_Nro'] = $pedidoMaterialNro !== ''
+            ? $pedidoMaterialNro
+            : (string) $this->nextPedidoMaterialNro();
 
         return $validated;
     }
@@ -547,6 +569,8 @@ class PedidoClienteMpController extends Controller
         $invalidRows = [];
         $preparedRows = [];
         $seenOf = [];
+        $pedidoMaterialNros = $request->input('Pedido_Material_Nro', []);
+        $pedidoMaterialLote = null;
 
         for ($index = 0; $index < $maxRows; $index++) {
             $rowNumber = $index + 1;
@@ -556,10 +580,17 @@ class PedidoClienteMpController extends Controller
             $estadoId = $estadoIds[$index] ?? 11;
             $observacion = $observaciones[$index] ?? null;
             $regStatus = $regStatuses[$index] ?? 1;
+            $pedidoMaterialFila = trim((string) ($pedidoMaterialNros[$index] ?? ''));
 
             $isEmptyRow = blank($idOf) && blank($idMaquina) && blank($nroIngreso);
             if ($isEmptyRow) {
                 continue;
+            }
+
+            if ($pedidoMaterialLote === null) {
+                $pedidoMaterialLote = $pedidoMaterialFila !== ''
+                    ? $pedidoMaterialFila
+                    : (string) $this->nextPedidoMaterialNro();
             }
 
             if (blank($idOf) || blank($idMaquina) || blank($nroIngreso) || blank($estadoId)) {
@@ -578,11 +609,23 @@ class PedidoClienteMpController extends Controller
             $maquina = DB::table('maquinas_produc')
                 ->select('id_maquina', 'Nro_maquina', 'familia_maquina', 'scrap_maquina')
                 ->where('id_maquina', $idMaquina)
+                ->where('Status', 1)
                 ->first();
             $ingreso = DB::table('mp_ingreso')
-                ->whereNull('deleted_at')
-                ->where('reg_Status', 1)
-                ->where('Nro_Ingreso_MP', $nroIngreso)
+                ->leftJoin('mp_materia_prima', 'mp_ingreso.Id_Materia_Prima', '=', 'mp_materia_prima.Id_Materia_Prima')
+                ->leftJoin('mp_diametro', 'mp_ingreso.Id_Diametro_MP', '=', 'mp_diametro.Id_Diametro')
+                ->whereNull('mp_ingreso.deleted_at')
+                ->where('mp_ingreso.reg_Status', 1)
+                ->where('mp_ingreso.Nro_Ingreso_MP', $nroIngreso)
+                ->select([
+                    'mp_ingreso.Nro_Ingreso_MP',
+                    'mp_ingreso.Nro_Pedido',
+                    'mp_ingreso.Codigo_MP',
+                    'mp_ingreso.Nro_Certificado_MP',
+                    'mp_ingreso.Longitud_Unidad_MP',
+                    'mp_materia_prima.Nombre_Materia as Materia_Prima',
+                    'mp_diametro.Valor_Diametro as Diametro_MP',
+                ])
                 ->first();
 
             if (!$pedido || !$pedido->producto || !$maquina || !$ingreso) {
@@ -590,18 +633,18 @@ class PedidoClienteMpController extends Controller
                 continue;
             }
 
-            $productoCodigoMp = $this->normalizeCodigoMp($this->buildCodigoMp(
+            [$productoMateria, $productoDiametro] = $this->resolveMateriaDiametroForComparison(
                 $pedido->producto->Prod_Codigo_MP ?? null,
                 $pedido->producto->Prod_Material_MP ?? null,
                 $pedido->producto->Prod_Diametro_de_MP ?? null
-            ));
-            $ingresoCodigoMp = $this->normalizeCodigoMp($this->buildCodigoMp(
+            );
+            [$ingresoMateria, $ingresoDiametro] = $this->resolveMateriaDiametroForComparison(
                 $ingreso->Codigo_MP ?? null,
-                null,
-                null
-            ));
+                $ingreso->Materia_Prima ?? null,
+                $ingreso->Diametro_MP ?? null
+            );
 
-            if ($productoCodigoMp && $ingresoCodigoMp !== $productoCodigoMp) {
+            if (!$this->isCompatibleMpSelection($productoMateria, $productoDiametro, $ingresoMateria, $ingresoDiametro)) {
                 $invalidRows[] = $rowNumber;
                 continue;
             }
@@ -628,7 +671,7 @@ class PedidoClienteMpController extends Controller
                 'Materia_Prima' => $plannerData['seleccion']['materia_prima'],
                 'Diametro_MP' => $plannerData['seleccion']['diametro_mp'],
                 'Nro_Ingreso_MP' => (int) $ingreso->Nro_Ingreso_MP,
-                'Pedido_Material_Nro' => $ingreso->Nro_Pedido,
+                'Pedido_Material_Nro' => $pedidoMaterialLote,
                 'Nro_Certificado_MP' => $ingreso->Nro_Certificado_MP,
                 'Longitud_Un_MP' => $plannerData['seleccion']['longitud_un_mp'],
                 'Largo_Pieza' => $plannerData['seleccion']['largo_pieza'],
@@ -690,6 +733,61 @@ class PedidoClienteMpController extends Controller
 
         $normalized = preg_replace('/\s+/', '', trim(mb_strtoupper($value)));
         return $normalized === '' ? null : $normalized;
+    }
+
+    protected function splitCodigoMp(?string $codigoMp): array
+    {
+        $codigoMp = trim((string) $codigoMp);
+        if ($codigoMp === '' || !str_contains($codigoMp, '_')) {
+            return [null, null];
+        }
+
+        $parts = explode('_', $codigoMp, 2);
+        return [trim($parts[0]) ?: null, trim($parts[1]) ?: null];
+    }
+
+    protected function resolveMateriaDiametroForComparison(?string $codigoMp, ?string $materiaPrima, ?string $diametroMp): array
+    {
+        [$materiaFromCode, $diametroFromCode] = $this->splitCodigoMp($codigoMp);
+
+        return [
+            $materiaFromCode ?: trim((string) $materiaPrima),
+            $diametroFromCode ?: trim((string) $diametroMp),
+        ];
+    }
+
+    protected function extractDiameter(?string $value): ?float
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        if (preg_match('/[Øø]?\s*([0-9]+(?:[\.,][0-9]+)?)/u', $value, $matches)) {
+            return (float) str_replace(',', '.', $matches[1]);
+        }
+
+        return null;
+    }
+
+    protected function isCompatibleMpSelection(?string $productoMateria, ?string $productoDiametro, ?string $ingresoMateria, ?string $ingresoDiametro): bool
+    {
+        $productoMateria = trim((string) $productoMateria);
+        $productoDiametro = trim((string) $productoDiametro);
+        $ingresoMateria = trim((string) $ingresoMateria);
+        $ingresoDiametro = trim((string) $ingresoDiametro);
+
+        if ($productoMateria !== '' && $ingresoMateria !== '' && $productoMateria !== $ingresoMateria) {
+            return false;
+        }
+
+        $diametroProducto = $this->extractDiameter($productoDiametro);
+        $diametroIngreso = $this->extractDiameter($ingresoDiametro);
+
+        if ($diametroProducto === null || $diametroIngreso === null) {
+            return true;
+        }
+
+        return $diametroIngreso >= $diametroProducto;
     }
 }
 

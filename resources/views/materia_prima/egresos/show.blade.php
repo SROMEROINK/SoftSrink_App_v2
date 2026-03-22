@@ -1,49 +1,54 @@
-{{-- resources/views/materia_prima/ingresos/show.blade.php --}}
 @extends('adminlte::page')
 
-@section('title', 'Detalles del Ingreso de Materia Prima')
+@section('title', 'Detalle de Egreso de MP')
 
 @section('content_header')
-    <h1>Detalles del Ingreso de Materia Prima</h1>
+    <h1>Detalle de Egreso de Materia Prima</h1>
 @stop
 
 @section('content')
-<div class="container">
+<div class="container-fluid">
     <div class="card">
-        <div class="card-header">
-            <h3>Ingreso Nro: {{ $mp_ingreso->Nro_Ingreso_MP }}</h3>
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <div>
+                <h3 class="card-title">OF #{{ $mp_egreso->pedidoMp->pedido->Nro_OF ?? $mp_egreso->Id_OF_Salidas_MP }}</h3>
+                <div class="text-muted">{{ $mp_egreso->pedidoMp->pedido->producto->Prod_Codigo ?? 'Sin producto' }}</div>
+            </div>
+            <span class="badge badge-{{ (int) $mp_egreso->reg_Status === 1 ? 'success' : 'secondary' }} px-3 py-2">
+                {{ (int) $mp_egreso->reg_Status === 1 ? 'ACTIVO' : 'INACTIVO' }}
+            </span>
         </div>
         <div class="card-body">
-            <ul class="list-group list-group-flush">
-                
-                <li class="list-group-item"><strong>Número de Pedido:</strong> {{ $mp_ingreso->Nro_Pedido }}</li>
-                <li class="list-group-item"><strong>Número de Remito:</strong> {{ $mp_ingreso->Nro_Remito }}</li>
-                <li class="list-group-item"><strong>Fecha de Ingreso:</strong> {{ $mp_ingreso->Fecha_Ingreso }}</li>
-                <li class="list-group-item"><strong>Número de Orden de Compra:</strong> {{ $mp_ingreso->Nro_OC }}</li>
-                <li class="list-group-item"><strong>Proveedor:</strong> {{ $mp_ingreso->proveedor->Prov_Nombre ?? 'No Asignado' }}</li>
-                <li class="list-group-item"><strong>Materia Prima:</strong> {{ $mp_ingreso->materiaPrima->Nombre_Materia ?? 'No Asignado' }}</li>
-                <li class="list-group-item"><strong>Diámetro:</strong> {{ $mp_ingreso->diametro->Valor_Diametro ?? 'No Asignado' }}</li>
-                <li class="list-group-item"><strong>Código de Materia Prima:</strong> {{ $mp_ingreso->Codigo_MP }}</li>
-                <li class="list-group-item"><strong>Número de Certificado:</strong> {{ $mp_ingreso->Nro_Certificado_MP }}</li>
-                <li class="list-group-item"><strong>Detalle de Origen:</strong> {{ $mp_ingreso->Detalle_Origen_MP }}</li>
-                <li class="list-group-item"><strong>Unidades:</strong> {{ $mp_ingreso->Unidades_MP }}</li>
-                <li class="list-group-item"><strong>Longitud por Unidad:</strong> {{ $mp_ingreso->Longitud_Unidad_MP }}</li>
-                <li class="list-group-item"><strong>Metros Totales:</strong> {{ $mp_ingreso->Mts_Totales }}</li>
-                <li class="list-group-item"><strong>Kilos Totales:</strong> {{ $mp_ingreso->Kilos_Totales }}</li>
-                <li class="list-group-item"><strong>Estado:</strong> {{ $mp_ingreso->reg_Status == 1 ? 'Activo' : 'Inactivo' }}</li>
-                <li class="list-group-item"><strong>Creado en:</strong> {{ $mp_ingreso->created_at }}</li>
-                <li class="list-group-item"><strong>Actualizado en:</strong> {{ $mp_ingreso->updated_at }}</li>
-            </ul>
+            <div class="row">
+                <div class="col-md-4"><strong>Ingreso MP:</strong> {{ $mp_egreso->pedidoMp->Nro_Ingreso_MP ?? '-' }}</div>
+                <div class="col-md-4"><strong>Codigo MP:</strong> {{ $mp_egreso->pedidoMp->Codigo_MP ?? '-' }}</div>
+                <div class="col-md-4"><strong>Maquina:</strong> {{ $mp_egreso->pedidoMp->Nro_Maquina ?? '-' }}</div>
+            </div>
+            <hr>
+            <div class="row">
+                <div class="col-md-3"><strong>Barras solicitadas:</strong> {{ number_format((int) $mp_egreso->Cantidad_Unidades_MP, 0, ',', '.') }}</div>
+                <div class="col-md-3"><strong>Barras preparadas:</strong> {{ number_format((int) $mp_egreso->Cantidad_Unidades_MP_Preparadas, 0, ',', '.') }}</div>
+                <div class="col-md-3"><strong>Adicionales:</strong> {{ number_format((int) $mp_egreso->Cantidad_MP_Adicionales, 0, ',', '.') }}</div>
+                <div class="col-md-3"><strong>Devoluciones:</strong> {{ number_format((int) $mp_egreso->Cant_Devoluciones, 0, ',', '.') }}</div>
+            </div>
+            <hr>
+            <div class="row">
+                <div class="col-md-4"><strong>Total salidas:</strong> {{ number_format((int) $mp_egreso->Total_Salidas_MP, 0, ',', '.') }}</div>
+                <div class="col-md-4"><strong>Total metros utilizados:</strong> {{ number_format((float) $mp_egreso->Total_Mtros_Utilizados, 2, ',', '.') }}</div>
+                <div class="col-md-4"><strong>Pedido Material Nro:</strong> {{ $mp_egreso->Nro_Pedido_MP ?? '-' }}</div>
+            </div>
+            <hr>
+            <div class="row">
+                <div class="col-md-3"><strong>Fecha pedido produccion:</strong> {{ optional($mp_egreso->Fecha_del_Pedido_Produccion)->format('d/m/Y') ?? '-' }}</div>
+                <div class="col-md-3"><strong>Resp. produccion:</strong> {{ $mp_egreso->Responsable_Pedido_Produccion ?? '-' }}</div>
+                <div class="col-md-3"><strong>Fecha entrega calidad:</strong> {{ optional($mp_egreso->Fecha_de_Entrega_Pedido_Calidad)->format('d/m/Y') ?? '-' }}</div>
+                <div class="col-md-3"><strong>Resp. calidad:</strong> {{ $mp_egreso->Responsable_de_entrega_Calidad ?? '-' }}</div>
+            </div>
         </div>
-        <div class="card-footer">
-            <a href="{{ route('mp_ingresos.index') }}" class="btn btn-default">Volver a la lista</a>
+        <div class="card-footer text-right">
+            <a href="{{ route('mp_egresos.index') }}" class="btn btn-secondary">Volver</a>
+            <a href="{{ route('mp_egresos.edit', $mp_egreso->Id_Egresos_MP) }}" class="btn btn-primary">Editar</a>
         </div>
     </div>
 </div>
-@stop
-
-@section('css')
-<link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap5.min.css">
-<link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.2.9/css/responsive.bootstrap5.min.css">
-<link rel="stylesheet" href="{{ asset('vendor/adminlte/dist/css/mp_ingreso_show.css') }}">
 @stop

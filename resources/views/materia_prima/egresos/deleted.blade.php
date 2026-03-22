@@ -1,92 +1,54 @@
-{{-- resources\views\materia_prima\ingresos\deleted.blade.php --}}
 @extends('adminlte::page')
+
+@section('title', 'Salidas de MP Eliminadas')
+
+@section('content_header')
+    <h1>Salidas de Materia Prima Eliminadas</h1>
+@stop
+
 @section('content')
-<div class="container">
-    <h1>Ingresos de Materia Prima Eliminados</h1>
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Nro Ingreso</th>
-                <th>Fecha de Ingreso</th>
-                <th>Proveedor</th>
-                <th>Materia Prima</th>
-                <th>Diámetro</th>
-                <th>Cantidad Unidades</th>
-                <th>Acciones</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach ($ingresosEliminados as $ingreso)
-            <tr>
-                <td>{{ $ingreso->Nro_Ingreso_MP }}</td>
-                <td>{{ $ingreso->Fecha_Ingreso }}</td>
-                <td>{{ $ingreso->proveedor->Prov_Nombre ?? 'No Asignado' }}</td>
-                <td>{{ $ingreso->materiaPrima->Nombre_Materia ?? 'No Asignado' }}</td>
-                <td>{{ $ingreso->diametro->Valor_Diametro ?? 'No Asignado' }}</td>
-                <td>{{ $ingreso->Unidades_MP }}</td>
-                <td>
-                    <form method="POST" action="{{ route('mp_ingresos.restore', $ingreso->Id_MP) }}">
-                        @csrf
-                        <button type="submit" class="btn btn-success">Restaurar</button>
-                    </form>
-                </td>
-            </tr>
-            @endforeach
-        </tbody>
-    </table>
-    <a href="{{ route('mp_ingresos.index') }}" class="btn btn-return">Volver a Ingresos de Materia Prima</a>
+<div class="container-fluid">
+    <div class="card">
+        <div class="card-body table-responsive">
+            <table class="table table-bordered table-striped">
+                <thead>
+                    <tr>
+                        <th>Nro OF</th>
+                        <th>Producto</th>
+                        <th>Ingreso MP</th>
+                        <th>Total salidas</th>
+                        <th>Total metros</th>
+                        <th>Eliminado</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($egresosEliminados as $egreso)
+                        <tr>
+                            <td>{{ $egreso->pedidoMp->pedido->Nro_OF ?? $egreso->Id_OF_Salidas_MP }}</td>
+                            <td>{{ $egreso->pedidoMp->pedido->producto->Prod_Codigo ?? '-' }}</td>
+                            <td>{{ $egreso->pedidoMp->Nro_Ingreso_MP ?? '-' }}</td>
+                            <td>{{ number_format((int) $egreso->Total_Salidas_MP, 0, ',', '.') }}</td>
+                            <td>{{ number_format((float) $egreso->Total_Mtros_Utilizados, 2, ',', '.') }}</td>
+                            <td>{{ optional($egreso->deleted_at)->format('d/m/Y H:i') ?? '-' }}</td>
+                            <td>
+                                <form action="{{ route('mp_egresos.restore', $egreso->Id_Egresos_MP) }}" method="POST">
+                                    @csrf
+                                    <button type="submit" class="btn btn-success btn-sm">Restaurar</button>
+                                </form>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="7" class="text-center">No hay salidas eliminadas.</td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+        <div class="card-footer text-right">
+            <a href="{{ route('mp_egresos.index') }}" class="btn btn-secondary">Volver</a>
+        </div>
+    </div>
 </div>
-@endsection
-
-@section('css')
-    <link rel="stylesheet" href="{{ asset('vendor/adminlte/dist/css/mp_ingreso_deleted.css') }}">
-@endsection
-
-@section('js')
-<script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script>
-    $(document).ready(function() {
-        $('form').on('submit', function(e) {
-            e.preventDefault(); // Detener la acción por defecto
-
-            const form = this; // Guardar referencia al formulario
-
-            Swal.fire({
-                title: '¿Estás seguro?',
-                text: "¿Quieres restaurar este ingreso de materia prima?",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#3085d6',
-                cancelButtonColor: '#d33',
-                confirmButtonText: 'Sí, restaurarlo!'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    $.ajax({
-                        url: $(form).attr('action'),
-                        type: 'POST',
-                        data: $(form).serialize(),
-                        success: function(response) {
-                            Swal.fire(
-                                'Restaurado!',
-                                'El ingreso de materia prima ha sido restaurado exitosamente.',
-                                'success'
-                            ).then((result) => {
-                                if (result.isConfirmed) {
-                                    window.location.href = "{{ route('mp_ingresos.index') }}";
-                                }
-                            });
-                        },
-                        error: function(response) {
-                            Swal.fire(
-                                'Error!',
-                                'No se pudo restaurar el ingreso de materia prima.',
-                                'error'
-                            );
-                        }
-                    });
-                }
-            });
-        });
-    });
-</script>
 @stop

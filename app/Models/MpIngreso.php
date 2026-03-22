@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\SoftDeletes; // Importa la clase SoftDeletes
 use App\Models\Proveedor;
 use App\Models\MpDiametro;
 use App\Models\MpMateriaPrima;
+use App\Models\MpSalidaInicial;
 
 class MpIngreso extends Model
 {
@@ -60,5 +61,10 @@ class MpIngreso extends Model
     public function diametro()
     {
         return $this->belongsTo(MpDiametro::class, 'Id_Diametro_MP', 'Id_Diametro');
+    }
+
+    public function salidaInicial()
+    {
+        return $this->hasOne(MpSalidaInicial::class, 'Id_Ingreso_MP', 'Id_MP');
     }
 }

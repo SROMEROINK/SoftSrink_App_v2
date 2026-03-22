@@ -1,6 +1,5 @@
 {{-- resources/views/partials/navigation.blade.php --}}
 
-<!-- Botón Materia Prima con sub-botonera desplegable -->
 <div class="btn-group">
     <button type="button" class="btn btn-success dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
         Listado de Proveedores
@@ -11,28 +10,28 @@
     </div>
 </div>
 
-
-<!-- Botón Materia Prima con sub-botonera desplegable -->
 <div class="btn-group">
     <button type="button" class="btn btn-success dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
         Materia Prima
     </button>
     <div class="dropdown-menu">
         <button class="dropdown-item" onclick="window.location.href='{{ route('mp_materia_prima.index') }}'">Materias Base</button>
-        <button class="dropdown-item" onclick="window.location.href='{{ route('materia_prima.diametro.index') }}'">Diámetro MP</button>
+        <button class="dropdown-item" onclick="window.location.href='{{ route('materia_prima.diametro.index') }}'">Di&aacute;metro MP</button>
         <button class="dropdown-item" onclick="window.location.href='{{ route('mp_ingresos.index') }}'">Ingreso de Materia Prima</button>
+        <button class="dropdown-item" onclick="window.location.href='{{ route('mp_salidas_iniciales.index') }}'">Salidas Iniciales MP</button>
         <button class="dropdown-item" onclick="window.location.href='{{ route('mp_egresos.index') }}'">Egreso de Materia Prima</button>
         <button class="dropdown-item" onclick="window.location.href='{{ route('pedido_cliente_mp.index') }}'">Definicion MP Pedidos</button>
+        <button class="dropdown-item" onclick="window.location.href='{{ route('mp_movimientos_adicionales.index') }}'">Movimientos Adicionales MP</button>
     </div>
 </div>
 
 <div class="btn-group">
     <button type="button" class="btn btn-secondary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-        Configuración
+        Configuraci&oacute;n
     </button>
     <div class="dropdown-menu">
         <button class="dropdown-item" onclick="window.location.href='{{ route('estado_planificacion.index') }}'">
-            Estados de Planificación
+            Estados de Planificaci&oacute;n
         </button>
     </div>
 </div>
@@ -51,22 +50,22 @@
     </div>
 </div>
 <button type="button" class="btn btn-success" onclick="window.location.href='{{ route('pedido_cliente.index') }}'">Pedido del Cliente</button>
-<button type="button" class="btn btn-primary" onclick="window.location.href='{{ route('fabricacion.index') }}'">Registro de Fabricación</button>
-<button type="button" class="btn btn-info" onclick="window.location.href='{{ route('fechas_of.index') }}'">Fechas de Producción</button>
+<button type="button" class="btn btn-primary" onclick="window.location.href='{{ route('fabricacion.index') }}'">Registro de Fabricaci&oacute;n</button>
+<button type="button" class="btn btn-info" onclick="window.location.href='{{ route('fechas_of.index') }}'">Fechas de Producci&oacute;n</button>
 <button type="button" class="btn btn-danger" onclick="window.location.href='{{ route('entregas_productos.index') }}'">Listado de Entregas</button>
-<button type="button" class="btn btn-dark" id="clearFilters">Limpiar Filtros</button> <!-- Botón para limpiar filtros -->
+<button type="button" class="btn btn-dark" id="clearFilters">Limpiar Filtros</button>
 
 <style>
     .dropdown-menu {
-        background-color: #f8f9fa; /* Fondo claro */
+        background-color: #f8f9fa;
     }
 
     .dropdown-item {
-        color: #343a40; /* Color del texto */
+        color: #343a40;
     }
 
     .dropdown-item:hover {
-        background-color: #007bff; /* Fondo azul al pasar el ratón */
-        color: #fff; /* Texto blanco en hover */
+        background-color: #007bff;
+        color: #fff;
     }
 </style>

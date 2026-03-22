@@ -1,0 +1,29 @@
+.salida-inicial-form-card .form-group label {
+    font-weight: 700;
+}
+
+.salida-inicial-form-card .form-control {
+    border-radius: 8px;
+}
+
+.salida-inicial-form-card .detail-item {
+    margin-bottom: 18px;
+}
+
+.salida-inicial-form-card .detail-value {
+    min-height: 22px;
+}
+
+
+.salida-inicial-form-card .formula-ajuste-alert {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    align-items: center;
+    border-radius: 10px;
+    margin-bottom: 18px;
+}
+
+.salida-inicial-form-card .formula-ajuste-alert span {
+    color: #495057;
+}

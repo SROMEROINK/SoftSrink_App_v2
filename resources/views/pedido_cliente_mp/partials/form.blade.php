@@ -204,7 +204,7 @@
 
             <div class="row">
                 <div class="col-md-4"><div class="form-group"><label for="Nro_Ingreso_MP">Ingreso MP Seleccionado</label><input type="number" min="0" step="1" name="Nro_Ingreso_MP" id="Nro_Ingreso_MP" class="form-control" value="{{ old('Nro_Ingreso_MP', $pedidoMp->Nro_Ingreso_MP ?? '') }}"></div></div>
-                <div class="col-md-4"><div class="form-group"><label for="Pedido_Material_Nro">Pedido de Material Nro</label><input type="text" name="Pedido_Material_Nro" id="Pedido_Material_Nro" class="form-control" value="{{ old('Pedido_Material_Nro', $pedidoMp->Pedido_Material_Nro ?? '') }}"></div></div>
+                <div class="col-md-4"><div class="form-group"><label for="Pedido_Material_Nro">Pedido de Material Nro</label><input type="text" name="Pedido_Material_Nro" id="Pedido_Material_Nro" class="form-control" value="{{ old('Pedido_Material_Nro', $pedidoMp->Pedido_Material_Nro ?? $nextPedidoMaterialNro ?? '') }}"></div></div>
                 <div class="col-md-4"><div class="form-group"><label for="Nro_Certificado_MP">Nro de Certificado MP</label><input type="text" name="Nro_Certificado_MP" id="Nro_Certificado_MP" class="form-control" value="{{ old('Nro_Certificado_MP', $pedidoMp->Nro_Certificado_MP ?? '') }}"></div></div>
             </div>
 

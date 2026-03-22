@@ -1,0 +1,4 @@
+﻿#form-mov-adicional .form-control,
+#form-mov-adicional .filtro-select {
+    min-height: 42px;
+}

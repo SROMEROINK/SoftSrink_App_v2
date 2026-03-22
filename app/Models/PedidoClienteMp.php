@@ -36,6 +36,8 @@ class PedidoClienteMp extends Model
         'MM_Totales',
         'Longitud_Barra_Sin_Scrap',
         'Cant_Barras_MP',
+        'Fecha_Planificacion',
+        'Responsable_Planificacion',
         'Cant_Piezas_Por_Barra',
         'Observaciones',
         'reg_Status',
@@ -59,6 +61,7 @@ class PedidoClienteMp extends Model
         'MM_Totales' => 'decimal:2',
         'Longitud_Barra_Sin_Scrap' => 'decimal:2',
         'Cant_Barras_MP' => 'integer',
+        'Fecha_Planificacion' => 'date',
         'Cant_Piezas_Por_Barra' => 'decimal:2',
         'reg_Status' => 'boolean',
     ];
@@ -71,6 +74,11 @@ class PedidoClienteMp extends Model
     public function estadoPlanificacion()
     {
         return $this->belongsTo(EstadoPlanificacion::class, 'Estado_Plani_Id', 'Estado_Plani_Id');
+    }
+
+    public function salidaInicial()
+    {
+        return $this->hasOne(MpEgreso::class, 'Id_OF_Salidas_MP', 'Id_OF');
     }
 
     public function creator()

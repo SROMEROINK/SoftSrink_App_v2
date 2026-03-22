@@ -68,6 +68,7 @@
     </table>
 
     <div class="btn-der">
+        <button type="button" class="btn btn-info" id="autocompletarCorrelativas">Cargar OF Correlativas</button>
         <button type="button" class="btn btn-success" id="agregarFila">Agregar Fila</button>
         <button type="button" class="btn btn-secondary" id="agregarDiezFilas">Agregar 10 Filas</button>
         <input type="submit" class="btn btn-primary" value="Guardar Carga Masiva">
@@ -87,6 +88,8 @@ $(document).ready(function () {
     const maquinasCatalogo = @json($maquinasCatalogo);
     const ingresosCatalogo = @json($ingresosCatalogo);
     const estadosPlanificacion = @json($estadosPlanificacion);
+    const nextPedidoMaterialNro = @json((string) ($nextPedidoMaterialNro ?? ''));
+    const pendingOfCount = Number(@json((int) ($pendingOfCount ?? 0)));
 
     const defaultsCalculo = {
         frenteado: 0.50,
@@ -155,6 +158,57 @@ $(document).ready(function () {
             .toUpperCase();
     }
 
+    function normalizeMateria(value) {
+        return String(value || '')
+            .normalize('NFKC')
+            .replace(/\s+/g, '')
+            .trim()
+            .toUpperCase();
+    }
+
+    function extractDiameter(value) {
+        const text = String(value || '');
+        const match = text.match(/[??]?\s*([0-9]+(?:[\.,][0-9]+)?)/u);
+        return match ? parseFloat(String(match[1]).replace(',', '.')) : null;
+    }
+
+    function splitCodigoMp(value) {
+        const text = String(value || '').trim();
+        if (!text.includes('_')) {
+            return { materia: '', diametro: '' };
+        }
+
+        const [materia, ...rest] = text.split('_');
+        return {
+            materia: materia || '',
+            diametro: rest.join('_') || ''
+        };
+    }
+
+    function isCompatibleIngresoWithPedido(pedido, ingreso) {
+        if (!pedido || !ingreso) {
+            return false;
+        }
+
+        const pedidoParts = splitCodigoMp(pedido.Codigo_MP || '');
+        const ingresoParts = splitCodigoMp(ingreso.Codigo_MP || '');
+
+        const materiaPedido = normalizeMateria(pedido.Materia_Prima || pedidoParts.materia);
+        const materiaIngreso = normalizeMateria(ingreso.Materia_Prima || ingresoParts.materia);
+        if (materiaPedido && materiaIngreso && materiaPedido !== materiaIngreso) {
+            return false;
+        }
+
+        const diametroPedido = extractDiameter(pedido.Diametro_MP || pedidoParts.diametro || pedido.Codigo_MP || '');
+        const diametroIngreso = extractDiameter(ingreso.Diametro_MP || ingresoParts.diametro || ingreso.Codigo_MP || '');
+
+        if (diametroPedido === null || diametroIngreso === null) {
+            return true;
+        }
+
+        return diametroIngreso >= diametroPedido;
+    }
+
     function findPedidoByOf(nroOf) {
         return pedidosCatalogo.find((pedido) => String(pedido.Nro_OF) === String(nroOf).trim());
     }
@@ -167,6 +221,25 @@ $(document).ready(function () {
         return ingresosCatalogo.find((ingreso) => String(ingreso.Nro_Ingreso_MP) === String(nroIngreso).trim());
     }
 
+    function getNextAvailablePedidos(limit = null) {
+        const selectedOfs = getSelectedOfs();
+        const disponibles = pedidosCatalogo.filter((pedido) => !selectedOfs.has(String(pedido.Nro_OF)));
+        return limit === null ? disponibles : disponibles.slice(0, limit);
+    }
+
+    function countEmptyRows() {
+        return $('#tablaListadoOF tbody tr').filter(function () {
+            return String($(this).find('.hidden-id-of').val() || '').trim() === '';
+        }).length;
+    }
+
+    function getRowsCanBeAdded(requested) {
+        const remainingPedidos = getNextAvailablePedidos().length;
+        const emptyRows = countEmptyRows();
+        return Math.max(0, Math.min(requested, remainingPedidos - emptyRows));
+    }
+
+
     function generarFila(numeroFila) {
         return `<tr>
             <td class="cell-index">${numeroFila}</td>
@@ -176,6 +249,7 @@ $(document).ready(function () {
                 <input type="hidden" class="hidden-cantidad-fabricacion">
                 <input type="hidden" class="hidden-largo-pieza">
                 <input type="hidden" class="hidden-codigo-mp-producto">
+                <input type="hidden" name="Pedido_Material_Nro[]" class="hidden-pedido-material" value="${nextPedidoMaterialNro}">
                 <input type="hidden" name="reg_Status[]" value="1">
             </td>
             <td><input type="text" class="form-control producto-readonly" readonly></td>
@@ -187,7 +261,7 @@ $(document).ready(function () {
             <td><input type="text" class="form-control familia-maquina-readonly" readonly></td>
             <td><input type="text" class="form-control codigo-mp-readonly" readonly></td>
             <td><input type="text" name="Nro_Ingreso_MP[]" class="form-control input-ingreso-mp" list="ingreso-mp-catalogo-list" placeholder="Buscar ingreso"></td>
-            <td><input type="text" class="form-control pedido-material-readonly" readonly></td>
+            <td><input type="text" class="form-control pedido-material-readonly" readonly value="${nextPedidoMaterialNro}"></td>
             <td><input type="text" class="form-control certificado-readonly" readonly></td>
             <td><input type="text" class="form-control barras-readonly" readonly></td>
             <td>
@@ -230,7 +304,8 @@ $(document).ready(function () {
         $fila.find('.producto-readonly').val('');
         $fila.find('.codigo-mp-readonly').val('');
         $fila.find('.input-ingreso-mp').val('');
-        $fila.find('.pedido-material-readonly').val('');
+        $fila.find('.pedido-material-readonly').val(nextPedidoMaterialNro);
+        $fila.find('.hidden-pedido-material').val(nextPedidoMaterialNro);
         $fila.find('.certificado-readonly').val('');
         $fila.find('.barras-readonly').val('');
         $fila.find('.select-maquina').val('');
@@ -263,7 +338,8 @@ $(document).ready(function () {
         const ingreso = findIngresoByNumber($fila.find('.input-ingreso-mp').val());
         const pedido = findPedidoByOf($fila.find('.input-of').val());
 
-        $fila.find('.pedido-material-readonly').val('');
+        $fila.find('.pedido-material-readonly').val(nextPedidoMaterialNro);
+        $fila.find('.hidden-pedido-material').val(nextPedidoMaterialNro);
         $fila.find('.certificado-readonly').val('');
 
         if (!ingreso) {
@@ -273,11 +349,10 @@ $(document).ready(function () {
             return false;
         }
 
-        const codigoEsperado = normalizeCodigoMp(pedido?.Codigo_MP || '');
-        const codigoIngreso = normalizeCodigoMp(ingreso.Codigo_MP || '');
-        if (codigoEsperado && codigoIngreso !== codigoEsperado) {
+        if (!isCompatibleIngresoWithPedido(pedido, ingreso)) {
             $fila.find('.input-ingreso-mp').addClass('input-invalid');
-            $fila.find('.pedido-material-readonly').val('');
+            $fila.find('.pedido-material-readonly').val(nextPedidoMaterialNro);
+        $fila.find('.hidden-pedido-material').val(nextPedidoMaterialNro);
             $fila.find('.certificado-readonly').val('');
             $fila.find('.barras-readonly').val('');
             actualizarEstadoFila($fila);
@@ -285,8 +360,9 @@ $(document).ready(function () {
         }
 
         $fila.find('.input-ingreso-mp').removeClass('input-invalid');
-        $fila.find('.codigo-mp-readonly').val(ingreso.Codigo_MP || codigoEsperado || '');
-        $fila.find('.pedido-material-readonly').val(ingreso.Pedido_Material_Nro || '');
+        $fila.find('.codigo-mp-readonly').val(ingreso.Codigo_MP || pedido?.Codigo_MP || '');
+        $fila.find('.pedido-material-readonly').val(nextPedidoMaterialNro);
+        $fila.find('.hidden-pedido-material').val(nextPedidoMaterialNro);
         $fila.find('.certificado-readonly').val(ingreso.Nro_Certificado_MP || '');
         recalcularBarrasFila($fila);
         actualizarEstadoFila($fila);
@@ -356,7 +432,13 @@ $(document).ready(function () {
     }
 
     function agregarFilas(cantidad) {
-        for (let i = 0; i < cantidad; i += 1) {
+        const cantidadReal = getRowsCanBeAdded(cantidad);
+        if (cantidadReal <= 0) {
+            SwalUtils.error('No hay OF disponibles para agregar mas filas en esta carga masiva.');
+            return;
+        }
+
+        for (let i = 0; i < cantidadReal; i += 1) {
             $('#tablaListadoOF tbody').append($(generarFila(filaCounter)));
             filaCounter += 1;
         }
@@ -364,6 +446,38 @@ $(document).ready(function () {
         $('#tablaListadoOF tbody tr').each(function () {
             actualizarEstadoFila($(this));
         });
+        refreshOfCatalog();
+    }
+
+    function autocompletarOfCorrelativas() {
+        const $filasVacias = $('#tablaListadoOF tbody tr').filter(function () {
+            return String($(this).find('.hidden-id-of').val() || '').trim() === '';
+        });
+
+        if ($filasVacias.length === 0) {
+            SwalUtils.error('No hay filas vacias para completar. Agrega mas filas para seguir cargando OF correlativas.');
+            return;
+        }
+
+        const disponibles = getNextAvailablePedidos($filasVacias.length);
+        if (!disponibles.length) {
+            SwalUtils.error('No quedan OF pendientes para autocompletar en la carga masiva.');
+            return;
+        }
+
+        $filasVacias.each(function (index) {
+            const pedido = disponibles[index];
+            if (!pedido) {
+                return false;
+            }
+
+            const $fila = $(this);
+            $fila.find('.input-of').removeClass('input-invalid');
+            completarFilaConPedido($fila, pedido);
+            actualizarEstadoFila($fila);
+        });
+
+        refreshOfCatalog();
     }
 
     $(document).on('focusin', '.input-of', function () {
@@ -430,7 +544,7 @@ $(document).ready(function () {
                 return;
             }
 
-            SwalUtils.error('El ingreso seleccionado no existe o no es compatible con el Codigo MP requerido por la OF.');
+            SwalUtils.error('El ingreso seleccionado no existe o no es compatible. Debe ser del mismo material y con diametro igual o mayor al requerido por la OF.');
         }
     });
 
@@ -474,6 +588,10 @@ $(document).ready(function () {
         }
     });
 
+    $('#autocompletarCorrelativas').on('click', function () {
+        autocompletarOfCorrelativas();
+    });
+
     $('#agregarFila').on('click', function () {
         agregarFilas(1);
     });
@@ -483,7 +601,10 @@ $(document).ready(function () {
     });
 
     refreshOfCatalog();
-    agregarFilas(10);
+    if (pendingOfCount > 0) {
+        agregarFilas(Math.min(10, pendingOfCount));
+        autocompletarOfCorrelativas();
+    }
 });
 </script>
 @stop

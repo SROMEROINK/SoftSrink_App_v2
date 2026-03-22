@@ -31,6 +31,7 @@ class PedidoClienteController extends Controller
             $pedidoCliente = PedidoCliente::with([
                 'producto.categoria',
                 'estadoPlanificacion',
+                'definicionMp.estadoPlanificacion',
                 'creator',
                 'updater',
             ])
@@ -88,6 +89,8 @@ class PedidoClienteController extends Controller
                 ->addColumn('Descripcion', fn ($of) => $of->producto->Prod_Descripcion ?? '')
                 ->addColumn('Nombre_Categoria', fn ($of) => $of->producto->categoria->Nombre_Categoria ?? '')
                 ->addColumn('Estado_Pedido', fn ($of) => $of->estadoPlanificacion->Nombre_Estado ?? '')
+                ->addColumn('Estado_MP', fn ($of) => $of->definicionMp?->estadoPlanificacion?->Nombre_Estado ?? 'SIN DEFINIR MP')
+                ->addColumn('Id_Pedido_MP', fn ($of) => $of->definicionMp?->Id_Pedido_MP)
                 ->addColumn('creator', fn ($of) => $of->creator->name ?? '')
                 ->addColumn('updater', fn ($of) => $of->updater->name ?? '')
                 ->editColumn('Fecha_del_Pedido', fn ($of) => $of->Fecha_del_Pedido?->format('Y-m-d'))

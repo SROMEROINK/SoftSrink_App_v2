@@ -2,33 +2,30 @@
 
 namespace App\Models;
 
-use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class MpEgreso extends Model
+class MpSalidaInicial extends Model
 {
     use HasFactory, SoftDeletes;
 
-    protected $table = 'mp_salidas';
-    protected $primaryKey = 'Id_Egresos_MP';
+    protected $table = 'mp_salidas_iniciales';
+    protected $primaryKey = 'Id_Ingreso_MP';
+    public $incrementing = false;
+    protected $keyType = 'int';
     public $timestamps = true;
 
     protected $fillable = [
-        'Id_OF_Salidas_MP',
+        'Id_Ingreso_MP',
         'Cantidad_Unidades_MP',
         'Cantidad_Unidades_MP_Preparadas',
         'Cantidad_MP_Adicionales',
-        'Cant_Devoluciones',
         'Total_Salidas_MP',
-        'Total_Mtros_Utilizados',
-        'Fecha_del_Pedido_Produccion',
-        'Responsable_Pedido_Produccion',
-        'Nro_Pedido_MP',
-        'Fecha_de_Entrega_Pedido_Calidad',
-        'Responsable_de_entrega_Calidad',
-        'Ultima_Carga',
+        'Devoluciones_Unidades_MP',
+        'Total_Unidades',
+        'Longitud_Unidad_MP',
+        'Total_mm_Utilizados',
         'reg_Status',
         'created_by',
         'updated_by',
@@ -36,27 +33,21 @@ class MpEgreso extends Model
     ];
 
     protected $casts = [
-        'Id_OF_Salidas_MP' => 'integer',
+        'Id_Ingreso_MP' => 'integer',
         'Cantidad_Unidades_MP' => 'integer',
         'Cantidad_Unidades_MP_Preparadas' => 'integer',
         'Cantidad_MP_Adicionales' => 'integer',
-        'Cant_Devoluciones' => 'integer',
         'Total_Salidas_MP' => 'integer',
-        'Total_Mtros_Utilizados' => 'decimal:2',
-        'Fecha_del_Pedido_Produccion' => 'date',
-        'Fecha_de_Entrega_Pedido_Calidad' => 'date',
-        'Nro_Pedido_MP' => 'integer',
+        'Devoluciones_Unidades_MP' => 'integer',
+        'Total_Unidades' => 'integer',
+        'Longitud_Unidad_MP' => 'decimal:2',
+        'Total_mm_Utilizados' => 'decimal:2',
         'reg_Status' => 'boolean',
     ];
 
-    public function pedidoMp()
+    public function ingresoMp()
     {
-        return $this->belongsTo(PedidoClienteMp::class, 'Id_OF_Salidas_MP', 'Id_OF');
-    }
-
-    public function pedido()
-    {
-        return $this->belongsTo(PedidoCliente::class, 'Id_OF_Salidas_MP', 'Id_OF');
+        return $this->belongsTo(MpIngreso::class, 'Id_Ingreso_MP', 'Id_MP');
     }
 
     public function creator()

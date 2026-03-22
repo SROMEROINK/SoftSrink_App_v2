@@ -1,4 +1,4 @@
-﻿@extends('adminlte::page')
+@extends('adminlte::page')
 
 @section('title', 'Definicion de Materia Prima por Pedido')
 
@@ -81,6 +81,7 @@
                             <th>Fecha Pedido</th>
                             <th>Cant. Pedido</th>
                             <th>Estado MP</th>
+                            <th>Pedido MP Nro</th>
                             <th>Codigo MP</th>
                             <th>Materia Prima</th>
                             <th>Diametro MP</th>
@@ -94,6 +95,7 @@
                             <th></th>
                             <th></th>
                             <th><select id="filtro_estado" class="form-control filtro-select"><option value="">Todos</option></select></th>
+                            <th><input type="text" id="filtro_pedido_material" class="form-control filtro-texto" placeholder="Filtrar pedido MP"></th>
                             <th></th>
                             <th><select id="filtro_materia_prima" class="form-control filtro-select"><option value="">Todos</option></select></th>
                             <th></th>
@@ -179,7 +181,8 @@ $(document).ready(function () {
                 d.filtro_producto = $('#filtro_producto').val();
                 d.filtro_categoria = $('#filtro_categoria').val();
                 d.filtro_estado = $('#filtro_estado').val();
-                d.filtro_materia_prima = $('#filtro_materia_prima').val();
+                d.filtro_materia_prima = $("#filtro_materia_prima").val();
+                d.filtro_pedido_material = $("#filtro_pedido_material").val();
             }
         },
         columns: [
@@ -189,6 +192,7 @@ $(document).ready(function () {
             { data: 'Fecha_del_Pedido', name: 'p.Fecha_del_Pedido', orderable: false, searchable: false },
             { data: 'Cant_Fabricacion', name: 'p.Cant_Fabricacion', orderable: false, searchable: false },
             { data: 'Estado_MP', name: 'Estado_MP', orderable: false, searchable: false },
+            { data: 'Pedido_Material_Nro', name: 'pm.Pedido_Material_Nro', orderable: false, searchable: false, defaultContent: '' },
             { data: 'Codigo_MP', name: 'Codigo_MP' },
             { data: 'Materia_Prima', name: 'Materia_Prima' },
             { data: 'Diametro_MP', name: 'Diametro_MP' },
@@ -250,7 +254,7 @@ $(document).ready(function () {
         if (estadoActual) $('#filtro_estado').val(estadoActual);
     });
 
-    $('#filtro_of, #filtro_producto').on('keyup change', function () {
+    $("#filtro_of, #filtro_producto, #filtro_pedido_material").on("keyup change", function () {
         table.ajax.reload(null, false);
     });
 

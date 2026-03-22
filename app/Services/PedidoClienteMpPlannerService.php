@@ -105,6 +105,7 @@ class PedidoClienteMpPlannerService
         $machine = DB::table('maquinas_produc')
             ->select('id_maquina', 'Nro_maquina', 'familia_maquina', 'scrap_maquina')
             ->where('id_maquina', $idMaquina)
+            ->where('Status', 1)
             ->first();
 
         if (!$machine) {
@@ -144,27 +145,39 @@ class PedidoClienteMpPlannerService
                 'mp_diametro.Valor_Diametro as Diametro_MP',
             ]);
 
-        if ($codigoMp) {
-            $query->where('mp_ingreso.Codigo_MP', $codigoMp);
-        } else {
-            if ($materiaPrima) {
-                $query->where('mp_materia_prima.Nombre_Materia', $materiaPrima);
-            }
-
-            if ($diametroMp) {
-                $query->where('mp_diametro.Valor_Diametro', $diametroMp);
-            }
+        if ($materiaPrima) {
+            $query->where('mp_materia_prima.Nombre_Materia', $materiaPrima);
         }
 
         return $query
             ->orderBy('mp_ingreso.Unidades_MP')
             ->orderBy('mp_ingreso.Nro_Ingreso_MP')
             ->get()
+            ->filter(function ($ingreso) use ($diametroMp, $codigoMp, $materiaPrima) {
+                $diametroIngreso = $this->extractDiameter($ingreso->Diametro_MP ?? $ingreso->Codigo_MP ?? null);
+                $diametroRequerido = $this->extractDiameter($diametroMp ?? $codigoMp);
+                $materiaIngreso = $this->normalizeText($ingreso->Materia_Prima ?? null);
+                $materiaRequerida = $this->normalizeText($materiaPrima);
+
+                if ($materiaRequerida && $materiaIngreso !== $materiaRequerida) {
+                    return false;
+                }
+
+                if ($diametroRequerido === null) {
+                    return true;
+                }
+
+                if ($diametroIngreso === null) {
+                    return false;
+                }
+
+                return $diametroIngreso >= $diametroRequerido;
+            })
             ->map(function ($ingreso) {
                 return [
                     'Id_MP' => (int) $ingreso->Id_MP,
                     'Nro_Ingreso_MP' => (int) $ingreso->Nro_Ingreso_MP,
-                    'Pedido_Material_Nro' => $ingreso->Nro_Pedido,
+                    'Pedido_Material_Nro' => blank($ingreso->Nro_Pedido) ? null : $ingreso->Nro_Pedido,
                     'Codigo_MP' => $ingreso->Codigo_MP,
                     'Nro_Certificado_MP' => $ingreso->Nro_Certificado_MP,
                     'Unidades_MP' => (int) $ingreso->Unidades_MP,
@@ -173,7 +186,8 @@ class PedidoClienteMpPlannerService
                     'Materia_Prima' => $ingreso->Materia_Prima,
                     'Diametro_MP' => $ingreso->Diametro_MP,
                 ];
-            });
+            })
+            ->values();
     }
 
     protected function resolveLongitudUnidad($currentValue, Collection $ingresos): float
@@ -238,11 +252,11 @@ class PedidoClienteMpPlannerService
     protected function buildCompatibilityMessage(?string $codigoMp, ?string $materiaPrima, ?string $diametroMp): string
     {
         if ($codigoMp) {
-            return "El producto ya define un Codigo MP obligatorio: {$codigoMp}. Solo se sugeriran ingresos compatibles con ese codigo.";
+            return "El producto ya define un Codigo MP de referencia: {$codigoMp}. Solo se sugeriran ingresos del mismo material y con diametro igual o mayor al requerido.";
         }
 
         if ($materiaPrima && $diametroMp) {
-            return "El producto ya define materia prima y diametro compatibles: {$materiaPrima} / {$diametroMp}.";
+            return "El producto ya define materia prima y diametro de referencia: {$materiaPrima} / {$diametroMp}. Solo se sugeriran ingresos del mismo material y con diametro igual o mayor.";
         }
 
         return 'El producto no tiene MP fija en la tabla de productos. Puedes definirla manualmente en esta etapa.';
@@ -252,6 +266,19 @@ class PedidoClienteMpPlannerService
     {
         $value = is_string($value) ? trim($value) : null;
         return $value === '' ? null : $value;
+    }
+
+    protected function extractDiameter(?string $value): ?float
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        if (preg_match('/[??]?\s*([0-9]+(?:[\.,][0-9]+)?)/u', $value, $matches)) {
+            return (float) str_replace(',', '.', $matches[1]);
+        }
+
+        return null;
     }
 
     protected function asFloat($value): float
