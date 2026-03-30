@@ -1,26 +1,35 @@
 /* public/vendor/adminlte/dist/css/fabricacion_index.css */
 
-/* Ajustes para la tabla */
-.table-responsive {
-    width: 100% !important;
-    max-width: 100% !important;
-    margin: 0 !important;
-    padding: 0 !important;
+.table-responsive-fabricacion {
+    width: 100%;
+    max-width: 100%;
     overflow-x: auto;
 }
 
-/* Reglas para DataTables */
-.dataTables_wrapper,
-.dataTables_scroll,
-.dataTables_scrollHead,
-.dataTables_scrollBody,
-.dataTables_scrollHeadInner {
+.table-responsive-fabricacion .dataTables_wrapper,
+.table-responsive-fabricacion .dataTables_scroll,
+.table-responsive-fabricacion .dataTables_scrollHead,
+.table-responsive-fabricacion .dataTables_scrollBody {
     width: 100% !important;
 }
 
-.dataTables_scrollHeadInner table,
-.dataTables_scrollBody table {
-    width: 100% !important;
+.table-responsive-fabricacion .dataTables_scrollHeadInner {
+    width: auto !important;
+}
+
+.table-responsive-fabricacion .dataTables_scrollHeadInner table,
+.table-responsive-fabricacion .dataTables_scrollBody table,
+#registro_de_fabricacion {
+    width: auto !important;
+    min-width: 100%;
+    table-layout: auto;
+}
+
+.table-responsive-fabricacion.tabla-plegada .dataTables_scrollHeadInner table,
+.table-responsive-fabricacion.tabla-plegada .dataTables_scrollBody table,
+.table-responsive-fabricacion.tabla-plegada #registro_de_fabricacion {
+    width: max-content !important;
+    min-width: 0 !important;
 }
 
 /* Estilos para el card del título */
@@ -109,6 +118,141 @@
 #registro_de_fabricacion th,
 #registro_de_fabricacion td {
     text-align: center; /* Centra el contenido de las celdas */
+    vertical-align: middle;
+}
+
+#registro_de_fabricacion thead tr:first-child th {
+    text-align: center !important;
+}
+
+#registro_de_fabricacion th.columna-id,
+#registro_de_fabricacion td.columna-id {
+    min-width: 68px;
+    width: 68px;
+}
+
+#registro_de_fabricacion th.columna-of,
+#registro_de_fabricacion td.columna-of {
+    min-width: 78px;
+    width: 78px;
+}
+
+#registro_de_fabricacion th.columna-codigo,
+#registro_de_fabricacion td.columna-codigo {
+    min-width: 108px;
+    width: 108px;
+}
+
+#registro_de_fabricacion th.columna-descripcion,
+#registro_de_fabricacion td.columna-descripcion {
+    min-width: 180px;
+}
+
+#registro_de_fabricacion th.columna-categoria,
+#registro_de_fabricacion td.columna-categoria {
+    min-width: 98px;
+    width: 98px;
+}
+
+#registro_de_fabricacion th.columna-maquina,
+#registro_de_fabricacion td.columna-maquina {
+    min-width: 86px;
+    width: 86px;
+}
+
+#registro_de_fabricacion th.columna-familia,
+#registro_de_fabricacion td.columna-familia {
+    min-width: 104px;
+    width: 104px;
+}
+
+#registro_de_fabricacion th.columna-fecha,
+#registro_de_fabricacion td.columna-fecha {
+    min-width: 112px;
+    width: 112px;
+}
+
+#registro_de_fabricacion th.columna-parcial,
+#registro_de_fabricacion td.columna-parcial {
+    min-width: 82px;
+    width: 82px;
+}
+
+#registro_de_fabricacion th.columna-cantidad,
+#registro_de_fabricacion td.columna-cantidad {
+    min-width: 90px;
+    width: 90px;
+}
+
+#registro_de_fabricacion th.columna-horario,
+#registro_de_fabricacion td.columna-horario {
+    min-width: 92px;
+    width: 92px;
+}
+
+#registro_de_fabricacion th.columna-operario,
+#registro_de_fabricacion td.columna-operario {
+    min-width: 110px;
+}
+
+#registro_de_fabricacion th.columna-turno,
+#registro_de_fabricacion td.columna-turno {
+    min-width: 78px;
+    width: 78px;
+}
+
+#registro_de_fabricacion th.columna-horas,
+#registro_de_fabricacion td.columna-horas {
+    min-width: 88px;
+    width: 88px;
+}
+
+#registro_de_fabricacion thead .filter-row th:nth-child(1) input,
+#registro_de_fabricacion thead .filter-row th:nth-child(2) input,
+#registro_de_fabricacion thead .filter-row th:nth-child(8) input,
+#registro_de_fabricacion thead .filter-row th:nth-child(9) input,
+#registro_de_fabricacion thead .filter-row th:nth-child(10) input,
+#registro_de_fabricacion thead .filter-row th:nth-child(11) input,
+#registro_de_fabricacion thead .filter-row th:nth-child(13) input,
+#registro_de_fabricacion thead .filter-row th:nth-child(14) input {
+    min-width: 70px;
+}
+
+#registro_de_fabricacion thead .filter-row th:nth-child(3) input,
+#registro_de_fabricacion thead .filter-row th:nth-child(5) select,
+#registro_de_fabricacion thead .filter-row th:nth-child(6) select,
+#registro_de_fabricacion thead .filter-row th:nth-child(7) select {
+    min-width: 90px;
+}
+
+#registro_de_fabricacion thead .filter-row th:nth-child(4) input,
+#registro_de_fabricacion thead .filter-row th:nth-child(12) input {
+    min-width: 150px;
+}
+
+.table-responsive-fabricacion .dataTables_scrollHead th.columna-acciones,
+.table-responsive-fabricacion .dataTables_scrollBody td.columna-acciones,
+.table-responsive-fabricacion .dataTables_scrollBody th.columna-acciones {
+    position: sticky;
+    right: 0;
+    z-index: 3;
+    min-width: 130px;
+    white-space: nowrap !important;
+    box-shadow: inset 1px 0 0 #d7dee8, -3px 0 6px rgba(15, 23, 42, 0.08);
+}
+
+.table-responsive-fabricacion .dataTables_scrollHead th.columna-acciones {
+    z-index: 5;
+    background: #f8fafc !important;
+}
+
+.table-responsive-fabricacion .dataTables_scrollBody td.columna-acciones,
+.table-responsive-fabricacion .dataTables_scrollBody th.columna-acciones {
+    background: #ffffff !important;
+}
+
+.table-responsive-fabricacion .dataTables_scrollBody tr:nth-child(even) td.columna-acciones {
+    background: #f7f7f7 !important;
 }
 
 /* Estilos para los campos select */

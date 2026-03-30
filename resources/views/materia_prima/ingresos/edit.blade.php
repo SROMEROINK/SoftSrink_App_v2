@@ -6,41 +6,26 @@
     <h1>Editar Ingreso de Materia Prima</h1>
 @stop
 
-{{-- @section('content')
-    @if(session('success'))
-        <div class="alert alert-success">
-            {{ session('success') }}
-        </div>
-    @endif
-    @if(session('error'))
-        <div class="alert alert-danger">
-            {{ session('error') }}
-        </div>
-    @endif
-    @if(session('warning'))
-        <div class="alert alert-warning">
-            {{ session('warning') }}
-        </div>
-    @endif --}}
 
 @section('content')
+    @include('components.swal-session')
 
     <form action="{{ route('mp_ingresos.update', $ingreso->Id_MP) }}" method="POST" data-edit-check="true" data-exclude-fields="_token,_method" data-redirect-url="{{ route('mp_ingresos.index') }}" data-success-message="Ingreso de materia prima actualizado correctamente">
         @csrf
         @method('PUT')
         
         <div class="form-group">
-            <label for="Nro_Ingreso_MP">Número de Ingreso MP:</label>
+            <label for="Nro_Ingreso_MP">NÃºmero de Ingreso MP:</label>
             <input type="number" class="form-control" id="Nro_Ingreso_MP" name="Nro_Ingreso_MP" value="{{ $ingreso->Nro_Ingreso_MP }}" required>
         </div>
 
         <div class="form-group">
-            <label for="Nro_Pedido">Número de Pedido:</label>
+            <label for="Nro_Pedido">NÃºmero de Pedido:</label>
             <input type="text" class="form-control" id="Nro_Pedido" name="Nro_Pedido" value="{{ $ingreso->Nro_Pedido }}" required>
         </div>
 
         <div class="form-group">
-            <label for="Nro_Remito">Número de Remito:</label>
+            <label for="Nro_Remito">NÃºmero de Remito:</label>
             <input type="text" class="form-control" id="Nro_Remito" name="Nro_Remito" value="{{ $ingreso->Nro_Remito }}" required>
         </div>
 
@@ -50,7 +35,7 @@
         </div>
 
         <div class="form-group">
-            <label for="Nro_OC">Número de Orden de Compra:</label>
+            <label for="Nro_OC">NÃºmero de Orden de Compra:</label>
             <input type="text" class="form-control" id="Nro_OC" name="Nro_OC" value="{{ $ingreso->Nro_OC }}" required>
         </div>
 
@@ -77,7 +62,7 @@
         </div>
 
         <div class="form-group">
-            <label for="Id_Diametro_MP">Diámetro:</label>
+            <label for="Id_Diametro_MP">DiÃ¡metro:</label>
             <select name="Id_Diametro_MP" id="Id_Diametro_MP" class="form-control">
                 @foreach ($diametros as $diametro)
                     <option value="{{ $diametro->Id_Diametro }}" {{ $ingreso->Id_Diametro_MP == $diametro->Id_Diametro ? 'selected' : '' }}>
@@ -88,12 +73,12 @@
         </div>
 
         <div class="form-group">
-            <label for="Codigo_MP">Código de Materia Prima:</label>
+            <label for="Codigo_MP">CÃ³digo de Materia Prima:</label>
             <input type="text" class="form-control" id="Codigo_MP" name="Codigo_MP" value="{{ $ingreso->Codigo_MP }}" required readonly>
         </div>
 
         <div class="form-group">
-            <label for="Nro_Certificado_MP">Número de Certificado:</label>
+            <label for="Nro_Certificado_MP">NÃºmero de Certificado:</label>
             <input type="text" class="form-control" id="Nro_Certificado_MP" name="Nro_Certificado_MP" value="{{ $ingreso->Nro_Certificado_MP }}">
         </div>
 
@@ -144,7 +129,7 @@
 <script src="{{ asset('js/form-edit-check.js') }}"></script>
 <script>
 $(document).ready(function() {
-    // Función para concatenar "Materia Prima" y "Diámetro" en "Código de Materia Prima"
+    // FunciÃ³n para concatenar "Materia Prima" y "DiÃ¡metro" en "CÃ³digo de Materia Prima"
     function updateConcatenatedField() {
         const materiaPrima = $('#Id_Materia_Prima option:selected').text().trim();
         const diametro = $('#Id_Diametro_MP option:selected').text().trim();
@@ -154,7 +139,7 @@ $(document).ready(function() {
     $('#Id_Materia_Prima, #Id_Diametro_MP').change(updateConcatenatedField);
     updateConcatenatedField();
 
-    // Calcular Metros Totales automáticamente
+    // Calcular Metros Totales automÃ¡ticamente
     function calculateMetrosTotales() {
         const unidades = parseFloat($('#Unidades_MP').val()) || 0;
         const longitud = parseFloat($('#Longitud_Unidad_MP').val()) || 0;
@@ -164,7 +149,7 @@ $(document).ready(function() {
     $('#Unidades_MP, #Longitud_Unidad_MP').on('input', calculateMetrosTotales);
     calculateMetrosTotales();
 
-    // Actualizar el "Detalle de Origen" según el prefijo de "Número de Certificado"
+    // Actualizar el "Detalle de Origen" segÃºn el prefijo de "NÃºmero de Certificado"
     $('#Nro_Certificado_MP').on('input', function() {
         const certificado = $(this).val().trim();
         $('#Detalle_Origen_MP').val(certificado.startsWith('YT') ? 'CHINA' : '');
@@ -172,3 +157,5 @@ $(document).ready(function() {
 });
 </script>
 @stop
+
+

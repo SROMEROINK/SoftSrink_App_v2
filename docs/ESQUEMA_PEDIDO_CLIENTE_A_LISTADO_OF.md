@@ -31,7 +31,7 @@ La estructura recomendada es por etapas:
 
 1. `pedido_cliente`
 2. `pedido_cliente_mp`
-3. `pedido_cliente_maquina`
+3. `pedido_cliente_maquinas`
 4. `mp_salidas`
 5. `mp_salidas_movimientos`
 6. `fechas_of`
@@ -102,31 +102,31 @@ No debe definir maquina ni tiempos de produccion.
 
 ---
 
-### 2.3 `pedido_cliente_maquina`
+### 2.3 `pedido_cliente_maquinas`
 
 Nueva tabla recomendada.
 
 Esta tabla representa la etapa posterior a MP, cuando ya se analiza disponibilidad de fabricacion y se asigna la maquina.
 
+En la implementacion actual validada, como una OF solo puede pasar por una maquina, conviene dejar esta tabla minimalista y normalizada.
+
 Debe guardar:
 
-- estado del pedido respecto de capacidad/produccion
-- maquina asignada
-- familia de maquina
-- scrap por maquina
-- tiempos de P.A.P.
-- inicio y fin estimado
-- tiempo pieza
-- mes y ano de produccion
+- `Id_Pedido_Maquina`
+- `Id_OF`
+- `Id_Pedido_MP`
+- `Id_Maquina`
+- `reg_Status`
+- auditoria
+
+La descripcion visible de la maquina debe salir desde `maquinas_produc`.
 
 Esta tabla responde:
 
 - en que maquina se va a fabricar
-- si hay disponibilidad de fabricacion
-- cuanto demora
-- cuando arranca y cuando termina
+- cual es la referencia tecnica unica de maquina por OF
 
-No debe encargarse de calcular stock de MP.
+No debe duplicar `Nro_Maquina`, `Familia_Maquina` ni los datos madre de MP.
 
 ---
 
@@ -187,11 +187,18 @@ Debe nutrirse de:
 
 - `pedido_cliente`
 - `pedido_cliente_mp`
-- `pedido_cliente_maquina`
+- `pedido_cliente_maquinas`
 - `mp_salidas`
 - `fechas_of`
 
 Su objetivo es mostrar el panorama unificado, no ser la fuente principal de carga.
+
+En la implementacion final validada:
+
+- `listado_of` debe ser `VIEW`, no tabla fisica de carga manual
+- maquina y familia se resuelven desde `pedido_cliente_maquinas` + `maquinas_produc`
+- `Codigo_MP`, `Nro_Certificado_MP`, `Nro_Pedido_MP`, `Nro_Remito_MP`, `Fecha_Ingreso_MP` y `Prov_Nombre` deben salir de `mp_ingreso`
+- `pedido_cliente_mp` queda como fuente operativa de planificacion, pero la descripcion final de MP en el consolidado debe salir de `mp_ingreso`
 
 ---
 

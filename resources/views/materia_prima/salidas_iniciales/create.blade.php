@@ -10,6 +10,7 @@
 @stop
 
 @section('content')
+    @include('components.swal-session')
     <form action="{{ route('mp_salidas_iniciales.store') }}" method="POST" class="ajax-form">
         @csrf
         @include('materia_prima.salidas_iniciales.partials.form')
@@ -23,7 +24,10 @@
 @stop
 
 @section('js')
+    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="{{ asset('js/swal-utils.js') }}"></script>
     <script src="{{ asset('js/form-ajax-submit.js') }}"></script>
     @stack('js')
 @stop
+
+

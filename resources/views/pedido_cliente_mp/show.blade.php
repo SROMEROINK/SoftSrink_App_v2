@@ -10,6 +10,7 @@
 @stop
 
 @section('content')
+    @include('components.swal-session')
 <div class="card show-card mt-3 pedido-show-card">
     <div class="show-card-header d-flex justify-content-between align-items-center">
         <div>
@@ -46,7 +47,7 @@
 
         <div class="row">
             <div class="col-md-4"><div class="detail-item"><span class="detail-label">Ingreso MP Seleccionado</span><div class="detail-value">{{ $pedidoMp->Nro_Ingreso_MP ?? '-' }}</div></div></div>
-            <div class="col-md-4"><div class="detail-item"><span class="detail-label">Pedido Material Nro</span><div class="detail-value">{{ $pedidoMp->Pedido_Material_Nro ?? '-' }}</div></div></div>
+            <div class="col-md-4"><div class="detail-item"><span class="detail-label">Pedido MP Interno</span><div class="detail-value">{{ $pedidoMp->Pedido_Material_Nro ?? '-' }}</div></div></div>
             <div class="col-md-4"><div class="detail-item"><span class="detail-label">Nro Certificado MP</span><div class="detail-value">{{ $pedidoMp->Nro_Certificado_MP ?: '-' }}</div></div></div>
         </div>
 
@@ -80,13 +81,6 @@
             <div class="col-md-6"><div class="detail-item"><span class="detail-label">Actualizado</span><div class="detail-value">{{ optional($pedidoMp->updated_at)->format('d/m/Y H:i:s') ?? '-' }}</div></div></div>
         </div>
     </div>
-
-    <div class="show-card-footer">
-        <div class="show-actions">
-            <a href="{{ route('pedido_cliente_mp.index') }}" class="btn btn-secondary">Volver</a>
-            <a href="{{ route('pedido_cliente_mp.edit', $pedidoMp->Id_Pedido_MP) }}" class="btn btn-primary">Editar</a>
-        </div>
-    </div>
 </div>
 @stop
 
@@ -95,3 +89,4 @@
     <link rel="stylesheet" href="{{ asset('vendor/adminlte/dist/css/shared/show-details.css') }}">
     <link rel="stylesheet" href="{{ asset('vendor/adminlte/dist/css/pedido_cliente_mp_show.css') }}">
 @stop
+

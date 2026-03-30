@@ -8,23 +8,40 @@ document.addEventListener('DOMContentLoaded', function () {
     info: @json(session('info')),
   };
 
-  let icon = null, text = null, title = null;
+  if (typeof window === 'undefined' || typeof window.Swal === 'undefined') {
+    return;
+  }
 
-  if (msg.success) { icon='success'; title='¡Éxito!'; text=msg.success; }
-  else if (msg.error) { icon='error'; title='Error'; text=msg.error; }
-  else if (msg.warning) { icon='warning'; title='Atención'; text=msg.warning; }
-  else if (msg.info) { icon='info'; title='Info'; text=msg.info; }
+  if (msg.success) {
+    if (window.SwalUtils) {
+      window.SwalUtils.updated(msg.success);
+    } else {
+      Swal.fire({ icon: 'success', title: 'Exito', text: msg.success, confirmButtonText: 'OK' });
+    }
+    return;
+  }
 
-  if (!icon) return;
+  if (msg.warning) {
+    if (window.SwalUtils) {
+      window.SwalUtils.noChanges(msg.warning);
+    } else {
+      Swal.fire({ icon: 'warning', title: 'Atencion', text: msg.warning, confirmButtonText: 'OK' });
+    }
+    return;
+  }
 
-  Swal.fire({
-    icon,
-    title,
-    text,
-    confirmButtonText: 'OK',
-    timer: icon === 'success' ? 2500 : undefined,
-    timerProgressBar: icon === 'success',
-  });
+  if (msg.error) {
+    if (window.SwalUtils) {
+      window.SwalUtils.error(msg.error);
+    } else {
+      Swal.fire({ icon: 'error', title: 'Error', text: msg.error, confirmButtonText: 'OK' });
+    }
+    return;
+  }
+
+  if (msg.info) {
+    Swal.fire({ icon: 'info', title: 'Informacion', text: msg.info, confirmButtonText: 'OK' });
+  }
 });
 </script>
 @endif

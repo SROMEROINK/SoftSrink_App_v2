@@ -1,37 +1,23 @@
 @extends('adminlte::page')
 
-@section('title', 'Editar Diámetro')
+@section('title', 'Editar DiÃ¡metro')
 {{-- resources\views\materia_prima\diametro\edit.blade.php --}}
 @section('content_header')
-    <h1>Editar Diámetro</h1>
+    <h1>Editar DiÃ¡metro</h1>
 @stop
 
 @section('content')
-    @if(session('success'))
-        <div class="alert alert-success">
-            {{ session('success') }}
-        </div>
-    @endif
-    @if(session('error'))
-        <div class="alert alert-danger">
-            {{ session('error') }}
-        </div>
-    @endif
-    @if(session('warning'))
-        <div class="alert alert-warning">
-            {{ session('warning') }}
-        </div>
-    @endif
+    @include('components.swal-session')
 
     <form action="{{ route('mp_diametro.update', $diametro->Id_Diametro) }}" method="POST" data-edit-check="true" data-exclude-fields="_token,_method">
         @csrf
         @method('PUT')
         <div class="form-group">
-            <label for="Valor_Diametro">Valor del Diámetro:</label>
+            <label for="Valor_Diametro">Valor del DiÃ¡metro:</label>
             <input type="text" class="form-control" id="Valor_Diametro" name="Valor_Diametro" value="{{ $diametro->Valor_Diametro }}" required>
         </div>
         <div class="form-group">
-            <label for="reg_Status">Estado del Diámetro:</label>
+            <label for="reg_Status">Estado del DiÃ¡metro:</label>
             <select name="reg_Status" id="reg_Status" class="form-control">
                 <option value="1" {{ $diametro->reg_Status == 1 ? 'selected' : '' }}>Activo</option>
                 <option value="0" {{ $diametro->reg_Status == 0 ? 'selected' : '' }}>Inactivo</option>
@@ -52,3 +38,4 @@
 <script src="{{ asset('js/swal-utils.js') }}"></script>
 <script src="{{ asset('js/form-edit-check.js') }}"></script>
 @stop
+

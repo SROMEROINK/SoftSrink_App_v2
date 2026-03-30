@@ -20,6 +20,7 @@
         <button class="dropdown-item" onclick="window.location.href='{{ route('mp_ingresos.index') }}'">Ingreso de Materia Prima</button>
         <button class="dropdown-item" onclick="window.location.href='{{ route('mp_salidas_iniciales.index') }}'">Salidas Iniciales MP</button>
         <button class="dropdown-item" onclick="window.location.href='{{ route('mp_egresos.index') }}'">Egreso de Materia Prima</button>
+        <button class="dropdown-item" onclick="window.location.href='{{ route('mp_stock.index') }}'">Stock MP</button>
         <button class="dropdown-item" onclick="window.location.href='{{ route('pedido_cliente_mp.index') }}'">Definicion MP Pedidos</button>
         <button class="dropdown-item" onclick="window.location.href='{{ route('mp_movimientos_adicionales.index') }}'">Movimientos Adicionales MP</button>
     </div>
@@ -49,7 +50,15 @@
         <button class="dropdown-item" onclick="window.location.href='{{ route('producto_grupo_conjuntos.index') }}'">Grupo Conjuntos</button>
     </div>
 </div>
-<button type="button" class="btn btn-success" onclick="window.location.href='{{ route('pedido_cliente.index') }}'">Pedido del Cliente</button>
+<div class="btn-group">
+    <button type="button" class="btn btn-success dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+        Pedido del Cliente
+    </button>
+    <div class="dropdown-menu">
+        <button class="dropdown-item" onclick="window.location.href='{{ route('pedido_cliente.index') }}'">Pedido del Cliente</button>
+        <button class="dropdown-item" onclick="window.location.href='{{ route('listado_of.index') }}'">Listado OF</button>
+    </div>
+</div>
 <button type="button" class="btn btn-primary" onclick="window.location.href='{{ route('fabricacion.index') }}'">Registro de Fabricaci&oacute;n</button>
 <button type="button" class="btn btn-info" onclick="window.location.href='{{ route('fechas_of.index') }}'">Fechas de Producci&oacute;n</button>
 <button type="button" class="btn btn-danger" onclick="window.location.href='{{ route('entregas_productos.index') }}'">Listado de Entregas</button>
@@ -69,3 +78,6 @@
         color: #fff;
     }
 </style>
+
+
+

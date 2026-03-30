@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Traits\AppliesExactNumericFilters;
 use App\Models\MpIngreso;
 use App\Models\MpMovimientoAdicional;
 use App\Models\User;
@@ -13,6 +14,7 @@ use Illuminate\Validation\ValidationException;
 
 class MpMovimientoAdicionalController extends Controller
 {
+    use AppliesExactNumericFilters;
     protected string $legacyCsvPath = 'C:\\Users\\SergioDanielRomero\\Documents\\SQL_SRINK_LARAVEL_11\\CARGA EXCEL-DB\\MP\\movimientos_adicionales_mp.csv';
 
     public function index()
@@ -37,11 +39,11 @@ class MpMovimientoAdicionalController extends Controller
         $query = MpMovimientoAdicional::query()->whereNull('deleted_at');
 
         if ($request->filled('filtro_ingreso')) {
-            $query->where('Nro_Ingreso_MP', 'like', '%' . $request->filtro_ingreso . '%');
+            $this->applySmartFilter($query, 'Nro_Ingreso_MP', $request->filtro_ingreso);
         }
 
         if ($request->filled('filtro_of')) {
-            $query->where('Nro_OF', 'like', '%' . $request->filtro_of . '%');
+            $this->applySmartFilter($query, 'Nro_OF', $request->filtro_of);
         }
 
         if ($request->filled('filtro_producto')) {

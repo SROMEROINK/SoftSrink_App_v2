@@ -13,6 +13,7 @@
 @stop
 
 @section('content')
+    @include('components.swal-session')
 <div class="container-fluid">
     <div class="row mt-3">
         <div class="col-md-4">
@@ -209,3 +210,4 @@ $(document).ready(function() {
 });
 </script>
 @stop
+

@@ -7,21 +7,7 @@
 @stop
 
 @section('content')
-    @if(session('success'))
-        <div class="alert alert-success">
-            {{ session('success') }}
-        </div>
-    @endif
-    @if(session('error'))
-        <div class="alert alert-danger">
-            {{ session('error') }}
-        </div>
-    @endif
-    @if(session('warning'))
-        <div class="alert alert-warning">
-            {{ session('warning') }}
-        </div>
-    @endif
+    @include('components.swal-session')
 
     <form action="{{ route('mp_materia_prima.update', $materiaBase->Id_Materia_Prima) }}" method="POST" data-edit-check="true" data-exclude-fields="_token,_method">
         @csrf
@@ -52,3 +38,4 @@
 <script src="{{ asset('js/swal-utils.js') }}"></script>
 <script src="{{ asset('js/form-edit-check.js') }}"></script>
 @stop
+

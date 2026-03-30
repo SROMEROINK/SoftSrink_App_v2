@@ -15,10 +15,11 @@
                     <thead>
                         <tr>
                             <th>Nro Ingreso MP</th>
-                            <th>Codigo MP</th>
-                            <th>Materia Prima</th>
-                            <th>Preparadas</th>
-                            <th>Total Salidas</th>
+                            <th>Stock Inicial</th>
+                            <th>Devol. Proveedor</th>
+                            <th>Diferencia de Stock</th>
+                            <th>Salidas Final</th>
+                            <th>Mts. Totales</th>
                             <th>Eliminado</th>
                             <th>Acciones</th>
                         </tr>
@@ -27,10 +28,11 @@
                         @forelse ($salidasEliminadas as $salida)
                             <tr>
                                 <td>{{ $salida->ingresoMp->Nro_Ingreso_MP ?? '-' }}</td>
-                                <td>{{ $salida->ingresoMp->Codigo_MP ?? '-' }}</td>
-                                <td>{{ $salida->ingresoMp->materiaPrima->Nombre_Materia ?? '-' }}</td>
-                                <td>{{ number_format((int) $salida->Cantidad_Unidades_MP_Preparadas, 0, ',', '.') }}</td>
-                                <td>{{ number_format((int) $salida->Total_Salidas_MP, 0, ',', '.') }}</td>
+                                <td>{{ number_format((int) ($salida->Stock_Inicial_Calculado ?? 0), 0, ',', '.') }}</td>
+                                <td>{{ number_format((int) ($salida->Devoluciones_Proveedor_Calculadas ?? 0), 0, ',', '.') }}</td>
+                                <td>{{ number_format((int) ($salida->Ajuste_Stock_Calculado ?? 0), 0, ',', '.') }}</td>
+                                <td>{{ number_format((int) ($salida->Total_Salidas_Calculadas ?? 0), 0, ',', '.') }}</td>
+                                <td>{{ number_format((float) ($salida->Total_mm_Utilizados_Calculados ?? 0), 2, ',', '.') }}</td>
                                 <td>{{ optional($salida->deleted_at)->format('d/m/Y H:i:s') ?? '-' }}</td>
                                 <td>
                                     <form action="{{ route('mp_salidas_iniciales.restore', $salida->Id_Ingreso_MP) }}" method="POST">
@@ -41,7 +43,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="7" class="text-center">No hay salidas iniciales eliminadas.</td>
+                                <td colspan="8" class="text-center">No hay salidas iniciales eliminadas.</td>
                             </tr>
                         @endforelse
                     </tbody>

@@ -27,6 +27,7 @@ use App\Http\Controllers\ProductoGrupoSubcategoriaController;
 use App\Http\Controllers\ProductoGrupoConjuntosController;
 use App\Http\Controllers\PedidoClienteMpController;
 use App\Http\Controllers\MpMovimientoAdicionalController;
+use App\Http\Controllers\ListadoOfController;
 
 // Ruta por defecto al iniciar la app
 Route::get('/', function () {
@@ -39,25 +40,35 @@ Route::middleware(['auth', 'verified'])->group(function () {
         return view('home');
     })->name('dashboard');
 
-    // Rutas protegidas por roles especÃƒÂ­ficos (Administrador)
+    // Rutas protegidas por roles especÃƒÆ’Ã‚Â­ficos (Administrador)
     Route::middleware(['role:Administrador'])->group(function () {
         Route::resource('users', UserController::class);
         Route::resource('roles', RolePermissionController::class);
         Route::resource('permissions', PermissionController::class);
     });
 
-    // Ruta especÃƒÂ­fica para DataTables y otras funcionalidades
+    // Ruta especÃƒÆ’Ã‚Â­fica para DataTables y otras funcionalidades
     Route::get('productos/data', [ProductoController::class, 'getData'])->name('productos.data');
     Route::get('pedido_cliente/data', [PedidoClienteController::class, 'getData'])->name('pedido_cliente.data');
     Route::get('pedido_cliente/resumen', [PedidoClienteController::class, 'resumen'])->name('pedido_cliente.resumen');
+    Route::get('pedido_cliente/plain', [PedidoClienteController::class, 'indexPlain'])->name('pedido_cliente.plain');
+    Route::get('listado_of', [ListadoOfController::class, 'index'])->name('listado_of.index');
+    Route::get('listado_of/data', [ListadoOfController::class, 'getData'])->name('listado_of.data');
+    Route::get('listado_of/resumen', [ListadoOfController::class, 'resumen'])->name('listado_of.resumen');
     Route::get('pedido_cliente_mp/data', [PedidoClienteMpController::class, 'getData'])->name('pedido_cliente_mp.data');
     Route::get('pedido_cliente_mp/resumen', [PedidoClienteMpController::class, 'resumen'])->name('pedido_cliente_mp.resumen');
     Route::get('pedido_cliente_mp/planner', [PedidoClienteMpController::class, 'planner'])->name('pedido_cliente_mp.planner');
     Route::get('pedido_cliente_mp/create-massive', [PedidoClienteMpController::class, 'createMassive'])->name('pedido_cliente_mp.createMassive');
     Route::post('pedido_cliente_mp/store-massive', [PedidoClienteMpController::class, 'storeMassive'])->name('pedido_cliente_mp.storeMassive');
     Route::get('pedido_cliente_mp/deleted', [PedidoClienteMpController::class, 'showDeleted'])->name('pedido_cliente_mp.deleted');
+    Route::get('pedido_cliente_mp/edit-group', [PedidoClienteMpController::class, 'editGroup'])->name('pedido_cliente_mp.editGroup');
+    Route::post('pedido_cliente_mp/update-group', [PedidoClienteMpController::class, 'updateGroup'])->name('pedido_cliente_mp.updateGroup');
+    Route::get('pedido_cliente_mp/{id}/edit-massive', [PedidoClienteMpController::class, 'editMassive'])->name('pedido_cliente_mp.editMassive');
+    Route::post('pedido_cliente_mp/{id}/update-massive', [PedidoClienteMpController::class, 'updateMassive'])->name('pedido_cliente_mp.updateMassive');
     Route::post('pedido_cliente_mp/{id}/restore', [PedidoClienteMpController::class, 'restore'])->name('pedido_cliente_mp.restore');
     Route::get('fabricacion/data', [RegistroDeFabricacionController::class, 'getData'])->name('fabricacion.data');
+    Route::post('fabricacion/import-historico', [RegistroDeFabricacionController::class, 'importHistoricCsv'])->name('fabricacion.importHistoricCsv');
+    Route::get('fabricacion/resumen', [RegistroDeFabricacionController::class, 'resumen'])->name('fabricacion.resumen');
     Route::get('fechas_of/data', [FechasOfController::class, 'getData'])->name('fechas_of.data');
     Route::get('/entregas_productos/data', [ListadoEntregaProductoController::class, 'getData'])->name('entregas_productos.data');
     Route::get('/fabricacion/withFiltro', [RegistroDeFabricacionController::class, 'indexWithFiltro'])->name('fabricacion.withFiltro');
@@ -67,7 +78,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     
     Route::get('/productos/codigos', [ProductoController::class, 'getCodigosProducto'])->name('productos.codigos');
     
-    // Rutas para obtener categorÃƒÂ­as y subcategorÃƒÂ­as
+    // Rutas para obtener categorÃƒÆ’Ã‚Â­as y subcategorÃƒÆ’Ã‚Â­as
     Route::get('/productos/categorias', [ProductoController::class, 'getCategorias'])->name('productos.categorias');
     Route::get('/productos/subcategorias', [ProductoController::class, 'getSubcategorias'])->name('productos.subcategorias');
     Route::get('/productos/codigos', [ProductoController::class, 'getCodigosProducto'])->name('productos.codigos');
@@ -89,15 +100,18 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/productos/{id}/descripcion', [ProductoController::class, 'getDescripcionProducto']);
     
     // Rutas para las funcionalidades de Materia Prima
-    // Rutas para los controladores de Materia Prima y DiÃƒÂ¡metros
+    // Rutas para los controladores de Materia Prima y DiÃƒÆ’Ã‚Â¡metros
     Route::get('/mp_diametros', [MpDiametroController::class, 'index'])->name('mp_diametros.index');
     Route::get('/mp_materias_primas', [MpMateriaPrimaController::class, 'index'])->name('mp_materias_primas.index');
     Route::get('/mp_ingresos', [MpIngresoController::class, 'index'])->name('mp_ingresos.index');
+    Route::get('/materia_prima/stock', [MpIngresoController::class, 'stock'])->name('mp_stock.index');
     Route::get('/mp_ingresos/filters', [MpIngresoController::class, 'getUniqueFilters'])->name('mp_ingresos.filters');
     Route::get('/mp_ingresos/data', [MpIngresoController::class, 'getData'])->name('mp_ingresos.data');
     Route::get('/mp_egresos/data', [MpEgresoController::class, 'getData'])->name('mp_egresos.data');
     Route::get('/mp_egresos', [MpEgresoController::class, 'index'])->name('mp_egresos.index');
     Route::get('/mp_salidas_iniciales/data', [MpSalidaInicialController::class, 'getData'])->name('mp_salidas_iniciales.data');
+    Route::get('/mp_salidas_iniciales/editar-masivo/{id?}', [MpSalidaInicialController::class, 'editMassive'])->name('mp_salidas_iniciales.editMassive');
+    Route::put('/mp_salidas_iniciales/actualizar-masivo', [MpSalidaInicialController::class, 'updateMassive'])->name('mp_salidas_iniciales.updateMassive');
     Route::get('/mp_movimientos_adicionales/data', [MpMovimientoAdicionalController::class, 'getData'])->name('mp_movimientos_adicionales.data');
     Route::get('/mp_movimientos_adicionales/deleted', [MpMovimientoAdicionalController::class, 'showDeleted'])->name('mp_movimientos_adicionales.deleted');
     Route::post('/mp_movimientos_adicionales/{id}/restore', [MpMovimientoAdicionalController::class, 'restore'])->name('mp_movimientos_adicionales.restore');
@@ -105,15 +119,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/mp_egresos/import-historico', [MpEgresoController::class, 'importHistoricCsv'])->name('mp_egresos.importHistoricCsv');
     Route::get('/mp_salidas_iniciales/deleted', [MpSalidaInicialController::class, 'showDeleted'])->name('mp_salidas_iniciales.deleted');
     Route::post('/mp_salidas_iniciales/{id}/restore', [MpSalidaInicialController::class, 'restore'])->name('mp_salidas_iniciales.restore');
+    Route::post('/mp_salidas_iniciales/import-historico', [MpSalidaInicialController::class, 'importHistoricCsv'])->name('mp_salidas_iniciales.importHistoricCsv');
     Route::get('/mp_ingresos/ultimo_nro_ingreso', [MpIngresoController::class, 'getUltimoNroIngreso'])->name('mp_ingresos.ultimo_nro_ingreso');
     Route::get('/mp_ingresos/resumen', [MpIngresoController::class, 'resumenIngresos'])->name('mp_ingresos.resumen');
-    
     // Otras rutas relacionadas
     Route::get('/productos_categoria', [ProductoCategoriaController::class, 'index'])->name('productos_categoria.index');
     Route::get('/entregas_productos', [ListadoEntregaProductoController::class, 'index'])->name('entregas_productos.index');
     Route::get('/pedido-cliente/get-id-producto/{nroOf}', [PedidoClienteController::class, 'getIdProductoPorNroOf']);
     
-    // Rutas para fabricaciÃƒÂ³n
+    // Rutas para fabricaciÃƒÆ’Ã‚Â³n
     Route::get('fabricacion/show/{nroOF}', [RegistroDeFabricacionController::class, 'showByNroOF'])->name('fabricacion.showByNroOF');
     
     // Rutas para proveedores
@@ -219,7 +233,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('producto_grupo_conjuntos', ProductoGrupoConjuntosController::class);
 
 // 08/03/2026*
-// Rutas para el mÃƒÂ³dulo de ejemplo (descomentar si se implementa el controlador y modelo correspondiente)
+// Rutas para el mÃƒÆ’Ã‚Â³dulo de ejemplo (descomentar si se implementa el controlador y modelo correspondiente)
 
 Route::get('modulo/data', [ModuloController::class, 'getData'])->name('modulo.data');
 Route::get('modulo/filters', [ModuloController::class, 'getUniqueFilters'])->name('modulo.filters');
@@ -230,8 +244,10 @@ Route::resource('modulo', ModuloController::class);
 
 });
 
-// Incluye las rutas de autenticaciÃƒÂ³n (si existe un archivo auth.php)
+// Incluye las rutas de autenticaciÃƒÆ’Ã‚Â³n (si existe un archivo auth.php)
 require __DIR__ . '/auth.php';
+
+
 
 
 

@@ -29,24 +29,22 @@
         </div>
 
         <div class="row">
-            <div class="col-md-4"><div class="detail-item"><span class="detail-label">Proveedor</span><div class="detail-value">{{ $salidaInicial->ingresoMp->proveedor->Prov_Nombre ?? '-' }}</div></div></div>
-            <div class="col-md-4"><div class="detail-item"><span class="detail-label">Certificado</span><div class="detail-value">{{ $salidaInicial->ingresoMp->Nro_Certificado_MP ?? '-' }}</div></div></div>
-            <div class="col-md-4"><div class="detail-item"><span class="detail-label">Longitud por unidad</span><div class="detail-value">{{ number_format((float) $salidaInicial->Longitud_Unidad_MP, 2, ',', '.') }}</div></div></div>
+            <div class="col-md-6"><div class="detail-item"><span class="detail-label">Proveedor</span><div class="detail-value">{{ $salidaInicial->ingresoMp->proveedor->Prov_Nombre ?? '-' }}</div></div></div>
+            <div class="col-md-6"><div class="detail-item"><span class="detail-label">Certificado</span><div class="detail-value">{{ $salidaInicial->ingresoMp->Nro_Certificado_MP ?? '-' }}</div></div></div>
         </div>
 
         <div class="detail-divider"></div>
 
         <div class="row">
-            <div class="col-md-3"><div class="detail-item"><span class="detail-label">Unidades ingresadas</span><div class="detail-value">{{ number_format((int) $salidaInicial->Cantidad_Unidades_MP, 0, ',', '.') }}</div></div></div>
-            <div class="col-md-3"><div class="detail-item"><span class="detail-label">Preparadas</span><div class="detail-value">{{ number_format((int) $salidaInicial->Cantidad_Unidades_MP_Preparadas, 0, ',', '.') }}</div></div></div>
-            <div class="col-md-3"><div class="detail-item"><span class="detail-label">Adicionales</span><div class="detail-value">{{ number_format((int) $salidaInicial->Cantidad_MP_Adicionales, 0, ',', '.') }}</div></div></div>
-            <div class="col-md-3"><div class="detail-item"><span class="detail-label">Devoluciones</span><div class="detail-value">{{ number_format((int) $salidaInicial->Devoluciones_Unidades_MP, 0, ',', '.') }}</div></div></div>
+            <div class="col-md-3"><div class="detail-item"><span class="detail-label">Unidades ingresadas</span><div class="detail-value">{{ number_format((int) $salidaInicial->Unidades_Ingresadas, 0, ',', '.') }}</div></div></div>
+            <div class="col-md-3"><div class="detail-item"><span class="detail-label">Stock inicial</span><div class="detail-value">{{ number_format((int) $salidaInicial->Stock_Inicial_Calculado, 0, ',', '.') }}</div></div></div>
+            <div class="col-md-3"><div class="detail-item"><span class="detail-label">Devoluciones al proveedor</span><div class="detail-value">{{ number_format((int) $salidaInicial->Devoluciones_Proveedor_Calculadas, 0, ',', '.') }}</div></div></div>
+            <div class="col-md-3"><div class="detail-item"><span class="detail-label">Diferencia de stock</span><div class="detail-value">{{ number_format((int) $salidaInicial->Ajuste_Stock_Calculado, 0, ',', '.') }}</div></div></div>
         </div>
 
         <div class="row">
-            <div class="col-md-4"><div class="detail-item"><span class="detail-label">Total salidas</span><div class="detail-value">{{ number_format((int) $salidaInicial->Total_Salidas_MP, 0, ',', '.') }}</div></div></div>
-            <div class="col-md-4"><div class="detail-item"><span class="detail-label">Stock ajustado</span><div class="detail-value">{{ number_format((int) $salidaInicial->Total_Unidades, 0, ',', '.') }}</div></div></div>
-            <div class="col-md-4"><div class="detail-item"><span class="detail-label">Total utilizado</span><div class="detail-value">{{ number_format((float) $salidaInicial->Total_mm_Utilizados, 2, ',', '.') }}</div></div></div>
+            <div class="col-md-6"><div class="detail-item"><span class="detail-label">Salidas final</span><div class="detail-value">{{ number_format((int) $salidaInicial->Total_Salidas_Calculadas, 0, ',', '.') }}</div></div></div>
+            <div class="col-md-6"><div class="detail-item"><span class="detail-label">Mts. Totales</span><div class="detail-value">{{ number_format((float) $salidaInicial->Total_mm_Utilizados_Calculados, 2, ',', '.') }}</div></div></div>
         </div>
 
         <div class="detail-divider"></div>

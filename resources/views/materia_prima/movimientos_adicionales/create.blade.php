@@ -7,6 +7,7 @@
 @stop
 
 @section('content')
+    @include('components.swal-session')
 <div class="container-fluid">
     <div class="card">
         <div class="card-header">
@@ -33,3 +34,4 @@
 @section('js')
 <script src="{{ asset('js/form-ajax-submit.js') }}"></script>
 @stop
+

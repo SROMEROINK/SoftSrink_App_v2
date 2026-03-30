@@ -77,3 +77,14 @@
 .pedido-mp-mass-table input::placeholder {
     text-align: center;
 }
+
+.pedido-mp-mass-table .ingreso-selector-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.pedido-mp-mass-table .ingreso-selector-cell .btn {
+    white-space: normal;
+    line-height: 1.2;
+}

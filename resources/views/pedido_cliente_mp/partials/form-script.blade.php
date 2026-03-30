@@ -21,14 +21,27 @@ $(document).ready(function () {
     const $consultarStock = $('#consultar_stock_mp');
     const $nroIngresoMp = $('#Nro_Ingreso_MP');
     const $pedidoMaterialNro = $('#Pedido_Material_Nro');
+    const $nroPedidoProveedor = $('#Nro_Pedido_Proveedor');
     const $nroCertificadoMp = $('#Nro_Certificado_MP');
     const $compatibilidadTexto = $('#compatibilidad_producto_texto');
     const $stockBody = $('#stock_ingresos_body');
+    const $ingresoSugeridosList = $('#ingreso-mp-sugeridos-list');
     const $stockFaltante = $('#stock_faltante_texto');
     const $stockMetrosReq = $('#stock_metros_requeridos');
     const $stockBarrasReq = $('#stock_barras_requeridas');
     const $stockBarrasDisp = $('#stock_barras_disponibles');
     const $stockMetrosDisp = $('#stock_metros_disponibles');
+    const $usarEnCargaMasiva = $('#usar_en_carga_masiva');
+    const $compactSelectorMode = $('#compact_selector_mode');
+    const $massiveRowIndex = $('#massive_row_index');
+    const $massiveReturnUrl = $('#massive_return_url');
+    const $massiveSelectionStorageKey = $('#massive_selection_storage_key');
+    const $selectedMachinePrefill = $('#selected_machine_prefill');
+    const $selectedIngresoPrefill = $('#selected_ingreso_prefill');
+    const $volverACargaMasiva = $('#volver_a_carga_masiva');
+    const plannerEditMode = $('#planner_edit_mode').length > 0;
+    const $plannerSelectionSnapshot = $('#planner_selection_snapshot');
+    const plannerCurrentPedidoMpId = $("#planner_current_pedido_mp_id").val();
 
     const todasLasMaterias = $materia.find('option').map(function () {
         return { value: $(this).val(), text: $(this).text() };
@@ -56,6 +69,20 @@ $(document).ready(function () {
         return String(Math.ceil(value));
     }
 
+    function syncPlannerSelectionSnapshot() {
+        if (!$plannerSelectionSnapshot.length) {
+            return;
+        }
+
+        $plannerSelectionSnapshot.val([
+            String($nroIngresoMp.val() || '').trim(),
+            String($nroCertificadoMp.val() || '').trim(),
+            String($longitudUnMp.val() || '').trim(),
+            String($cantBarras.val() || '').trim(),
+            String($codigo.val() || '').trim()
+        ].join('|'));
+    }
+
     function getSelectedOption() {
         return $of.find('option:selected');
     }
@@ -65,7 +92,7 @@ $(document).ready(function () {
     }
 
     function resetStockPanel(message = 'Selecciona una OF y consulta ingresos compatibles.') {
-        $stockBody.html(`<tr><td colspan="7" class="text-center text-muted">${message}</td></tr>`);
+        $stockBody.html(`<tr><td colspan="8" class="text-center text-muted">${message}</td></tr>`);
         $stockFaltante.text('Sin consulta todavia.');
         $stockMetrosReq.text('-');
         $stockBarrasReq.text('-');
@@ -96,9 +123,26 @@ $(document).ready(function () {
         const productoDiametro = (option.data('producto-diametro-mp') || '').toString().trim();
         const productoCodigo = (option.data('producto-codigo-mp') || '').toString().trim();
         const productoLargoPieza = option.data('producto-largo-pieza');
+        const materiaActual = ($materia.val() || '').toString().trim();
+        const diametroActual = ($diametro.val() || '').toString().trim();
+        const codigoActual = ($codigo.val() || '').toString().trim();
+        const preserveCurrentSelection = (plannerEditMode || $compactSelectorMode.length) && (materiaActual || diametroActual || codigoActual);
 
         if (!$largoPieza.val() && productoLargoPieza) {
             $largoPieza.val(productoLargoPieza);
+        }
+
+        if (preserveCurrentSelection) {
+            fillSelect($materia, todasLasMaterias, materiaActual, false);
+            fillSelect($diametro, todosLosDiametros, diametroActual, false);
+
+            const textoActual = codigoActual
+                ? `Estas editando el Codigo MP ${codigoActual}. Se sugeriran ingresos compatibles para esa seleccion actual.`
+                : 'Estas editando una definicion existente. Puedes cambiar materia prima o diametro y volver a evaluar los ingresos compatibles.';
+
+            $compatibilidadTexto.text(textoActual);
+            updateCodigoMp();
+            return;
         }
 
         if (productoCodigo || (productoMaterial && productoDiametro)) {
@@ -168,6 +212,7 @@ $(document).ready(function () {
 
     function fillIngresoSeleccionado(ingreso) {
         $nroIngresoMp.val(ingreso.Nro_Ingreso_MP ?? '');
+        $nroPedidoProveedor.val(ingreso.Nro_Pedido_Proveedor ?? '');
         $nroCertificadoMp.val(ingreso.Nro_Certificado_MP ?? '');
 
         if (ingreso.Longitud_Unidad_MP !== undefined && ingreso.Longitud_Unidad_MP !== null && ingreso.Longitud_Unidad_MP !== '') {
@@ -175,15 +220,44 @@ $(document).ready(function () {
         }
 
         recalculateFields();
+        syncPlannerSelectionSnapshot();
     }
 
     function getIngresoDataFromRow($row) {
         return {
             Nro_Ingreso_MP: $row.attr('data-nro-ingreso-mp') || '',
-            Pedido_Material_Nro: $row.attr('data-pedido-material-nro') || '',
+            Nro_Pedido_Proveedor: $row.attr('data-nro-pedido-proveedor') || '',
             Nro_Certificado_MP: $row.attr('data-nro-certificado-mp') || '',
             Longitud_Unidad_MP: $row.attr('data-longitud-unidad-mp') || ''
         };
+    }
+
+    function updateIngresoSuggestionsList(ingresos) {
+        if (!$ingresoSugeridosList.length) {
+            return;
+        }
+
+        const currentValue = String($nroIngresoMp.val() || '').trim();
+        const options = [];
+        const seen = new Set();
+
+        (ingresos || []).forEach(function (ingreso) {
+            const nro = String(ingreso.Nro_Ingreso_MP || '').trim();
+            if (!nro || seen.has(nro)) {
+                return;
+            }
+
+            seen.add(nro);
+            const codigo = ingreso.Codigo_MP || '-';
+            const certificado = ingreso.Nro_Certificado_MP || '-';
+            options.push(`<option value="${nro}">${codigo} | Cert: ${certificado}</option>`);
+        });
+
+        if (currentValue && !seen.has(currentValue)) {
+            options.unshift(`<option value="${currentValue}"></option>`);
+        }
+
+        $ingresoSugeridosList.html(options.join(''));
     }
 
     function renderIngresos(data) {
@@ -220,9 +294,12 @@ $(document).ready(function () {
         }
 
         if (!ingresos.length) {
-            $stockBody.html('<tr><td colspan="7" class="text-center text-muted">No se encontraron ingresos compatibles para este Codigo MP.</td></tr>');
+            updateIngresoSuggestionsList([]);
+            $stockBody.html('<tr><td colspan="8" class="text-center text-muted">No se encontraron ingresos compatibles para este Codigo MP.</td></tr>');
             return;
         }
+
+        updateIngresoSuggestionsList(ingresos);
 
         const sugerencias = {};
         (stock.sugerencia || []).forEach(item => { sugerencias[item.Nro_Ingreso_MP] = item; });
@@ -235,11 +312,12 @@ $(document).ready(function () {
             return `
                 <tr class="js-ingreso-sugerido"
                     data-nro-ingreso-mp="${ingreso.Nro_Ingreso_MP || ''}"
-                    data-pedido-material-nro="${ingreso.Pedido_Material_Nro || ''}"
+                    data-nro-pedido-proveedor="${ingreso.Nro_Pedido_Proveedor || ''}"
                     data-nro-certificado-mp="${ingreso.Nro_Certificado_MP || ''}"
                     data-longitud-unidad-mp="${ingreso.Longitud_Unidad_MP || ''}"
                     title="Seleccionar este ingreso">
                     <td><button type="button" class="btn btn-link btn-sm p-0 js-seleccionar-ingreso">${ingreso.Nro_Ingreso_MP}</button></td>
+                    <td>${ingreso.Nro_Pedido_Proveedor || '-'}</td>
                     <td>${ingreso.Codigo_MP || '-'}</td>
                     <td>${ingreso.Nro_Certificado_MP || '-'}</td>
                     <td>${Number(ingreso.Unidades_MP || 0).toLocaleString('es-AR')}</td>
@@ -249,6 +327,14 @@ $(document).ready(function () {
                 </tr>`;
         }).join('');
         $stockBody.html(rows);
+
+        const ingresoPrefill = String($nroIngresoMp.val() || $selectedIngresoPrefill.val() || '').trim();
+        if (ingresoPrefill !== '') {
+            const $rowPrefill = $stockBody.find(`.js-ingreso-sugerido[data-nro-ingreso-mp="${ingresoPrefill}"]`).first();
+            if ($rowPrefill.length) {
+                selectIngresoRow($rowPrefill);
+            }
+        }
     }
 
     function selectIngresoRow($row) {
@@ -270,6 +356,7 @@ $(document).ready(function () {
     function consultarStock() {
         const idOf = $of.val();
         if (!idOf) {
+            updateIngresoSuggestionsList([]);
             resetStockPanel('Selecciona una OF antes de consultar ingresos compatibles.');
             return;
         }
@@ -285,7 +372,8 @@ $(document).ready(function () {
             Largo_Pieza: $largoPieza.val(),
             Frenteado: $frenteado.val(),
             Ancho_Cut_Off: $anchoCutOff.val(),
-            Sobrematerial_Promedio: $sobrematerial.val()
+            Sobrematerial_Promedio: $sobrematerial.val(),
+            current_pedido_mp_id: plannerCurrentPedidoMpId
         }).done(function (response) {
             if (response.compatibilidad && response.compatibilidad.mensaje) {
                 $compatibilidadTexto.text(response.compatibilidad.mensaje);
@@ -293,18 +381,89 @@ $(document).ready(function () {
             renderIngresos(response);
             recalculateFields();
         }).fail(function () {
+            updateIngresoSuggestionsList([]);
             resetStockPanel('No se pudo consultar el stock compatible en este momento.');
         });
     }
 
-    $of.on('change', function () { updatePedidoResumen(); resetStockPanel(); });
-    $maquina.on('change', function () { recalculateFields(); resetStockPanel('La maquina cambio. Vuelve a consultar ingresos compatibles.'); });
-    $materia.on('change', function () { recalculateFields(); resetStockPanel('Los datos cambiaron. Vuelve a consultar ingresos compatibles.'); });
-    $diametro.on('change', function () { recalculateFields(); resetStockPanel('Los datos cambiaron. Vuelve a consultar ingresos compatibles.'); });
+    function shouldAutoRefreshStock() {
+        return ($compactSelectorMode.length || plannerEditMode) && $of.val() && $maquina.val();
+    }
+
+    function refreshOrResetStock(message) {
+        if (shouldAutoRefreshStock()) {
+            consultarStock();
+            return;
+        }
+
+        resetStockPanel(message);
+    }
+
+    $of.on('change', function () { updatePedidoResumen(); refreshOrResetStock(); });
+    $maquina.on('change', function () { recalculateFields(); refreshOrResetStock('La maquina cambio. Vuelve a consultar ingresos compatibles.'); });
+    $materia.on('change', function () { recalculateFields(); refreshOrResetStock('Los datos cambiaron. Vuelve a consultar ingresos compatibles.'); });
+    $diametro.on('change', function () { recalculateFields(); refreshOrResetStock('Los datos cambiaron. Vuelve a consultar ingresos compatibles.'); });
     $('.js-calc').on('input change', function () { recalculateFields(); resetStockPanel('Los calculos cambiaron. Vuelve a consultar ingresos compatibles.'); });
-    $consultarStock.on('click', consultarStock);
+    if ($consultarStock.length) {
+        $consultarStock.on('click', consultarStock);
+    }
+
+    function guardarSeleccionParaCargaMasiva(preserveWithoutIngreso = false) {
+        if (!$of.val()) {
+            SwalUtils.error('Primero selecciona una OF valida.');
+            return;
+        }
+
+        if (!$maquina.val()) {
+            SwalUtils.error('Primero selecciona una maquina valida.');
+            return;
+        }
+
+        if (!$nroIngresoMp.val() && !preserveWithoutIngreso) {
+            SwalUtils.error('Debes seleccionar un ingreso MP antes de volver a la carga masiva.');
+            return;
+        }
+
+        const payload = {
+            idOf: $of.val(),
+            nroOf: getSelectedOption().data('nro-of') || '',
+            rowIndex: $massiveRowIndex.val() || '',
+            machineId: $maquina.val(),
+            nroIngreso: $nroIngresoMp.val(),
+            certificado: $nroCertificadoMp.val() || '',
+            pedidoMaterial: $pedidoMaterialNro.val() || '',
+            longitudUnMp: $longitudUnMp.val() || ''
+        };
+
+        const selectionStorageKey = $massiveSelectionStorageKey.val() || 'pedidoClienteMpMassiveSelection';
+        sessionStorage.setItem(selectionStorageKey, JSON.stringify(payload));
+        window.location.href = $massiveReturnUrl.val();
+    }
+
+    if ($usarEnCargaMasiva.length) {
+        $usarEnCargaMasiva.on('click', function () {
+            guardarSeleccionParaCargaMasiva(false);
+        });
+    }
+
+    if ($volverACargaMasiva.length) {
+        $volverACargaMasiva.on('click', function (event) {
+            event.preventDefault();
+            guardarSeleccionParaCargaMasiva(true);
+        });
+    }
+
+    if ($selectedMachinePrefill.length && $selectedMachinePrefill.val() && !$maquina.val()) {
+        $maquina.val($selectedMachinePrefill.val());
+    }
 
     updateMachineSummary();
     updatePedidoResumen();
+    syncPlannerSelectionSnapshot();
+
+    if (($compactSelectorMode.length || plannerEditMode) && $of.val() && $maquina.val()) {
+        consultarStock();
+    }
 });
 </script>
+

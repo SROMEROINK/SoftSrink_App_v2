@@ -18,13 +18,10 @@ class MpSalidaInicial extends Model
 
     protected $fillable = [
         'Id_Ingreso_MP',
-        'Cantidad_Unidades_MP',
-        'Cantidad_Unidades_MP_Preparadas',
-        'Cantidad_MP_Adicionales',
+        'Stock_Inicial',
+        'Devoluciones_Proveedor',
+        'Ajuste_Stock',
         'Total_Salidas_MP',
-        'Devoluciones_Unidades_MP',
-        'Total_Unidades',
-        'Longitud_Unidad_MP',
         'Total_mm_Utilizados',
         'reg_Status',
         'created_by',
@@ -34,13 +31,10 @@ class MpSalidaInicial extends Model
 
     protected $casts = [
         'Id_Ingreso_MP' => 'integer',
-        'Cantidad_Unidades_MP' => 'integer',
-        'Cantidad_Unidades_MP_Preparadas' => 'integer',
-        'Cantidad_MP_Adicionales' => 'integer',
+        'Stock_Inicial' => 'integer',
+        'Devoluciones_Proveedor' => 'integer',
+        'Ajuste_Stock' => 'integer',
         'Total_Salidas_MP' => 'integer',
-        'Devoluciones_Unidades_MP' => 'integer',
-        'Total_Unidades' => 'integer',
-        'Longitud_Unidad_MP' => 'decimal:2',
         'Total_mm_Utilizados' => 'decimal:2',
         'reg_Status' => 'boolean',
     ];

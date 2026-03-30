@@ -18,7 +18,6 @@ use Yajra\DataTables\Facades\DataTables;
 class PedidoClienteController extends Controller
 {
     use CheckForChanges;
-
     public function __construct()
     {
         $this->middleware('permission:ver produccion')->only(['index', 'show']);
@@ -107,6 +106,21 @@ class PedidoClienteController extends Controller
     public function index()
     {
         return view('pedido_cliente.index');
+    }
+
+    public function indexPlain()
+    {
+        $pedidos = PedidoCliente::with([
+            'producto.categoria',
+            'producto.subCategoria',
+            'estadoPlanificacion',
+            'definicionMp.estadoPlanificacion',
+        ])
+            ->whereNull('deleted_at')
+            ->orderByDesc('Id_OF')
+            ->get();
+
+        return view('pedido_cliente.index_plain', compact('pedidos'));
     }
 
     public function resumen()

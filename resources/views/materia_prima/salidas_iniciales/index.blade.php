@@ -3,16 +3,20 @@
 @section('title', 'Salidas Iniciales de Materia Prima')
 
 @section('content_header')
-    <h1 class="text-center">Salidas Iniciales de Materia Prima</h1>
+<x-header-card
+    title="Salidas Iniciales de Materia Prima"
+    buttonRoute="{{ route('mp_salidas_iniciales.create') }}"
+    buttonText="Registrar ajuste"
+    deletedRouteUrl="{{ route('mp_salidas_iniciales.deleted') }}"
+    deletedButtonText="Ver eliminados"
+/>
 @stop
 
 @section('content')
+    @include('components.swal-session')
 <div class="container-fluid">
-    <div class="card mb-3">
-        <div class="card-body d-flex justify-content-end gap-2">
-            <a href="{{ route('mp_salidas_iniciales.create') }}" class="btn btn-success">Registrar ajuste</a>
-            <a href="{{ route('mp_salidas_iniciales.deleted') }}" class="btn btn-secondary">Ver eliminados</a>
-        </div>
+    <div class="d-flex justify-content-end mb-3">
+        <a href="{{ route('mp_salidas_iniciales.editMassive') }}" class="btn btn-primary">Editar ajustes masivamente</a>
     </div>
 
     <div class="alert alert-info ajuste-stock-alert">
@@ -58,28 +62,18 @@
                     <thead>
                         <tr>
                             <th>Nro Ingreso MP</th>
-                            <th>Codigo MP</th>
-                            <th>Materia Prima</th>
-                            <th>Diametro MP</th>
-                            <th>Unid. Ingreso</th>
-                            <th>Preparadas</th>
-                            <th>Adicionales</th>
-                            <th>Devoluciones</th>
-                            <th>Total Salidas</th>
-                            <th>Stock Ajustado</th>
-                            <th>Total Utilizado</th>
+                            <th>Cant. Unid.</th>
+                            <th>Longitud x Un.(MP)</th>
+                            <th>Stock Inicial</th>
+                            <th>Devoluciones al Proveedor</th>
+                            <th>Diferencia de Stock</th>
+                            <th>Salidas Final</th>
+                            <th>Mts. Totales</th>
                             <th>Estado</th>
                             <th>Acciones</th>
                         </tr>
                         <tr class="filter-row">
                             <th><input type="text" id="filtro_ingreso" class="form-control filtro-texto" placeholder="Filtrar ingreso"></th>
-                            <th><input type="text" id="filtro_codigo" class="form-control filtro-texto" placeholder="Filtrar codigo"></th>
-                            <th>
-                                <select id="filtro_materia" class="form-control filtro-select">
-                                    <option value="">Todas</option>
-                                </select>
-                            </th>
-                            <th></th>
                             <th></th>
                             <th></th>
                             <th></th>
@@ -105,6 +99,14 @@
 @stop
 
 @section('css')
+    <style>
+        .content-header .card .card-header .button-group {
+            margin-left: auto;
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.5rem;
+        }
+    </style>
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/dataTables.bootstrap4.min.css">
     <link rel="stylesheet" href="https://cdn.datatables.net/fixedheader/3.4.1/css/fixedHeader.bootstrap4.min.css">
     <link rel="stylesheet" href="{{ asset('vendor/adminlte/dist/css/shared/filters.css') }}">
@@ -125,8 +127,6 @@
                     url: "{{ route('mp_salidas_iniciales.data') }}",
                     data: function (d) {
                         d.filtro_ingreso = $('#filtro_ingreso').val();
-                        d.filtro_codigo = $('#filtro_codigo').val();
-                        d.filtro_materia = $('#filtro_materia').val();
                         d.filtro_estado = $('#filtro_estado').val();
                     }
                 },
@@ -136,16 +136,13 @@
                 scrollX: true,
                 columns: [
                     { data: 'Nro_Ingreso_MP', name: 'i.Nro_Ingreso_MP' },
-                    { data: 'Codigo_MP', name: 'i.Codigo_MP' },
-                    { data: 'Materia_Prima', name: 'm.Nombre_Materia' },
-                    { data: 'Diametro_MP', name: 'd.Valor_Diametro' },
-                    { data: 'Unidades_Ingresadas', name: 'i.Unidades_MP', searchable: false },
-                    { data: 'Cantidad_Unidades_MP_Preparadas', name: 'si.Cantidad_Unidades_MP_Preparadas', searchable: false },
-                    { data: 'Cantidad_MP_Adicionales', name: 'si.Cantidad_MP_Adicionales', searchable: false },
-                    { data: 'Devoluciones_Unidades_MP', name: 'si.Devoluciones_Unidades_MP', searchable: false },
-                    { data: 'Total_Salidas_MP', name: 'si.Total_Salidas_MP', searchable: false },
-                    { data: 'Total_Unidades', name: 'si.Total_Unidades', searchable: false },
-                    { data: 'Total_mm_Utilizados', name: 'si.Total_mm_Utilizados', searchable: false },
+                    { data: 'Cant_Unid', name: 'i.Unidades_MP', searchable: false },
+                    { data: 'Longitud_Unidad_MP', name: 'i.Longitud_Unidad_MP', searchable: false },
+                    { data: 'Stock_Inicial', name: 'Stock_Inicial', searchable: false },
+                    { data: 'Devoluciones_Proveedor', name: 'Devoluciones_Proveedor', searchable: false },
+                    { data: 'Ajuste_Stock', name: 'Ajuste_Stock', searchable: false },
+                    { data: 'Total_Salidas_MP', name: 'Total_Salidas_MP', searchable: false },
+                    { data: 'Total_mm_Utilizados', name: 'Total_mm_Utilizados', searchable: false },
                     { data: 'Estado_Ajuste', name: 'Estado_Ajuste', orderable: false },
                     { data: 'acciones', name: 'acciones', orderable: false, searchable: false }
                 ],
@@ -162,16 +159,6 @@
                         next: "Siguiente",
                         previous: "Anterior"
                     }
-                },
-                initComplete: function () {
-                    const api = this.api();
-                    const materias = new Set();
-                    api.column(2).data().each(function (value) {
-                        if (value) materias.add(value);
-                    });
-                    Array.from(materias).sort().forEach(function (materia) {
-                        $('#filtro_materia').append(`<option value="${materia}">${materia}</option>`);
-                    });
                 }
             });
 

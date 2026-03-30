@@ -7,6 +7,7 @@
 @stop
 
 @section('content')
+    @include('components.swal-session')
     <form action="{{ route('mp_egresos.store') }}" method="POST">
         @csrf
         @include('materia_prima.egresos.partials.form')
@@ -16,3 +17,4 @@
 @section('css')
     <link rel="stylesheet" href="{{ asset('vendor/adminlte/dist/css/mp_egreso_create.css') }}">
 @stop
+

@@ -16,6 +16,7 @@
 @stop
 
 @section('content')
+    @include('components.swal-session')
 <div class="container-fluid">
     <div class="row mb-4">
     <div class="col-md-4">
@@ -134,7 +135,7 @@ $.get("{{ route('mp_ingresos.resumen') }}", function (data) {
 function deleteIngreso(id) {
     Swal.fire({
         title: '¿Estás seguro?',
-        text: "¡No podrás revertir esto!",
+        text: '¡No podrás revertir esto!',
         icon: 'warning',
         showCancelButton: true,
         confirmButtonColor: '#3085d6',
@@ -240,7 +241,7 @@ $(document).ready(function () {
         language: {
             lengthMenu: "Mostrar _MENU_ registros por página",
             zeroRecords: "No se encontraron resultados",
-            info: "Mostrando página _PAGE_ de _PAGES_",
+            info: "Mostrando pÃ¡gina _PAGE_ de _PAGES_",
             infoEmpty: "No hay registros disponibles",
             infoFiltered: "(filtrado de _MAX_ registros totales)",
             search: "Buscar:",

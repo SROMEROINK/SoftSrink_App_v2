@@ -83,6 +83,7 @@
 @stop
 
 @section('css')
+<link rel="stylesheet" href="{{ asset('vendor/adminlte/dist/css/shared/datatables.css') }}">
 <link rel="stylesheet" href="{{ asset('vendor/adminlte/dist/css/modulo_reutilizable_index.css') }}">
 @stop
 

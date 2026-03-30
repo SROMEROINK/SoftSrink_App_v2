@@ -41,7 +41,7 @@
             @foreach ($registros as $registro)
                 <tr>
                     <td>{{ $registro->Id_OF }}</td>
-                    <td>{{ $registro->listado_of->Nro_OF }}</td>
+                    <td>{{ $registro->pedido->Nro_OF ?? $registro->Nro_OF }}</td>
                     <td>{{ $registro->Nro_Parcial }}</td>
                     <td>{{ $registro->Nro_OF_Parcial }}</td>
                     <td>{{ $registro->Cant_Piezas }}</td>
@@ -74,6 +74,7 @@
 <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap5.min.css">
 <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.2.9/css/responsive.bootstrap5.min.css">
 <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.2.2/css/buttons.bootstrap5.min.css">
+<link rel="stylesheet" href="{{ asset('vendor/adminlte/dist/css/shared/datatables.css') }}">
 <link rel="stylesheet" href="{{ asset('vendor/adminlte/dist/css/fabricacion_show.css') }}">
 @stop
 

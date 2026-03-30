@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Traits\AppliesExactNumericFilters;
 use App\Models\MpEgreso;
 use App\Models\PedidoClienteMp;
 use App\Services\HistoricalPedidoMpEgresoImportService;
@@ -13,6 +14,7 @@ use Illuminate\Support\Facades\Schema;
 
 class MpEgresoController extends Controller
 {
+    use AppliesExactNumericFilters;
     public function getData(Request $request)
     {
         $hasPlanningColumns = Schema::hasColumn('pedido_cliente_mp', 'Fecha_Planificacion')
@@ -58,7 +60,7 @@ class MpEgresoController extends Controller
             ]);
 
         if ($request->filled('filtro_of')) {
-            $query->where('p.Nro_OF', 'like', '%' . $request->filtro_of . '%');
+            $this->applySmartFilter($query, 'p.Nro_OF', $request->filtro_of);
         }
 
         if ($request->filled('filtro_producto')) {
@@ -66,7 +68,7 @@ class MpEgresoController extends Controller
         }
 
         if ($request->filled('filtro_ingreso_mp')) {
-            $query->where('pm.Nro_Ingreso_MP', 'like', '%' . $request->filtro_ingreso_mp . '%');
+            $this->applySmartFilter($query, 'pm.Nro_Ingreso_MP', $request->filtro_ingreso_mp);
         }
 
         if ($request->filled('filtro_estado_salida')) {

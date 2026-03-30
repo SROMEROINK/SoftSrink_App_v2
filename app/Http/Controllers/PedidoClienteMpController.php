@@ -22,15 +22,19 @@ use Yajra\DataTables\Facades\DataTables;
 class PedidoClienteMpController extends Controller
 {
     use CheckForChanges;
+    protected bool $pedidoMaterialNormalizado = false;
+
 
     public function __construct(protected PedidoClienteMpPlannerService $plannerService)
     {
         $this->middleware('permission:ver produccion')->only(['index', 'show', 'getData', 'resumen', 'showDeleted', 'planner']);
-        $this->middleware('permission:editar produccion')->only(['create', 'store', 'createMassive', 'storeMassive', 'edit', 'update', 'destroy', 'restore']);
+        $this->middleware('permission:editar produccion')->only(['create', 'store', 'createMassive', 'storeMassive', 'editGroup', 'updateGroup', 'editMassive', 'updateMassive', 'edit', 'update', 'destroy', 'restore']);
     }
 
     public function getData(Request $request)
     {
+        $this->normalizeInternalPedidoMaterialNumbers();
+
         $query = DB::table('pedido_cliente as p')
             ->leftJoin('pedido_cliente_mp as pm', function ($join) {
                 $join->on('pm.Id_OF', '=', 'p.Id_OF')
@@ -55,10 +59,9 @@ class PedidoClienteMpController extends Controller
                 'prod.Prod_Codigo',
                 'cat.Nombre_Categoria',
                 'pm.Id_Pedido_MP',
+                'pm.Nro_Ingreso_MP',
                 'pm.Pedido_Material_Nro',
                 'pm.Codigo_MP',
-                'pm.Materia_Prima',
-                'pm.Diametro_MP',
                 'pm.Cant_Barras_MP',
                 DB::raw('COALESCE(pm.Estado_Plani_Id, p.Estado_Plani_Id) as Estado_Plani_Id'),
                 DB::raw("(SELECT ep.Nombre_Estado FROM estado_planificacion ep WHERE ep.Estado_Plani_Id = COALESCE(pm.Estado_Plani_Id, p.Estado_Plani_Id) LIMIT 1) as Estado_MP"),
@@ -80,28 +83,45 @@ class PedidoClienteMpController extends Controller
             $query->whereRaw('COALESCE(pm.Estado_Plani_Id, p.Estado_Plani_Id) = ?', [$request->filtro_estado]);
         }
 
-        if ($request->filled('filtro_materia_prima')) {
-            $query->where('pm.Materia_Prima', $request->filtro_materia_prima);
+        if ($request->filled('filtro_codigo_mp')) {
+            $query->where('pm.Codigo_MP', $request->filtro_codigo_mp);
         }
 
         if ($request->filled('filtro_pedido_material')) {
-            $query->where('pm.Pedido_Material_Nro', 'like', '%' . $request->filtro_pedido_material . '%');
+            $pedidoMaterialFiltro = trim((string) $request->filtro_pedido_material);
+
+            if (is_numeric($pedidoMaterialFiltro)) {
+                $query->whereRaw('CAST(pm.Pedido_Material_Nro AS UNSIGNED) = ?', [(int) $pedidoMaterialFiltro]);
+            } else {
+                $query->where('pm.Pedido_Material_Nro', $pedidoMaterialFiltro);
+            }
         }
 
         return DataTables::of($query)
+            ->orderColumn('pm.Pedido_Material_Nro', function ($query, $order) {
+                $query->orderByRaw("CAST(pm.Pedido_Material_Nro AS UNSIGNED) {$order}");
+            })
+            ->orderColumn('Pedido_Material_Nro', function ($query, $order) {
+                $query->orderByRaw("CAST(pm.Pedido_Material_Nro AS UNSIGNED) {$order}");
+            })
             ->editColumn('Fecha_del_Pedido', fn ($row) => $row->Fecha_del_Pedido ? Carbon::parse($row->Fecha_del_Pedido)->format('d/m/Y') : '')
             ->editColumn('Cant_Fabricacion', fn ($row) => $row->Cant_Fabricacion !== null ? number_format((int) $row->Cant_Fabricacion, 0, ',', '.') : '')
+            ->editColumn('Nro_Ingreso_MP', fn ($row) => $row->Nro_Ingreso_MP !== null ? number_format((int) $row->Nro_Ingreso_MP, 0, ',', '.') : '')
             ->editColumn('Cant_Barras_MP', fn ($row) => $row->Cant_Barras_MP !== null ? number_format((int) $row->Cant_Barras_MP, 0, ',', '.') : '')
             ->toJson();
     }
 
     public function index()
     {
+        $this->normalizeInternalPedidoMaterialNumbers();
+
         return view('pedido_cliente_mp.index', $this->legacyPendingSummary());
     }
 
     public function resumen()
     {
+        $this->normalizeInternalPedidoMaterialNumbers();
+
         $pendingSummary = $this->legacyPendingSummary();
 
         return response()->json([
@@ -117,22 +137,151 @@ class PedidoClienteMpController extends Controller
 
     public function create(Request $request)
     {
+        $this->normalizeInternalPedidoMaterialNumbers();
         $selectedOf = $request->query('of');
+        $compactSelectorMode = $request->boolean('from_massive');
+        $selectedMachine = $request->query('machine');
+        $massiveRowIndex = $request->query('row');
+        $massiveReturnUrl = $request->query('return_url', route('pedido_cliente_mp.createMassive'));
+        $massiveSelectionStorageKey = $request->query('storage_key', 'pedidoClienteMpMassiveSelection');
+        $selectedIngreso = $request->query('selected_ingreso');
+        $selectedCertificado = $request->query('selected_certificado');
+        $selectedPedidoMaterial = $request->query('selected_pedido_material');
+        $selectedLongitudUnMp = $request->query('selected_longitud_un_mp');
+        $selectedMateriaPrima = $request->query('selected_materia_prima');
+        $selectedDiametroMp = $request->query('selected_diametro_mp');
+        $selectedCodigoMp = $request->query('selected_codigo_mp');
+
+        if (!$compactSelectorMode) {
+            $redirectParams = [];
+            if ($selectedOf !== null && $selectedOf !== '') {
+                $redirectParams['of'] = $selectedOf;
+            }
+
+            return redirect()
+                ->route('pedido_cliente_mp.createMassive', $redirectParams)
+                ->with('info', 'La definicion de MP ahora se realiza desde la hoja masiva.');
+        }
 
         return view('pedido_cliente_mp.create', array_merge(
             $this->formData($selectedOf),
-            ['selectedOf' => $selectedOf]
+            [
+                'selectedOf' => $selectedOf,
+                'compactSelectorMode' => $compactSelectorMode,
+                'selectedMachine' => $selectedMachine,
+                'massiveRowIndex' => $massiveRowIndex,
+                'massiveReturnUrl' => $massiveReturnUrl,
+                'massiveSelectionStorageKey' => $massiveSelectionStorageKey,
+                'selectedIngreso' => $selectedIngreso,
+                'selectedCertificado' => $selectedCertificado,
+                'selectedPedidoMaterial' => $selectedPedidoMaterial,
+                'selectedLongitudUnMp' => $selectedLongitudUnMp,
+                'selectedMateriaPrima' => $selectedMateriaPrima,
+                'selectedDiametroMp' => $selectedDiametroMp,
+                'selectedCodigoMp' => $selectedCodigoMp,
+            ]
         ));
     }
 
-    public function createMassive()
+    public function createMassive(Request $request)
     {
+        $this->normalizeInternalPedidoMaterialNumbers();
         return view('pedido_cliente_mp.mass-create', array_merge(
             $this->legacyPendingSummary(),
-            $this->massiveCreateData()
+            $this->massiveCreateData(),
+            [
+                'preselectedOf' => $request->query('of'),
+            ]
         ));
     }
 
+    public function editGroup(Request $request)
+    {
+        $this->normalizeInternalPedidoMaterialNumbers();
+
+        $pedidoMaterial = trim((string) $request->query('pedido_material', ''));
+
+        if ($pedidoMaterial === '') {
+            return redirect()->route('pedido_cliente_mp.index')
+                ->with('warning', 'Debes indicar un Pedido MP Interno para editar el grupo.');
+        }
+
+        $registros = PedidoClienteMp::with(['pedido.producto.categoria'])
+            ->whereNull('deleted_at')
+            ->when(is_numeric($pedidoMaterial), function ($query) use ($pedidoMaterial) {
+                $query->whereRaw('CAST(Pedido_Material_Nro AS UNSIGNED) = ?', [(int) $pedidoMaterial]);
+            }, function ($query) use ($pedidoMaterial) {
+                $query->where('Pedido_Material_Nro', $pedidoMaterial);
+            })
+            ->orderBy('Id_OF')
+            ->get();
+
+        if ($registros->isEmpty()) {
+            return redirect()->route('pedido_cliente_mp.index')
+                ->with('warning', 'No se encontraron registros para el Pedido MP Interno seleccionado.');
+        }
+
+        return view('pedido_cliente_mp.edit-group', [
+            'pedidoMaterial' => $pedidoMaterial,
+            'registros' => $registros,
+        ]);
+    }
+
+    public function updateGroup(Request $request)
+    {
+        $ids = $request->input('ids', []);
+        $pedidoMaterialNros = $request->input('pedido_material_nro', []);
+
+        if (empty($ids) || empty($pedidoMaterialNros)) {
+            return redirect()->route('pedido_cliente_mp.index')
+                ->with('warning', 'No se recibieron filas para actualizar.');
+        }
+
+        DB::beginTransaction();
+
+        try {
+            $registros = PedidoClienteMp::whereIn('Id_Pedido_MP', $ids)
+                ->whereNull('deleted_at')
+                ->get()
+                ->keyBy('Id_Pedido_MP');
+
+            $actualizados = 0;
+
+            foreach ($ids as $index => $id) {
+                $registro = $registros->get((int) $id);
+                if (!$registro) {
+                    continue;
+                }
+
+                $nuevoPedido = trim((string) ($pedidoMaterialNros[$index] ?? ''));
+                if ($nuevoPedido === '') {
+                    continue;
+                }
+
+                if ((string) $registro->Pedido_Material_Nro === $nuevoPedido) {
+                    continue;
+                }
+
+                $registro->Pedido_Material_Nro = $nuevoPedido;
+                $registro->updated_by = Auth::id();
+                $registro->save();
+                $actualizados++;
+            }
+
+            DB::commit();
+
+            return redirect()->route('pedido_cliente_mp.index')
+                ->with('success', $actualizados > 0
+                    ? 'Pedidos MP Internos actualizados correctamente.'
+                    : 'No habia cambios para guardar en el grupo.');
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            Log::error('Error al actualizar grupo de pedido_cliente_mp', ['error' => $e->getMessage()]);
+
+            return redirect()->route('pedido_cliente_mp.index')
+                ->with('error', 'No se pudo actualizar el grupo de Pedido MP Interno.');
+        }
+    }
     public function planner(Request $request)
     {
         $pedido = PedidoCliente::with(['producto.categoria', 'producto.subCategoria'])
@@ -211,6 +360,7 @@ class PedidoClienteMpController extends Controller
 
     public function show($id)
     {
+        $this->normalizeInternalPedidoMaterialNumbers();
         $pedidoMp = PedidoClienteMp::with([
             'pedido.producto.categoria',
             'pedido.producto.subCategoria',
@@ -222,12 +372,130 @@ class PedidoClienteMpController extends Controller
 
     public function edit($id)
     {
-        $pedidoMp = PedidoClienteMp::findOrFail($id);
+        return redirect()
+            ->route('pedido_cliente_mp.editMassive', $id)
+            ->with('info', 'La edicion de MP ahora se realiza desde la hoja de edicion masiva.');
+    }
 
-        return view('pedido_cliente_mp.edit', array_merge(
-            $this->formData($pedidoMp->Id_OF),
-            ['pedidoMp' => $pedidoMp]
+    public function editMassive($id)
+    {
+        $this->normalizeInternalPedidoMaterialNumbers();
+
+        $pedidoMp = PedidoClienteMp::with(['pedido.producto.categoria', 'pedido.producto.subCategoria'])
+            ->whereNull('deleted_at')
+            ->findOrFail($id);
+
+        return view('pedido_cliente_mp.edit-massive', array_merge(
+            $this->legacyPendingSummary(),
+            $this->massiveCreateData(),
+            [
+                'pedidoMp' => $pedidoMp,
+                'editMassiveSelectionStorageKey' => "pedidoClienteMpEditMassiveSelection_{$pedidoMp->Id_Pedido_MP}",
+                'editMassiveDraftStorageKey' => "pedidoClienteMpEditMassiveDraft_{$pedidoMp->Id_Pedido_MP}",
+            ]
         ));
+    }
+
+    public function updateMassive(Request $request, $id)
+    {
+        $pedidoMp = PedidoClienteMp::whereNull('deleted_at')->findOrFail($id);
+        $pedido = PedidoCliente::with('producto')->whereNull('deleted_at')->findOrFail($pedidoMp->Id_OF);
+
+        $validated = $request->validate([
+            'Id_Maquina' => 'required|integer',
+            'Nro_Ingreso_MP' => 'required|integer|min:1',
+            'Estado_Plani_Id' => 'required|exists:estado_planificacion,Estado_Plani_Id',
+            'Observaciones' => 'nullable|string',
+        ], [
+            'Id_Maquina.required' => 'Debes seleccionar una maquina.',
+            'Nro_Ingreso_MP.required' => 'Debes seleccionar un ingreso MP.',
+            'Estado_Plani_Id.required' => 'Debes indicar el estado de MP.',
+        ]);
+
+        $maquina = DB::table('maquinas_produc')
+            ->select('id_maquina', 'Nro_maquina', 'familia_maquina', 'scrap_maquina')
+            ->where('id_maquina', $validated['Id_Maquina'])
+            ->where('Status', 1)
+            ->first();
+
+        $ingreso = DB::table('mp_ingreso')
+            ->leftJoin('mp_materia_prima', 'mp_ingreso.Id_Materia_Prima', '=', 'mp_materia_prima.Id_Materia_Prima')
+            ->leftJoin('mp_diametro', 'mp_ingreso.Id_Diametro_MP', '=', 'mp_diametro.Id_Diametro')
+            ->whereNull('mp_ingreso.deleted_at')
+            ->where('mp_ingreso.reg_Status', 1)
+            ->where('mp_ingreso.Nro_Ingreso_MP', $validated['Nro_Ingreso_MP'])
+            ->select([
+                'mp_ingreso.Nro_Ingreso_MP',
+                'mp_ingreso.Nro_Pedido',
+                'mp_ingreso.Codigo_MP',
+                'mp_ingreso.Nro_Certificado_MP',
+                'mp_ingreso.Longitud_Unidad_MP',
+                'mp_materia_prima.Nombre_Materia as Materia_Prima',
+                'mp_diametro.Valor_Diametro as Diametro_MP',
+            ])
+            ->first();
+
+        if (!$maquina || !$ingreso) {
+            return redirect()
+                ->route('pedido_cliente_mp.editMassive', $pedidoMp->Id_Pedido_MP)
+                ->with('error', 'La maquina o el ingreso MP seleccionado no son validos.');
+        }
+
+        [$productoMateria, $productoDiametro] = $this->resolveMateriaDiametroForComparison(
+            $pedido->producto->Prod_Codigo_MP ?? null,
+            $pedido->producto->Prod_Material_MP ?? null,
+            $pedido->producto->Prod_Diametro_de_MP ?? null
+        );
+        [$ingresoMateria, $ingresoDiametro] = $this->resolveMateriaDiametroForComparison(
+            $ingreso->Codigo_MP ?? null,
+            $ingreso->Materia_Prima ?? null,
+            $ingreso->Diametro_MP ?? null
+        );
+
+        if (!$this->isCompatibleMpSelection($productoMateria, $productoDiametro, $ingresoMateria, $ingresoDiametro)) {
+            return redirect()
+                ->route('pedido_cliente_mp.editMassive', $pedidoMp->Id_Pedido_MP)
+                ->with('error', 'El ingreso seleccionado no es compatible con la materia prima requerida por la OF.');
+        }
+
+        $plannerData = $this->plannerService->buildForPedido($pedido, [
+            'Id_Maquina' => $validated['Id_Maquina'],
+            'Codigo_MP' => $ingreso->Codigo_MP,
+            'Longitud_Un_MP' => $ingreso->Longitud_Unidad_MP,
+        ]);
+
+        $payload = [
+            'Estado_Plani_Id' => $validated['Estado_Plani_Id'],
+            'Id_Maquina' => (int) $maquina->id_maquina,
+            'Nro_Maquina' => $maquina->Nro_maquina,
+            'Familia_Maquina' => $maquina->familia_maquina,
+            'Scrap_Maquina' => $maquina->scrap_maquina,
+            'Codigo_MP' => $plannerData['seleccion']['codigo_mp'],
+            'Materia_Prima' => $plannerData['seleccion']['materia_prima'],
+            'Diametro_MP' => $plannerData['seleccion']['diametro_mp'],
+            'Nro_Ingreso_MP' => (int) $ingreso->Nro_Ingreso_MP,
+            'Nro_Certificado_MP' => $ingreso->Nro_Certificado_MP,
+            'Longitud_Un_MP' => $plannerData['seleccion']['longitud_un_mp'],
+            'Largo_Pieza' => $plannerData['seleccion']['largo_pieza'],
+            'Frenteado' => $plannerData['seleccion']['frenteado'],
+            'Ancho_Cut_Off' => $plannerData['seleccion']['ancho_cut_off'],
+            'Sobrematerial_Promedio' => $plannerData['seleccion']['sobrematerial_promedio'],
+            'Largo_Total_Pieza' => $plannerData['seleccion']['largo_total_pieza'],
+            'MM_Totales' => $plannerData['seleccion']['mm_totales'],
+            'Longitud_Barra_Sin_Scrap' => $plannerData['seleccion']['longitud_barra_sin_scrap'],
+            'Cant_Barras_MP' => $plannerData['seleccion']['cant_barras_requeridas'],
+            'Cant_Piezas_Por_Barra' => $plannerData['seleccion']['cant_piezas_por_barra'],
+            'Observaciones' => blank($validated['Observaciones'] ?? null) ? null : $validated['Observaciones'],
+        ];
+
+        return $this->updateIfChanged($pedidoMp, $payload, [
+            'success_redirect' => route('pedido_cliente_mp.index'),
+            'success_message' => 'Definicion de materia prima actualizada correctamente.',
+            'no_changes_message' => 'No se detectaron cambios en la hoja de edicion.',
+            'set_updated_by' => true,
+            'use_transaction' => true,
+            'normalize_data' => false,
+        ]);
     }
 
     public function update(Request $request, $id)
@@ -334,13 +602,25 @@ class PedidoClienteMpController extends Controller
             ->orderBy('Estado_Plani_Id')
             ->get(['Estado_Plani_Id', 'Nombre_Estado']);
 
-        $materiasPrimas = MpMateriaPrima::where('reg_Status', 1)
-            ->orderBy('Nombre_Materia')
-            ->pluck('Nombre_Materia');
+        $stockRows = collect($this->plannerService->buildStockDashboard()['rows'] ?? []);
 
-        $diametros = MpDiametro::where('reg_Status', 1)
-            ->orderBy('Valor_Diametro')
-            ->pluck('Valor_Diametro');
+        $materiasPrimas = $stockRows
+            ->pluck('Materia_Prima')
+            ->filter()
+            ->unique()
+            ->sort()
+            ->values();
+
+        $diametros = $stockRows
+            ->pluck('Diametro_MP')
+            ->filter()
+            ->unique(function ($value) {
+                return trim((string) $value);
+            })
+            ->sortBy(function ($value) {
+                return $this->extractDiameter($value) ?? PHP_INT_MAX;
+            })
+            ->values();
 
         $maquinas = DB::table('maquinas_produc')
             ->select('id_maquina', 'Nro_maquina', 'familia_maquina', 'scrap_maquina')
@@ -399,27 +679,20 @@ class PedidoClienteMpController extends Controller
                 'scrap_maquina' => (float) $maquina->scrap_maquina,
             ])->values();
 
-        $ingresosCatalogo = MpIngreso::query()
-            ->whereNull('deleted_at')
-            ->where('reg_Status', 1)
-            ->orderBy('Nro_Ingreso_MP')
-            ->get([
-                'Nro_Ingreso_MP',
-                'Nro_Pedido',
-                'Codigo_MP',
-                'Nro_Certificado_MP',
-                'Longitud_Unidad_MP',
-                'Unidades_MP',
-                'Mts_Totales',
-            ])
+        $ingresosCatalogo = collect($this->plannerService->buildStockDashboard()['rows'] ?? [])
+            ->sortBy('Nro_Ingreso_MP')
+            ->values()
             ->map(fn ($ingreso) => [
-                'Nro_Ingreso_MP' => (int) $ingreso->Nro_Ingreso_MP,
-                'Codigo_MP' => $ingreso->Codigo_MP,
-                'Nro_Certificado_MP' => $ingreso->Nro_Certificado_MP,
-                'Longitud_Unidad_MP' => $ingreso->Longitud_Unidad_MP !== null ? (float) $ingreso->Longitud_Unidad_MP : null,
-                'Unidades_MP' => (int) ($ingreso->Unidades_MP ?? 0),
-                'Mts_Totales' => $ingreso->Mts_Totales !== null ? (float) $ingreso->Mts_Totales : null,
-            ])->values();
+                'Nro_Ingreso_MP' => (int) ($ingreso['Nro_Ingreso_MP'] ?? 0),
+                'Nro_Pedido' => $ingreso['Nro_Pedido_Proveedor'] ?? null,
+                'Codigo_MP' => $ingreso['Codigo_MP'] ?? null,
+                'Nro_Certificado_MP' => $ingreso['Nro_Certificado_MP'] ?? null,
+                'Longitud_Unidad_MP' => isset($ingreso['Longitud_Unidad_MP']) ? (float) $ingreso['Longitud_Unidad_MP'] : null,
+                'Unidades_MP' => (int) ($ingreso['Unidades_MP'] ?? 0),
+                'Mts_Totales' => isset($ingreso['Mts_Totales']) ? (float) $ingreso['Mts_Totales'] : null,
+                'Materia_Prima' => $ingreso['Materia_Prima'] ?? null,
+                'Diametro_MP' => $ingreso['Diametro_MP'] ?? null,
+            ]);
 
         $estadosPlanificacion = EstadoPlanificacion::where('Status', 1)
             ->orderBy('Estado_Plani_Id')
@@ -451,13 +724,69 @@ class PedidoClienteMpController extends Controller
 
     protected function nextPedidoMaterialNro(): int
     {
+        $this->normalizeInternalPedidoMaterialNumbers();
+
+        $umbralPedidoProveedor = 9999;
+
         $maxPedidoDefinido = (int) (PedidoClienteMp::withTrashed()
+            ->whereRaw('Pedido_Material_Nro REGEXP "^[0-9]+$"')
+            ->whereRaw('CAST(Pedido_Material_Nro AS UNSIGNED) <= ?', [$umbralPedidoProveedor])
             ->selectRaw('MAX(CAST(Pedido_Material_Nro AS UNSIGNED)) as max_pedido')
             ->value('max_pedido') ?? 0);
 
-        $maxPedidoEgreso = (int) (DB::table('mp_salidas')->max('Nro_Pedido_MP') ?? 0);
+        $maxPedidoEgreso = (int) (DB::table('mp_salidas')
+            ->where('Nro_Pedido_MP', '<=', $umbralPedidoProveedor)
+            ->max('Nro_Pedido_MP') ?? 0);
 
         return max($maxPedidoDefinido, $maxPedidoEgreso, 0) + 1;
+    }
+
+    protected function normalizeInternalPedidoMaterialNumbers(): void
+    {
+        if ($this->pedidoMaterialNormalizado) {
+            return;
+        }
+
+        $this->pedidoMaterialNormalizado = true;
+        $umbralPedidoProveedor = 9999;
+
+        $gruposContaminados = DB::table('pedido_cliente_mp')
+            ->whereRaw('Pedido_Material_Nro REGEXP "^[0-9]+$"')
+            ->whereRaw('CAST(Pedido_Material_Nro AS UNSIGNED) > ?', [$umbralPedidoProveedor])
+            ->selectRaw('Pedido_Material_Nro, MIN(Id_Pedido_MP) as first_id')
+            ->groupBy('Pedido_Material_Nro')
+            ->orderBy('first_id')
+            ->get();
+
+        if ($gruposContaminados->isEmpty()) {
+            return;
+        }
+
+        $maxPedidoDefinido = (int) (PedidoClienteMp::withTrashed()
+            ->whereRaw('Pedido_Material_Nro REGEXP "^[0-9]+$"')
+            ->whereRaw('CAST(Pedido_Material_Nro AS UNSIGNED) <= ?', [$umbralPedidoProveedor])
+            ->selectRaw('MAX(CAST(Pedido_Material_Nro AS UNSIGNED)) as max_pedido')
+            ->value('max_pedido') ?? 0);
+
+        $maxPedidoEgreso = (int) (DB::table('mp_salidas')
+            ->where('Nro_Pedido_MP', '<=', $umbralPedidoProveedor)
+            ->max('Nro_Pedido_MP') ?? 0);
+
+        $ultimoCorrelativo = max($maxPedidoDefinido, $maxPedidoEgreso, 0);
+        $ahora = now();
+        $userId = Auth::id();
+
+        foreach ($gruposContaminados as $grupo) {
+            $ultimoCorrelativo++;
+
+            DB::table('pedido_cliente_mp')
+                ->where('Pedido_Material_Nro', $grupo->Pedido_Material_Nro)
+                ->update([
+                    'Pedido_Material_Nro' => (string) $ultimoCorrelativo,
+                    'updated_at' => $ahora,
+                    'updated_by' => $userId,
+                ]);
+        }
     }
 
     protected function validateData(Request $request, $id = null): array
@@ -762,7 +1091,7 @@ class PedidoClienteMpController extends Controller
             return null;
         }
 
-        if (preg_match('/[Øø]?\s*([0-9]+(?:[\.,][0-9]+)?)/u', $value, $matches)) {
+        if (preg_match('/[ÃƒËœÃƒÂ¸]?\s*([0-9]+(?:[\.,][0-9]+)?)/u', $value, $matches)) {
             return (float) str_replace(',', '.', $matches[1]);
         }
 
@@ -790,6 +1119,9 @@ class PedidoClienteMpController extends Controller
         return $diametroIngreso >= $diametroProducto;
     }
 }
+
+
+
 
 
 

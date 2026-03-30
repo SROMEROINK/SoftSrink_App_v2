@@ -7,6 +7,7 @@
 @stop
 
 @section('content')
+    @include('components.swal-session')
 <form method="post" action="{{ route('mp_materia_prima.store') }}">
     @csrf
     <div class="card">
@@ -67,3 +68,4 @@
     });
 </script>
 @stop
+

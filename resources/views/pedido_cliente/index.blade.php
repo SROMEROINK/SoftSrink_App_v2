@@ -190,8 +190,8 @@ $(document).ready(function () {
                 searchable: false,
                 render: function (data, type, row) {
                     const mpAction = row.Id_Pedido_MP
-                        ? `<a href="/pedido_cliente_mp/${row.Id_Pedido_MP}/edit" class="btn btn-success btn-sm">Cargar MP</a>`
-                        : `<a href="/pedido_cliente_mp/create?of=${data}" class="btn btn-success btn-sm">Cargar MP</a>`;
+                        ? `<a href="/pedido_cliente_mp/${row.Id_Pedido_MP}/edit-massive" class="btn btn-success btn-sm">Cargar MP</a>`
+                        : `<a href="/pedido_cliente_mp/create-massive?of=${data}" class="btn btn-success btn-sm">Cargar MP</a>`;
 
                     return `
                         ${mpAction}

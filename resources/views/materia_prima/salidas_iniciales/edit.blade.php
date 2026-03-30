@@ -10,6 +10,7 @@
 @stop
 
 @section('content')
+    @include('components.swal-session')
     <form action="{{ route('mp_salidas_iniciales.update', $salidaInicial->Id_Ingreso_MP) }}" method="POST">
         @csrf
         @method('PUT')
@@ -24,5 +25,9 @@
 @stop
 
 @section('js')
+    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="{{ asset('js/swal-utils.js') }}"></script>
     @stack('js')
 @stop
+
+

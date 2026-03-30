@@ -1,0 +1,14 @@
+.table-responsive-listado-of .dataTables_scrollHead th.columna-acciones,
+.table-responsive-listado-of .dataTables_scrollBody td.columna-acciones {
+    position: sticky;
+    right: 0;
+    z-index: 3;
+    min-width: 165px;
+    white-space: nowrap !important;
+    background: #fff !important;
+    box-shadow: inset 1px 0 0 #d7dee8, -3px 0 6px rgba(15, 23, 42, 0.08);
+}
+
+.table-responsive-listado-of .dataTables_scrollBody tr:nth-child(even) td.columna-acciones {
+    background: #f7f7f7 !important;
+}

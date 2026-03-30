@@ -8,18 +8,19 @@
 @stop
 
 @section('content')
+    @include('components.swal-session')
 
 @if(!empty($ultimoIngreso))
 <div class="card card-outline card-info">
     <div class="card-header">
-        <h3 class="card-title">Último ingreso registrado</h3>
+        <h3 class="card-title">Ãšltimo ingreso registrado</h3>
     </div>
     <div class="card-body">
         <div class="row">
             <div class="col-md-3"><b>Nro_Ingreso_MP:</b> {{ $ultimoIngreso->Nro_Ingreso_MP }}</div>
-            <div class="col-md-3"><b>Fecha:</b> {{ $ultimoIngreso->Fecha_Ingreso ?? '—' }}</div>
-            <div class="col-md-3"><b>Proveedor:</b> {{ optional($ultimoIngreso->proveedor)->Prov_Nombre ?? '—' }}</div>
-            <div class="col-md-3"><b>Código MP:</b> {{ $ultimoIngreso->Codigo_MP ?? '—' }}</div>
+            <div class="col-md-3"><b>Fecha:</b> {{ $ultimoIngreso->Fecha_Ingreso ?? 'â€”' }}</div>
+            <div class="col-md-3"><b>Proveedor:</b> {{ optional($ultimoIngreso->proveedor)->Prov_Nombre ?? 'â€”' }}</div>
+            <div class="col-md-3"><b>CÃ³digo MP:</b> {{ $ultimoIngreso->Codigo_MP ?? 'â€”' }}</div>
         </div>
     </div>
 </div>
@@ -75,7 +76,7 @@
                     <div class="form-group">
                         <label for="Id_Proveedor">Proveedor</label>
                         <select name="Id_Proveedor" id="Id_Proveedor" class="form-control" required>
-                            <option value="">Seleccione…</option>
+                            <option value="">Seleccioneâ€¦</option>
                             @foreach ($proveedores as $proveedor)
                                 <option value="{{ $proveedor->Prov_Id }}">{{ $proveedor->Prov_Nombre }}</option>
                             @endforeach
@@ -95,11 +96,11 @@
                 <table class="table table-bordered custom-font centered-form" id="tablaIngresoMP">
                     <thead>
                         <tr>
-                            <th>N° Fila</th>
+                            <th>NÂ° Fila</th>
                             <th>Nro_Ingreso_MP</th>
                             <th>Materia Prima</th>
-                            <th>Diámetro</th>
-                            <th>Código MP</th>
+                            <th>DiÃ¡metro</th>
+                            <th>CÃ³digo MP</th>
                             <th>Certificado</th>
                             <th>Origen</th>
                             <th>Unidades</th>
@@ -110,7 +111,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        {{-- filas dinámicas --}}
+                        {{-- filas dinÃ¡micas --}}
                     </tbody>
                 </table>
             </div>
@@ -149,7 +150,7 @@ $(document).ready(function () {
     }
 
     function generarOpcionesMaterias() {
-        let html = '<option value="">Seleccione…</option>';
+        let html = '<option value="">Seleccioneâ€¦</option>';
         materiasPrimas.forEach(mp => {
             html += `<option value="${mp.Id_Materia_Prima}" data-nombre="${escapeHtml(mp.Nombre_Materia)}">${escapeHtml(mp.Nombre_Materia)}</option>`;
         });
@@ -157,7 +158,7 @@ $(document).ready(function () {
     }
 
     function generarOpcionesDiametros() {
-        let html = '<option value="">Seleccione…</option>';
+        let html = '<option value="">Seleccioneâ€¦</option>';
         diametros.forEach(d => {
             const valor = d.Valor_Diametro ?? d.Diametro ?? '';
             html += `<option value="${d.Id_Diametro}" data-valor="${escapeHtml(valor)}">${escapeHtml(valor)}</option>`;

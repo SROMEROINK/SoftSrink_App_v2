@@ -7,16 +7,8 @@
 @stop
 
 @section('content')
+    @include('components.swal-session')
 <div class="container-fluid">
-    @if(session('success'))
-        <div class="alert alert-success">{{ session('success') }}</div>
-    @endif
-    @if(session('error'))
-        <div class="alert alert-danger">{{ session('error') }}</div>
-    @endif
-    @if(session('warning'))
-        <div class="alert alert-warning">{{ session('warning') }}</div>
-    @endif
 
     <div class="card">
         <div class="card-header">
@@ -46,3 +38,4 @@
 <script src="{{ asset('js/swal-utils.js') }}"></script>
 <script src="{{ asset('js/form-edit-check.js') }}"></script>
 @stop
+

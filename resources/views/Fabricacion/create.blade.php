@@ -233,7 +233,7 @@ $('form').submit(function(event) {
 function buscarIdProducto(nroOf, $fila) {
     if (nroOf) {
         $.ajax({
-            url: '/listado-of/get-id-producto/' + encodeURIComponent(nroOf),
+            url: '/pedido-cliente/get-id-producto/' + encodeURIComponent(nroOf),
             type: 'GET',
             dataType: 'json',
             success: function(response) {

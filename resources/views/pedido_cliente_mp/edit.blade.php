@@ -10,10 +10,12 @@
 @stop
 
 @section('content')
+    @include('components.swal-session')
     @php($formTitle = 'Editar definicion de materia prima')
     @php($formAction = route('pedido_cliente_mp.update', $pedidoMp->Id_Pedido_MP))
     @php($submitText = 'Actualizar')
     @php($isEdit = true)
+    @php($plannerEditMode = true)
 
     @include('pedido_cliente_mp.partials.form')
 @stop
@@ -33,5 +35,6 @@
     <script src="{{ asset('js/form-edit-check.js') }}"></script>
     @include('pedido_cliente_mp.partials.form-script')
 @stop
+
 
 

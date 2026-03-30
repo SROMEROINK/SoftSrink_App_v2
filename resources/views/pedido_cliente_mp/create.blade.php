@@ -1,15 +1,23 @@
 @extends('adminlte::page')
 
+@php($compactSelectorMode = $compactSelectorMode ?? false)
+@php($selectedMachine = $selectedMachine ?? null)
+@php($massiveRowIndex = $massiveRowIndex ?? null)
+@php($massiveReturnUrl = $massiveReturnUrl ?? route('pedido_cliente_mp.createMassive'))
+
 @section('title', 'Definir Materia Prima del Pedido')
 
 @section('content_header')
-    <div class="show-header">
-        <h1>Definir Materia Prima del Pedido</h1>
-        <p>Primera etapa tecnica para abastecimiento y calculo de barras por OF.</p>
-    </div>
+    @if(!$compactSelectorMode)
+        <div class="show-header">
+            <h1>Definir Materia Prima del Pedido</h1>
+            <p>Primera etapa tecnica para abastecimiento y calculo de barras por OF.</p>
+        </div>
+    @endif
 @stop
 
 @section('content')
+    @include('components.swal-session')
     @php($pedidoMp = null)
     @php($formTitle = 'Nueva definicion de materia prima')
     @php($formAction = route('pedido_cliente_mp.store'))
@@ -34,5 +42,7 @@
     <script src="{{ asset('js/form-ajax-submit.js') }}"></script>
     @include('pedido_cliente_mp.partials.form-script')
 @stop
+
+
 
 

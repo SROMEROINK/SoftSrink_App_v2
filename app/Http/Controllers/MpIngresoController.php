@@ -3,15 +3,17 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Validation\Rule; // al inicio del controlador
+use App\Http\Controllers\Traits\AppliesExactNumericFilters;
 use App\Http\Controllers\Traits\CheckForChanges;
 use Illuminate\Http\Request;
 use App\Models\MpIngreso;
-use App\Models\Proveedor;  // Asegúrate de importar el modelo Proveedor correctamente
+use App\Models\Proveedor;  // AsegÃƒÂºrate de importar el modelo Proveedor correctamente
 use App\Models\MpDiametro;
 use App\Models\MpMateriaPrima;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
+use App\Services\PedidoClienteMpPlannerService;
 
 
 
@@ -20,22 +22,22 @@ use Illuminate\Support\Facades\DB;
 
 class MpIngresoController extends Controller
 {
+    use AppliesExactNumericFilters;
     use CheckForChanges;
-
     public function getUniqueFilters(Request $request)
 {
     try {
         // Crear una consulta base sin filtrar
         $baseQuery = MpIngreso::query();
 
-        // Aplicar filtros según el selector anterior para actualizar dinámicamente
+        // Aplicar filtros segÃƒÂºn el selector anterior para actualizar dinÃƒÂ¡micamente
         if ($request->filled('filtro_proveedor')) {
             $baseQuery->whereHas('proveedor', function ($q) use ($request) {
                 $q->where('Prov_Nombre', $request->filtro_proveedor);
             });
         }
 
-        // Obtener valores únicos con los filtros aplicados
+        // Obtener valores ÃƒÂºnicos con los filtros aplicados
         $proveedores = MpIngreso::join('proveedores', 'mp_ingreso.Id_Proveedor', '=', 'proveedores.Prov_Id')
             ->distinct()
             ->pluck('proveedores.Prov_Nombre')
@@ -56,7 +58,7 @@ class MpIngresoController extends Controller
 
         $codigos = $baseQuery->distinct()->pluck('mp_ingreso.Codigo_MP')->sort()->values();
 
-        // Retornar los valores únicos como respuesta JSON
+        // Retornar los valores ÃƒÂºnicos como respuesta JSON
         return response()->json([
             'proveedores' => $proveedores,
             'materias_primas' => $materiasPrimas,
@@ -66,7 +68,7 @@ class MpIngresoController extends Controller
 
     } catch (\Exception $e) {
         Log::error('Error en getUniqueFilters: ' . $e->getMessage());
-        return response()->json(['error' => 'Error al recuperar los filtros únicos.'], 500);
+        return response()->json(['error' => 'Error al recuperar los filtros ÃƒÂºnicos.'], 500);
     }
 }
 
@@ -83,9 +85,49 @@ public function getUltimoNroIngreso()
 }
 
     
-public function getData(Request $request)
-{
-    try {
+    public function getData(Request $request)
+    {
+        try {
+        $allowedColumns = [
+            'Nro_Ingreso_MP',
+            'Fecha_Ingreso',
+            'Nro_OC',
+            'Proveedor',
+            'Materia_Prima',
+            'Diametro_MP',
+            'Codigo_MP',
+            'Nro_Certificado_MP',
+            'Detalle_Origen_MP',
+            'Unidades_MP',
+            'Longitud_Unidad_MP',
+            'Mts_Totales',
+            'Kilos_Totales',
+            'mp_ingreso_created_at',
+            'mp_ingreso_updated_at',
+        ];
+
+        $incomingColumns = collect($request->input('columns', []))
+            ->pluck('data')
+            ->filter()
+            ->values()
+            ->all();
+
+        $invalidColumns = array_values(array_diff($incomingColumns, array_merge($allowedColumns, ['Id_MP'])));
+
+        if (!empty($invalidColumns)) {
+            Log::warning('MpIngreso DataTables payload sanitizado por columnas invalidas.', [
+                'invalid_columns' => $invalidColumns,
+                'incoming_order' => $request->input('order', []),
+                'incoming_columns' => $incomingColumns,
+            ]);
+        }
+
+        // Esta tabla se ordena solo por Nro_Ingreso_MP DESC para evitar
+        // que DataTables arrastre columnas de otros listados como Nro_OF.
+        $request->merge([
+            'order' => [],
+        ]);
+
         $ingresos_mp = MpIngreso::with(['proveedor'])
             ->leftJoin('mp_materia_prima', 'mp_ingreso.Id_Materia_Prima', '=', 'mp_materia_prima.Id_Materia_Prima')
             ->leftJoin('mp_diametro', 'mp_ingreso.Id_Diametro_MP', '=', 'mp_diametro.Id_Diametro')
@@ -112,7 +154,7 @@ public function getData(Request $request)
 
         // Filtro Nro_Ingreso_MP
         if ($request->filled('filtro_nro_ingreso')) {
-            $ingresos_mp->where('mp_ingreso.Nro_Ingreso_MP', 'like', '%' . $request->filtro_nro_ingreso . '%');
+            $this->applySmartFilter($ingresos_mp, 'mp_ingreso.Nro_Ingreso_MP', $request->filtro_nro_ingreso);
         }
 
         // Filtro Fecha_Ingreso
@@ -120,9 +162,9 @@ public function getData(Request $request)
             $ingresos_mp->whereDate('mp_ingreso.Fecha_Ingreso','like', '%' . $request->filtro_fecha_ingreso . '%');
         }
 
-        // Filtro Nro_OC  ✅ corregido
+        // Filtro Nro_OC  Ã¢Å“â€¦ corregido
         if ($request->filled('filtro_nro_oc')) {
-            $ingresos_mp->where('mp_ingreso.Nro_OC', 'like', '%' . $request->filtro_nro_oc . '%');
+            $this->applySmartFilter($ingresos_mp, 'mp_ingreso.Nro_OC', $request->filtro_nro_oc);
         }
 
         // Filtro Proveedor
@@ -135,54 +177,62 @@ public function getData(Request $request)
             $ingresos_mp->whereRaw('LOWER(mp_materia_prima.Nombre_Materia) = ?', [strtolower($request->filtro_materia_prima)]);
         }
 
-        // Filtro Diámetro
+        // Filtro DiÃƒÂ¡metro
         if ($request->filled('filtro_diametro')) {
             $ingresos_mp->whereRaw('LOWER(mp_diametro.Valor_Diametro) = ?', [strtolower($request->filtro_diametro)]);
         }
 
-        // Filtro Código MP
+        // Filtro CÃƒÂ³digo MP
         if ($request->filled('filtro_codigo_mp')) {
             $ingresos_mp->whereRaw('LOWER(mp_ingreso.Codigo_MP) = ?', [strtolower($request->filtro_codigo_mp)]);
         }
 
-        // Filtro Certificado  ✅ ahora parcial
+        // Filtro Certificado  Ã¢Å“â€¦ ahora parcial
         if ($request->filled('filtro_certificado')) {
             $ingresos_mp->where('mp_ingreso.Nro_Certificado_MP', 'like', '%' . $request->filtro_certificado . '%');
         }
 
-        // Filtro Detalle Origen  ✅ ahora parcial
+        // Filtro Detalle Origen  Ã¢Å“â€¦ ahora parcial
         if ($request->filled('filtro_detalle_origen')) {
             $ingresos_mp->where('mp_ingreso.Detalle_Origen_MP', 'like', '%' . $request->filtro_detalle_origen . '%');
         }
 
         // Filtro Unidades
         if ($request->filled('filtro_unidades')) {
-            $ingresos_mp->where('mp_ingreso.Unidades_MP', 'like', '%' . $request->filtro_unidades . '%');
+            $this->applySmartFilter($ingresos_mp, 'mp_ingreso.Unidades_MP', $request->filtro_unidades);
         }
 
-        // Filtro Longitud  ✅ parcial
+        // Filtro Longitud  Ã¢Å“â€¦ parcial
         if ($request->filled('filtro_longitud')) {
-            $ingresos_mp->where('mp_ingreso.Longitud_Unidad_MP', 'like', '%' . $request->filtro_longitud . '%');
+            $this->applySmartFilter($ingresos_mp, 'mp_ingreso.Longitud_Unidad_MP', $request->filtro_longitud);
         }
 
-        // Filtro Mts Totales  ✅ parcial
+        // Filtro Mts Totales  Ã¢Å“â€¦ parcial
         if ($request->filled('filtro_mts_totales')) {
-            $ingresos_mp->where('mp_ingreso.Mts_Totales', 'like', '%' . $request->filtro_mts_totales . '%');
+            $this->applySmartFilter($ingresos_mp, 'mp_ingreso.Mts_Totales', $request->filtro_mts_totales);
         }
 
-        // Filtro Kilos Totales  ✅ parcial
+        // Filtro Kilos Totales  Ã¢Å“â€¦ parcial
         if ($request->filled('filtro_kilos_totales')) {
-            $ingresos_mp->where('mp_ingreso.Kilos_Totales', 'like', '%' . $request->filtro_kilos_totales . '%');
+            $this->applySmartFilter($ingresos_mp, 'mp_ingreso.Kilos_Totales', $request->filtro_kilos_totales);
         }
 
         return datatables()->of($ingresos_mp)
+            ->editColumn('Fecha_Ingreso', function ($mpIngreso) {
+                return $mpIngreso->Fecha_Ingreso
+                    ? date('Y-m-d', strtotime((string) $mpIngreso->Fecha_Ingreso))
+                    : '';
+            })
             ->addColumn('Proveedor', function ($mpIngreso) {
                 return $mpIngreso->proveedor ? $mpIngreso->proveedor->Prov_Nombre : 'No Asignado';
             })
             ->make(true);
 
     } catch (\Exception $e) {
-        Log::error('Error en getData: ' . $e->getMessage());
+        Log::error('Error en getData: ' . $e->getMessage(), [
+            'order' => $request->input('order', []),
+            'columns' => $request->input('columns', []),
+        ]);
 
         return response()->json([
             'error' => 'Error al recuperar los datos.'
@@ -213,7 +263,7 @@ public function resumenIngresos()
     public function index()
     {
         // Obtener los Ingresos_mp de la base de datos y paginarlos
-        $ingresos_mp = MpIngreso::paginate(10); // Esto paginará los resultados, mostrando 10 Ingresos_mp de por página
+        $ingresos_mp = MpIngreso::paginate(10); // Esto paginarÃƒÂ¡ los resultados, mostrando 10 Ingresos_mp de por pÃƒÂ¡gina
         $totalIngresos = MpIngreso::count(); // Cuenta todas las materias primas
         // Pasar los Ingresos_mp paginados a la vista correspondiente
         return view('materia_prima.ingresos.index', compact('totalIngresos', 'ingresos_mp'));
@@ -431,9 +481,9 @@ Este si funciona 09/11/2024:
         'reg_Status' => 'required|in:0,1',
     ]);
 
-    Log::info('Datos validados correctamente para actualización:', $validatedData);
+    Log::info('Datos validados correctamente para actualizaciÃƒÂ³n:', $validatedData);
 
-    // Normalización específica de datos para evitar errores en isDirty()
+    // NormalizaciÃƒÂ³n especÃƒÂ­fica de datos para evitar errores en isDirty()
     $validatedData['Detalle_Origen_MP'] = $validatedData['Detalle_Origen_MP'] ?? '';
     $validatedData['Nro_Certificado_MP'] = $validatedData['Nro_Certificado_MP'] ?? '';
     $validatedData['Codigo_MP'] = trim($validatedData['Codigo_MP']);
@@ -464,7 +514,7 @@ public function destroy($id)
         // Ejemplo: verificar si este ingreso ya fue usado en egresos o consumos
         $usadoEnMovimientos = false;
 
-        // Reemplazar esta lógica por tu relación real
+        // Reemplazar esta lÃƒÂ³gica por tu relaciÃƒÂ³n real
         // $usadoEnMovimientos = $ingreso->egresos()->exists();
 
         if ($usadoEnMovimientos) {
@@ -504,7 +554,7 @@ public function restore($id)
         $ingreso = MpIngreso::withTrashed()->findOrFail($id);
         $ingreso->restore();
 
-        return redirect()->route('mp_ingresos.index')->with('success', 'Ingreso de materia prima restaurado con éxito');
+        return redirect()->route('mp_ingresos.index')->with('success', 'Ingreso de materia prima restaurado con ÃƒÂ©xito');
     } catch (\Exception $e) {
         Log::error('Error al restaurar el ingreso de materia prima:', ['error' => $e->getMessage()]);
         return redirect()->route('mp_ingresos.index')->with('error', 'Error al restaurar el ingreso de materia prima');
@@ -520,5 +570,16 @@ public function showDeleted()
 }
 
 
+
+
+public function stock(PedidoClienteMpPlannerService $plannerService)
+{
+    $dashboard = $plannerService->buildStockDashboard();
+
+    return view('materia_prima.stock.index', [
+        'rows' => $dashboard['rows'],
+        'summary' => $dashboard['summary'],
+    ]);
+}
 
 }

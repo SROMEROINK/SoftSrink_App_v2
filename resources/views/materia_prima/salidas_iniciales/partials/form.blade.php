@@ -1,11 +1,13 @@
 @php
     $selectedIngreso = old('Id_Ingreso_MP', $salidaInicial->Id_Ingreso_MP ?? $selectedIngresoId ?? null);
     $selectedIngresoModel = $ingresos->firstWhere('Id_MP', (int) $selectedIngreso);
-    $preparadas = old('Cantidad_Unidades_MP_Preparadas', $salidaInicial->Cantidad_Unidades_MP_Preparadas ?? 0);
-    $adicionales = old('Cantidad_MP_Adicionales', $salidaInicial->Cantidad_MP_Adicionales ?? 0);
-    $devoluciones = old('Devoluciones_Unidades_MP', $salidaInicial->Devoluciones_Unidades_MP ?? 0);
+    $stockInicial = old('Stock_Inicial', $salidaInicial->Stock_Inicial ?? $selectedIngresoModel->Unidades_MP ?? 0);
+    $devolucionesProveedor = old('Devoluciones_Proveedor', $salidaInicial->Devoluciones_Proveedor ?? $salidaInicial->Devoluciones_Proveedor_Calculadas ?? 0);
+    $ajusteStock = old('Ajuste_Stock', $salidaInicial->Ajuste_Stock ?? $salidaInicial->Ajuste_Stock_Calculado ?? 0);
     $estadoRegistro = old('reg_Status', isset($salidaInicial) ? (int) $salidaInicial->reg_Status : 1);
 @endphp
+
+<input type="hidden" name="return_to" value="{{ request('return_to', 'salidas_iniciales') }}">
 
 <div class="card show-card mt-3 salida-inicial-form-card">
     <div class="show-card-header d-flex justify-content-between align-items-center">
@@ -79,14 +81,13 @@
         <div class="row">
             <div class="col-md-4"><div class="detail-item"><span class="detail-label">Proveedor</span><div class="detail-value" id="detalle_proveedor">{{ $selectedIngresoModel->proveedor->Prov_Nombre ?? '-' }}</div></div></div>
             <div class="col-md-4"><div class="detail-item"><span class="detail-label">Certificado</span><div class="detail-value" id="detalle_certificado">{{ $selectedIngresoModel->Nro_Certificado_MP ?? '-' }}</div></div></div>
-            <div class="col-md-4"><div class="detail-item"><span class="detail-label">Metros del ingreso</span><div class="detail-value" id="detalle_metros">{{ $selectedIngresoModel ? number_format((float) $selectedIngresoModel->Mts_Totales, 2, ',', '.') : '-' }}</div></div></div>
+            <div class="col-md-4"><div class="detail-item"><span class="detail-label">Longitud por unidad</span><div class="detail-value" id="detalle_longitud">{{ $selectedIngresoModel ? number_format((float) $selectedIngresoModel->Longitud_Unidad_MP, 2, ',', '.') : (isset($salidaInicial) ? number_format((float) $salidaInicial->Longitud_Unidad_Calculada, 2, ',', '.') : '0,00') }}</div></div></div>
         </div>
 
         <div class="alert alert-light formula-ajuste-alert">
             <strong>Formula del ajuste:</strong>
-            <span>Total salidas = preparadas + adicionales - devoluciones.</span>
-            <span>Stock ajustado = unidades ingresadas - total salidas.</span>
-            <span>Total utilizado = total salidas x longitud por unidad.</span>
+            <span>Salidas final = stock inicial - devoluciones al proveedor + diferencia de stock. Si la diferencia es negativa, el resultado baja; si es positiva, sube.</span>
+            <span>Mts. Totales = salidas final x longitud por unidad.</span>
         </div>
 
         <div class="detail-divider"></div>
@@ -94,41 +95,20 @@
         <div class="row">
             <div class="col-md-4">
                 <div class="form-group">
-                    <label for="Cantidad_Unidades_MP">Unidades ingresadas</label>
-                    <input type="number" id="Cantidad_Unidades_MP" class="form-control text-center" value="{{ $selectedIngresoModel->Unidades_MP ?? $salidaInicial->Cantidad_Unidades_MP ?? 0 }}" readonly>
+                    <label for="Stock_Inicial">Stock inicial</label>
+                    <input type="number" name="Stock_Inicial" id="Stock_Inicial" class="form-control text-center" min="0" step="1" value="{{ $stockInicial }}">
                 </div>
             </div>
             <div class="col-md-4">
                 <div class="form-group">
-                    <label for="Longitud_Unidad_MP">Longitud por unidad</label>
-                    <input type="text" id="Longitud_Unidad_MP" class="form-control text-center" value="{{ $selectedIngresoModel ? number_format((float) $selectedIngresoModel->Longitud_Unidad_MP, 2, ',', '.') : (isset($salidaInicial) ? number_format((float) $salidaInicial->Longitud_Unidad_MP, 2, ',', '.') : '0,00') }}" readonly>
+                    <label for="Devoluciones_Proveedor">Devoluciones al proveedor</label>
+                    <input type="number" name="Devoluciones_Proveedor" id="Devoluciones_Proveedor" class="form-control text-center" min="0" step="1" value="{{ $devolucionesProveedor }}">
                 </div>
             </div>
             <div class="col-md-4">
                 <div class="form-group">
-                    <label for="Cantidad_Unidades_MP_Preparadas">Unidades preparadas</label>
-                    <input type="number" name="Cantidad_Unidades_MP_Preparadas" id="Cantidad_Unidades_MP_Preparadas" class="form-control text-center" min="0" step="1" value="{{ $preparadas }}" required>
-                </div>
-            </div>
-        </div>
-
-        <div class="row">
-            <div class="col-md-4">
-                <div class="form-group">
-                    <label for="Cantidad_MP_Adicionales">Unidades adicionales</label>
-                    <input type="number" name="Cantidad_MP_Adicionales" id="Cantidad_MP_Adicionales" class="form-control text-center" min="0" step="1" value="{{ $adicionales }}">
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="form-group">
-                    <label for="Devoluciones_Unidades_MP">Devoluciones</label>
-                    <input type="number" name="Devoluciones_Unidades_MP" id="Devoluciones_Unidades_MP" class="form-control text-center" min="0" step="1" value="{{ $devoluciones }}">
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="form-group">
-                    <label for="Total_Salidas_MP">Total salidas ajustadas</label>
-                    <input type="text" id="Total_Salidas_MP" class="form-control text-center" readonly>
+                    <label for="Ajuste_Stock">Diferencia de Stock</label>
+                    <input type="number" name="Ajuste_Stock" id="Ajuste_Stock" class="form-control text-center" step="1" value="{{ $ajusteStock }}">
                 </div>
             </div>
         </div>
@@ -136,13 +116,13 @@
         <div class="row">
             <div class="col-md-6">
                 <div class="form-group">
-                    <label for="Total_Unidades">Stock ajustado de unidades</label>
-                    <input type="text" id="Total_Unidades" class="form-control text-center" readonly>
+                    <label for="Total_Salidas_MP">Salidas Final</label>
+                    <input type="text" id="Total_Salidas_MP" class="form-control text-center" value="{{ isset($salidaInicial) ? number_format((int) ($salidaInicial->Total_Salidas_Calculadas ?? 0), 0, ',', '.') : '0' }}" readonly>
                 </div>
             </div>
             <div class="col-md-6">
                 <div class="form-group">
-                    <label for="Total_mm_Utilizados">Total utilizado</label>
+                    <label for="Total_mm_Utilizados">Mts. Totales</label>
                     <input type="text" id="Total_mm_Utilizados" class="form-control text-center" readonly>
                 </div>
             </div>
@@ -151,7 +131,7 @@
 
     <div class="show-card-footer">
         <div class="show-actions">
-            <a href="{{ route('mp_salidas_iniciales.index') }}" class="btn btn-secondary">Volver</a>
+            <a href="{{ request('return_to') === 'stock_mp' ? route('mp_stock.index') : route('mp_salidas_iniciales.index') }}" class="btn btn-secondary">Volver</a>
             <button type="submit" class="btn btn-primary">{{ isset($salidaInicial) ? 'Actualizar' : 'Guardar' }}</button>
         </div>
     </div>
@@ -161,21 +141,18 @@
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     const ingresoSelect = document.getElementById('Id_Ingreso_MP');
-    const unidadesInput = document.getElementById('Cantidad_Unidades_MP');
-    const longitudInput = document.getElementById('Longitud_Unidad_MP');
-    const preparadasInput = document.getElementById('Cantidad_Unidades_MP_Preparadas');
-    const adicionalesInput = document.getElementById('Cantidad_MP_Adicionales');
-    const devolucionesInput = document.getElementById('Devoluciones_Unidades_MP');
+    const stockInicialInput = document.getElementById('Stock_Inicial');
+    const devolucionesProveedorInput = document.getElementById('Devoluciones_Proveedor');
+    const ajusteStockInput = document.getElementById('Ajuste_Stock');
     const totalSalidasInput = document.getElementById('Total_Salidas_MP');
-    const totalUnidadesInput = document.getElementById('Total_Unidades');
-    const totalUtilizadoInput = document.getElementById('Total_mm_Utilizados');
+    const totalMtsAjustadosInput = document.getElementById('Total_mm_Utilizados');
     const detalleNroIngreso = document.getElementById('detalle_nro_ingreso');
     const detalleCodigo = document.getElementById('detalle_codigo');
     const detalleMateria = document.getElementById('detalle_materia');
     const detalleDiametro = document.getElementById('detalle_diametro');
     const detalleProveedor = document.getElementById('detalle_proveedor');
     const detalleCertificado = document.getElementById('detalle_certificado');
-    const detalleMetros = document.getElementById('detalle_metros');
+    const detalleLongitud = document.getElementById('detalle_longitud');
 
     function parseNumber(value) {
         const normalized = String(value ?? '').replace(/\./g, '').replace(',', '.');
@@ -200,52 +177,55 @@ document.addEventListener('DOMContentLoaded', function () {
             detalleDiametro.textContent = '-';
             detalleProveedor.textContent = '-';
             detalleCertificado.textContent = '-';
-            detalleMetros.textContent = '-';
-            unidadesInput.value = 0;
-            longitudInput.value = '0,00';
-            recalculate();
+            detalleLongitud.textContent = '0,00';
+            totalSalidasInput.value = '0';
+            totalMtsAjustadosInput.value = '0,00';
             return;
         }
 
-        const unidades = parseNumber(option.dataset.unidades);
         const longitud = parseNumber(option.dataset.longitud);
-        const metros = parseNumber(option.dataset.metros);
-
         detalleNroIngreso.textContent = option.dataset.nroIngreso || '-';
         detalleCodigo.textContent = option.dataset.codigo || '-';
         detalleMateria.textContent = option.dataset.materia || '-';
         detalleDiametro.textContent = option.dataset.diametro || '-';
         detalleProveedor.textContent = option.dataset.proveedor || '-';
         detalleCertificado.textContent = option.dataset.certificado || '-';
-        detalleMetros.textContent = formatDecimal(metros);
+        detalleLongitud.textContent = formatDecimal(longitud);
 
-        unidadesInput.value = unidades;
-        longitudInput.value = formatDecimal(longitud);
+        if (!stockInicialInput.dataset.manualEdited) {
+            stockInicialInput.value = parseNumber(option.dataset.unidades);
+        }
+
         recalculate();
     }
 
     function recalculate() {
-        const unidades = parseNumber(unidadesInput.value);
-        const longitud = parseNumber(longitudInput.value);
-        const preparadas = parseNumber(preparadasInput.value);
-        const adicionales = parseNumber(adicionalesInput.value);
-        const devoluciones = parseNumber(devolucionesInput.value);
-
-        const totalSalidas = preparadas + adicionales - devoluciones;
-        const totalUnidades = unidades - totalSalidas;
-        const totalUtilizado = totalSalidas * longitud;
+        const stockInicial = parseNumber(stockInicialInput.value);
+        const devolucionesProveedor = parseNumber(devolucionesProveedorInput.value);
+        const ajusteStock = parseNumber(ajusteStockInput.value);
+        const longitud = parseNumber(detalleLongitud.textContent);
+        const totalSalidas = stockInicial - devolucionesProveedor + ajusteStock;
+        const totalMtsAjustados = totalSalidas * longitud;
 
         totalSalidasInput.value = formatInt(totalSalidas);
-        totalUnidadesInput.value = formatInt(totalUnidades);
-        totalUtilizadoInput.value = formatDecimal(totalUtilizado);
+        totalMtsAjustadosInput.value = formatDecimal(totalMtsAjustados);
     }
 
     if (ingresoSelect) {
         ingresoSelect.addEventListener('change', updateIngresoDetails);
     }
 
-    [preparadasInput, adicionalesInput, devolucionesInput].forEach((input) => {
-        if (input) input.addEventListener('input', recalculate);
+    if (stockInicialInput) {
+        stockInicialInput.addEventListener('input', function () {
+            stockInicialInput.dataset.manualEdited = '1';
+            recalculate();
+        });
+    }
+
+    [devolucionesProveedorInput, ajusteStockInput].forEach((input) => {
+        if (input) {
+            input.addEventListener('input', recalculate);
+        }
     });
 
     updateIngresoDetails();

@@ -11,20 +11,68 @@
 .dataTables_wrapper,
 .dataTables_scroll,
 .dataTables_scrollHead,
-.dataTables_scrollBody,
-.dataTables_scrollHeadInner {
+.dataTables_scrollBody {
     width: 100% !important;
 }
 
+.dataTables_scrollHeadInner {
+    width: auto !important;
+}
+
 .dataTables_scrollHeadInner table,
-.dataTables_scrollBody table {
-    width: 100% !important;
+.dataTables_scrollBody table,
+.table.dataTable {
+    width: auto !important;
+    min-width: 100%;
+    table-layout: auto;
 }
 
 .table.dataTable th,
 .table.dataTable td {
     vertical-align: middle;
     text-align: center;
+    padding: 0.45rem 0.4rem;
+}
+
+.table.dataTable thead th {
+    font-size: 0.88rem;
+    font-weight: 700;
+    line-height: 1.15;
+    white-space: nowrap;
+}
+
+.table.dataTable tbody td {
+    font-size: 0.88rem;
+    line-height: 1.2;
+}
+
+.table.dataTable thead .filter-row input,
+.table.dataTable thead .filter-row select,
+.table.dataTable thead tr:nth-child(2) input,
+.table.dataTable thead tr:nth-child(2) select {
+    min-width: 72px;
+    max-width: 100%;
+    font-size: 0.84rem;
+    padding: 0.3rem 0.45rem;
+}
+
+.table.dataTable thead .filter-row th,
+.table.dataTable thead tr:nth-child(2) th {
+    padding: 0.3rem 0.25rem;
+}
+
+.table.dataTable .btn-sm,
+.dataTables_wrapper .btn-sm,
+.table-responsive .btn-sm {
+    padding: 3px 8px;
+    font-size: 12px;
+    margin-right: 2px;
+    white-space: nowrap;
+}
+
+.table.dataTable td.text-nowrap,
+.table.dataTable th.text-nowrap {
+    white-space: nowrap !important;
 }
 
 .dataTables_wrapper .dataTables_processing {
@@ -33,10 +81,4 @@
     border-radius: 6px;
     color: #333;
     padding: 10px 18px;
-}
-
-.table-responsive .btn-sm {
-    padding: 3px 6px;
-    font-size: 12px;
-    margin-right: 2px;
 }

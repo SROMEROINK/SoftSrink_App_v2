@@ -3,7 +3,10 @@
 namespace App\Services;
 
 use App\Models\MpIngreso;
+use App\Models\MpMovimientoAdicional;
+use App\Models\MpSalidaInicial;
 use App\Models\PedidoCliente;
+use App\Models\PedidoClienteMp;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
@@ -40,7 +43,12 @@ class PedidoClienteMpPlannerService
             : 0.0;
         $metrosTotales = $mmTotales > 0 ? ($mmTotales / 1000) : 0.0;
 
-        $ingresos = $this->getCompatibleIngresos($codigoMp, $materiaPrima, $diametroMp);
+        $ingresos = $this->getCompatibleIngresos(
+            $codigoMp,
+            $materiaPrima,
+            $diametroMp,
+            isset($input['current_pedido_mp_id']) ? (int) $input['current_pedido_mp_id'] : null
+        );
         $longitudUnMp = $this->resolveLongitudUnidad($input['Longitud_Un_MP'] ?? null, $ingresos);
         $longitudBarraSinScrap = max(0, ($longitudUnMp * 1000) - $scrapMaquina);
         $cantBarrasRequeridas = $mmTotales > 0 && $longitudBarraSinScrap > 0
@@ -84,10 +92,25 @@ class PedidoClienteMpPlannerService
             'compatibilidad' => [
                 'bloqueada' => (bool) ($productoCodigoMp || ($productoMaterial && $productoDiametro)),
                 'requiere_codigo_producto' => (bool) $productoCodigoMp,
-                'mensaje' => $this->buildCompatibilityMessage($productoCodigoMp, $productoMaterial, $productoDiametro),
+                'mensaje' => $this->buildCompatibilityMessage($productoCodigoMp, $productoMaterial, $productoDiametro, $diametroMp),
             ],
             'ingresos' => $ingresos->values()->all(),
             'stock' => $stockSummary,
+        ];
+    }
+
+    public function buildStockDashboard(?int $excludePedidoMpId = null): array
+    {
+        $rows = $this->buildNetStockRows($excludePedidoMpId)->values();
+
+        return [
+            'rows' => $rows->all(),
+            'summary' => [
+                'ingresos_con_stock' => $rows->count(),
+                'total_barras_disponibles' => (int) $rows->sum('Barras_Disponibles'),
+                'total_metros_disponibles' => $this->roundValue($rows->sum('Mts_Disponibles')) ?? 0.0,
+                'total_barras_reservadas' => (int) $rows->sum('Barras_Reservadas'),
+            ],
         ];
     }
 
@@ -125,38 +148,19 @@ class PedidoClienteMpPlannerService
         ];
     }
 
-    protected function getCompatibleIngresos(?string $codigoMp, ?string $materiaPrima, ?string $diametroMp): Collection
+    protected function getCompatibleIngresos(?string $codigoMp, ?string $materiaPrima, ?string $diametroMp, ?int $excludePedidoMpId = null): Collection
     {
-        $query = MpIngreso::query()
-            ->leftJoin('mp_materia_prima', 'mp_ingreso.Id_Materia_Prima', '=', 'mp_materia_prima.Id_Materia_Prima')
-            ->leftJoin('mp_diametro', 'mp_ingreso.Id_Diametro_MP', '=', 'mp_diametro.Id_Diametro')
-            ->whereNull('mp_ingreso.deleted_at')
-            ->where('mp_ingreso.reg_Status', 1)
-            ->select([
-                'mp_ingreso.Id_MP',
-                'mp_ingreso.Nro_Ingreso_MP',
-                'mp_ingreso.Codigo_MP',
-                'mp_ingreso.Nro_Pedido',
-                'mp_ingreso.Nro_Certificado_MP',
-                'mp_ingreso.Unidades_MP',
-                'mp_ingreso.Longitud_Unidad_MP',
-                'mp_ingreso.Mts_Totales',
-                'mp_materia_prima.Nombre_Materia as Materia_Prima',
-                'mp_diametro.Valor_Diametro as Diametro_MP',
-            ]);
+        $diametroRequerido = $this->extractDiameter($diametroMp ?? $codigoMp);
+        $diametroMaximoPermitido = $this->resolveMaxAllowedDiameter($diametroMp ?? $codigoMp);
+        $materiaRequerida = $this->normalizeText($materiaPrima);
 
-        if ($materiaPrima) {
-            $query->where('mp_materia_prima.Nombre_Materia', $materiaPrima);
-        }
-
-        return $query
-            ->orderBy('mp_ingreso.Unidades_MP')
-            ->orderBy('mp_ingreso.Nro_Ingreso_MP')
-            ->get()
-            ->filter(function ($ingreso) use ($diametroMp, $codigoMp, $materiaPrima) {
-                $diametroIngreso = $this->extractDiameter($ingreso->Diametro_MP ?? $ingreso->Codigo_MP ?? null);
-                $diametroRequerido = $this->extractDiameter($diametroMp ?? $codigoMp);
-                $materiaIngreso = $this->normalizeText($ingreso->Materia_Prima ?? null);
+        return $this->buildNetStockRows($excludePedidoMpId)
+            ->when($materiaRequerida, function (Collection $rows) use ($materiaRequerida) {
+                return $rows->filter(fn ($row) => $this->normalizeText($row['Materia_Prima'] ?? null) === $materiaRequerida);
+            })
+            ->filter(function ($ingreso) use ($diametroRequerido, $diametroMaximoPermitido, $materiaPrima) {
+                $diametroIngreso = $this->extractDiameter($ingreso['Diametro_MP'] ?? $ingreso['Codigo_MP'] ?? null);
+                $materiaIngreso = $this->normalizeText($ingreso['Materia_Prima'] ?? null);
                 $materiaRequerida = $this->normalizeText($materiaPrima);
 
                 if ($materiaRequerida && $materiaIngreso !== $materiaRequerida) {
@@ -171,20 +175,168 @@ class PedidoClienteMpPlannerService
                     return false;
                 }
 
-                return $diametroIngreso >= $diametroRequerido;
+                if ($diametroIngreso < $diametroRequerido) {
+                    return false;
+                }
+
+                if ($diametroMaximoPermitido !== null && $diametroIngreso > $diametroMaximoPermitido) {
+                    return false;
+                }
+
+                return true;
             })
-            ->map(function ($ingreso) {
+            ->values();
+    }
+
+    protected function buildNetStockRows(?int $excludePedidoMpId = null): Collection
+    {
+        $ingresos = MpIngreso::query()
+            ->with(['proveedor', 'materiaPrima', 'diametro'])
+            ->whereNull('deleted_at')
+            ->where('reg_Status', 1)
+            ->orderBy('Nro_Ingreso_MP')
+            ->get();
+
+        $salidasIniciales = MpSalidaInicial::query()
+            ->whereNull('deleted_at')
+            ->get()
+            ->keyBy('Id_Ingreso_MP');
+
+        $movimientos = MpMovimientoAdicional::query()
+            ->whereNull('deleted_at')
+            ->selectRaw('Nro_Ingreso_MP, SUM(Cantidad_Adicionales) as adicionales, SUM(Cantidad_Devoluciones) as devoluciones')
+            ->groupBy('Nro_Ingreso_MP')
+            ->get()
+            ->keyBy('Nro_Ingreso_MP');
+
+        $reservas = PedidoClienteMp::query()
+            ->whereNull('deleted_at')
+            ->whereNotNull('Nro_Ingreso_MP')
+            ->when($excludePedidoMpId, fn ($query) => $query->where('Id_Pedido_MP', '!=', $excludePedidoMpId))
+            ->selectRaw('Nro_Ingreso_MP, SUM(Cant_Barras_MP) as reservadas')
+            ->groupBy('Nro_Ingreso_MP')
+            ->get()
+            ->keyBy('Nro_Ingreso_MP');
+
+        $egresosPedidos = \DB::table('mp_salidas as s')
+            ->join('pedido_cliente_mp as pm', 'pm.Id_OF', '=', 's.Id_OF_Salidas_MP')
+            ->whereNull('s.deleted_at')
+            ->whereNull('pm.deleted_at')
+            ->selectRaw('pm.Nro_Ingreso_MP, SUM(s.Total_Salidas_MP) as egresadas, SUM(s.Total_Mtros_Utilizados) as metros_egresados')
+            ->groupBy('pm.Nro_Ingreso_MP')
+            ->get()
+            ->keyBy('Nro_Ingreso_MP');
+
+        return $ingresos
+            ->map(function (MpIngreso $ingreso) use ($salidasIniciales, $movimientos, $reservas, $egresosPedidos) {
+                $salidaInicial = $salidasIniciales->get($ingreso->Id_MP);
+                $movimiento = $movimientos->get($ingreso->Nro_Ingreso_MP);
+                $reserva = $reservas->get($ingreso->Nro_Ingreso_MP);
+                $egresoPedido = $egresosPedidos->get($ingreso->Nro_Ingreso_MP);
+
+                $barrasIngreso = (int) ($ingreso->Unidades_MP ?? 0);
+                $devolucionesProveedor = (int) ($salidaInicial->Devoluciones_Proveedor ?? 0);
+                $stockInicial = (int) ($salidaInicial->Stock_Inicial ?? $barrasIngreso);
+                $ajusteStock = (int) ($salidaInicial->Ajuste_Stock ?? 0);
+                $salidasFinalBase = (int) ($stockInicial - $devolucionesProveedor + $ajusteStock);
+                $barrasBaseTeoricas = $barrasIngreso - $salidasFinalBase;
+                $barrasBase = max(0, $barrasBaseTeoricas);
+                $longitudUnidad = $this->asFloat($ingreso->Longitud_Unidad_MP ?? 0);
+                $devoluciones = (int) ($movimiento->devoluciones ?? 0);
+                $adicionales = (int) ($movimiento->adicionales ?? 0);
+                $reservadas = (int) ($reserva->reservadas ?? 0);
+                $egresadasPedidos = (int) ($egresoPedido->egresadas ?? 0);
+                $metrosEgresadosPedidos = $this->asFloat($egresoPedido->metros_egresados ?? 0);
+                $reservadasPendientes = max(0, $reservadas - $egresadasPedidos);
+                $saldoTeorico = $barrasBaseTeoricas + $devoluciones - $adicionales - $egresadasPedidos - $reservadasPendientes;
+                $barrasDisponibles = max(0, $saldoTeorico);
+                $mtsDisponibles = $saldoTeorico * $longitudUnidad;
+                $tieneMasSalidasQueIngresos = $salidasFinalBase > $barrasIngreso;
+                $tieneIngresosExtra = $salidasFinalBase < 0;
+                $tieneStockNegativo = $saldoTeorico < 0;
+                $tieneAlertaStock = $tieneMasSalidasQueIngresos || $tieneIngresosExtra || $tieneStockNegativo;
+
+                $motivosAlerta = [];
+                $tipoAlerta = '';
+                $botonAlertaTexto = '';
+                $botonAlertaClase = 'btn-secondary';
+
+                if ($tieneMasSalidasQueIngresos) {
+                    $motivosAlerta[] = 'Mas salidas que ingresos';
+                    $tipoAlerta = 'mas_salidas';
+                    $botonAlertaTexto = 'Mas salidas que ingresos';
+                    $botonAlertaClase = 'btn-danger';
+                }
+
+                if ($tieneIngresosExtra) {
+                    $motivosAlerta[] = 'Ingresos extra vs original';
+                    if ($tipoAlerta === '') {
+                        $tipoAlerta = 'ingresos_extra';
+                        $botonAlertaTexto = 'Ingresos extra al original';
+                        $botonAlertaClase = 'btn-warning';
+                    }
+                }
+
+                if ($tieneStockNegativo) {
+                    $motivosAlerta[] = 'Stock negativo';
+                    if ($tipoAlerta === '') {
+                        $tipoAlerta = 'stock_negativo';
+                        $botonAlertaTexto = 'Stock negativo';
+                        $botonAlertaClase = 'btn-danger';
+                    }
+                }
+
+                $motivoAlerta = empty($motivosAlerta) ? '' : implode(' | ', array_unique($motivosAlerta));
+                $cantidadAlertaBarras = $saldoTeorico < 0 ? abs($saldoTeorico) : abs(min(0, $barrasBaseTeoricas));
+                $cantidadAlertaMetros = abs($mtsDisponibles);
+
                 return [
                     'Id_MP' => (int) $ingreso->Id_MP,
                     'Nro_Ingreso_MP' => (int) $ingreso->Nro_Ingreso_MP,
-                    'Pedido_Material_Nro' => blank($ingreso->Nro_Pedido) ? null : $ingreso->Nro_Pedido,
-                    'Codigo_MP' => $ingreso->Codigo_MP,
+                    'Fecha_Ingreso' => $ingreso->Fecha_Ingreso
+                        ? $ingreso->Fecha_Ingreso->format('Y-m-d')
+                        : '',
+                    'Proveedor' => $ingreso->proveedor->Prov_Nombre ?? null,
+                    'Pedido_Proveedor_MP' => blank($ingreso->Nro_Pedido) ? null : $ingreso->Nro_Pedido,
                     'Nro_Certificado_MP' => $ingreso->Nro_Certificado_MP,
-                    'Unidades_MP' => (int) $ingreso->Unidades_MP,
-                    'Longitud_Unidad_MP' => $this->roundValue($ingreso->Longitud_Unidad_MP),
-                    'Mts_Totales' => $this->roundValue($ingreso->Mts_Totales),
-                    'Materia_Prima' => $ingreso->Materia_Prima,
-                    'Diametro_MP' => $ingreso->Diametro_MP,
+                    'Materia_Prima' => $ingreso->materiaPrima->Nombre_Materia ?? null,
+                    'Diametro_MP' => $ingreso->diametro->Valor_Diametro ?? null,
+                    'Codigo_MP' => $ingreso->Codigo_MP,
+                    'Barras_Ingreso' => $barrasIngreso,
+                    'Stock_Inicial' => $stockInicial,
+                    'Devoluciones_Proveedor' => $devolucionesProveedor,
+                    'Ajuste_Stock' => $ajusteStock,
+                    'Barras_Base' => max(0, $barrasBase),
+                    'Salidas_Final_Base' => max(0, $salidasFinalBase),
+                    'Cantidad_Devoluciones_Stock' => $devoluciones,
+                    'Cantidad_Adicionales_Stock' => $adicionales,
+                    'Barras_Reservadas' => $reservadas,
+                    'Barras_Egresadas_Pedidos' => $egresadasPedidos,
+                    'Metros_Egresados_Pedidos' => $this->roundValue($metrosEgresadosPedidos) ?? 0.0,
+                    'Barras_Reservadas_Pendientes' => $reservadasPendientes,
+                    'Saldo_Teorico' => $saldoTeorico,
+                    'Tiene_Inconsistencia_Base' => $tieneMasSalidasQueIngresos,
+                    'Tiene_Ingresos_Extra' => $tieneIngresosExtra,
+                    'Tiene_Stock_Negativo' => $tieneStockNegativo,
+                    'Tiene_Alerta_Stock' => $tieneAlertaStock,
+                    'Tipo_Alerta' => $tipoAlerta,
+                    'Motivo_Alerta' => $motivoAlerta,
+                    'Boton_Alerta_Texto' => $botonAlertaTexto,
+                    'Boton_Alerta_Clase' => $botonAlertaClase,
+                    'Cantidad_Alerta_Barras' => $cantidadAlertaBarras,
+                    'Cantidad_Alerta_Metros' => $this->roundValue($cantidadAlertaMetros) ?? 0.0,
+                    'Barras_Disponibles' => $barrasDisponibles,
+                    'Longitud_Unidad_MP' => $this->roundValue($longitudUnidad) ?? 0.0,
+                    'Mts_Disponibles' => $this->roundValue($mtsDisponibles) ?? 0.0,
+                    'Detalle_Origen_MP' => $ingreso->Detalle_Origen_MP,
+                    'Nro_Pedido_Proveedor' => blank($ingreso->Nro_Pedido) ? null : $ingreso->Nro_Pedido,
+                    'Tiene_Salida_Inicial' => (bool) $salidaInicial,
+                    'Url_Salida_Inicial' => $salidaInicial
+                        ? route('mp_salidas_iniciales.editMassive', ['id' => $ingreso->Id_MP, 'return_to' => 'stock_mp'])
+                        : route('mp_salidas_iniciales.create', ['ingreso_mp' => $ingreso->Id_MP, 'return_to' => 'stock_mp']),
+                    'Texto_Salida_Inicial' => $salidaInicial ? 'Editar ajuste' : 'Registrar ajuste',
+                    'Unidades_MP' => max(0, $barrasDisponibles),
+                    'Mts_Totales' => $this->roundValue($mtsDisponibles) ?? 0.0,
                 ];
             })
             ->values();
@@ -249,22 +401,88 @@ class PedidoClienteMpPlannerService
         ];
     }
 
-    protected function buildCompatibilityMessage(?string $codigoMp, ?string $materiaPrima, ?string $diametroMp): string
+    protected function buildCompatibilityMessage(?string $codigoMp, ?string $materiaPrima, ?string $productoDiametroMp, ?string $diametroSeleccionado = null): string
     {
+        $diametroBase = $diametroSeleccionado ?: $productoDiametroMp ?: $codigoMp;
+        $diametroMaximoPermitido = $this->resolveMaxAllowedDiameterLabel($diametroBase);
+
+        $rangoMensaje = $diametroMaximoPermitido && $diametroBase
+            ? " y con diametro desde {$diametroBase} hasta {$diametroMaximoPermitido}"
+            : ' y con diametro igual o mayor al requerido';
+
         if ($codigoMp) {
-            return "El producto ya define un Codigo MP de referencia: {$codigoMp}. Solo se sugeriran ingresos del mismo material y con diametro igual o mayor al requerido.";
+            return "El producto ya define un Codigo MP de referencia: {$codigoMp}. Solo se sugeriran ingresos del mismo material{$rangoMensaje}.";
         }
 
-        if ($materiaPrima && $diametroMp) {
-            return "El producto ya define materia prima y diametro de referencia: {$materiaPrima} / {$diametroMp}. Solo se sugeriran ingresos del mismo material y con diametro igual o mayor.";
+        if ($materiaPrima && $productoDiametroMp) {
+            return "El producto ya define materia prima y diametro de referencia: {$materiaPrima} / {$productoDiametroMp}. Solo se sugeriran ingresos del mismo material{$rangoMensaje}.";
         }
 
         return 'El producto no tiene MP fija en la tabla de productos. Puedes definirla manualmente en esta etapa.';
     }
 
+    protected function resolveMaxAllowedDiameter(?string $diametroBase): ?float
+    {
+        $item = $this->resolveAllowedDiameterItem($diametroBase);
+
+        return $item['value'] ?? null;
+    }
+
+    protected function resolveMaxAllowedDiameterLabel(?string $diametroBase): ?string
+    {
+        $item = $this->resolveAllowedDiameterItem($diametroBase);
+
+        return $item['label'] ?? null;
+    }
+
+    protected function resolveAllowedDiameterItem(?string $diametroBase): ?array
+    {
+        $diametroBaseValue = $this->extractDiameter($diametroBase);
+        if ($diametroBaseValue === null) {
+            return null;
+        }
+
+        $diametros = DB::table('mp_diametro')
+            ->where('reg_Status', 1)
+            ->whereNull('deleted_at')
+            ->orderBy('Id_Diametro')
+            ->pluck('Valor_Diametro')
+            ->map(function ($valor) {
+                return [
+                    'label' => $valor,
+                    'value' => $this->extractDiameter($valor),
+                ];
+            })
+            ->filter(fn ($item) => $item['value'] !== null)
+            ->values();
+
+        if ($diametros->isEmpty()) {
+            return null;
+        }
+
+        $startIndex = $diametros->search(function ($item) use ($diametroBaseValue) {
+            return abs($item['value'] - $diametroBaseValue) < 0.0001;
+        });
+
+        if ($startIndex === false) {
+            $startIndex = $diametros->search(function ($item) use ($diametroBaseValue) {
+                return $item['value'] >= $diametroBaseValue;
+            });
+        }
+
+        if ($startIndex === false) {
+            return null;
+        }
+
+        $maxIndex = min($startIndex + 3, $diametros->count() - 1);
+
+        return $diametros->get($maxIndex);
+    }
+
     protected function normalizeText(?string $value): ?string
     {
         $value = is_string($value) ? trim($value) : null;
+
         return $value === '' ? null : $value;
     }
 
@@ -274,7 +492,7 @@ class PedidoClienteMpPlannerService
             return null;
         }
 
-        if (preg_match('/[??]?\s*([0-9]+(?:[\.,][0-9]+)?)/u', $value, $matches)) {
+        if (preg_match('/[ÃƒÆ’Ã†â€™Ãƒâ€¹Ã…â€œÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬â„¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬]?\s*([0-9]+(?:[\.,][0-9]+)?)/u', $value, $matches)) {
             return (float) str_replace(',', '.', $matches[1]);
         }
 

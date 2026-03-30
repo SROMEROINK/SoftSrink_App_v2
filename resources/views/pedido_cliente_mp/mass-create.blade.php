@@ -12,6 +12,7 @@
 @stop
 
 @section('content')
+    @include('components.swal-session')
 <form method="POST"
       action="{{ route('pedido_cliente_mp.storeMassive') }}"
       data-ajax="true"
@@ -57,7 +58,7 @@
                 <th class="col-familia">Familia de Maquinas</th>
                 <th class="col-codigo">Codigo MP</th>
                 <th class="col-ingreso">Ingreso MP Seleccionado</th>
-                <th class="col-pedido">Pedido Material</th>
+                <th class="col-pedido">Pedido MP Interno</th>
                 <th class="col-certificado">Certificado</th>
                 <th class="col-barras">Cant. Barras MP</th>
                 <th class="col-estado">Estado MP</th>
@@ -90,6 +91,8 @@ $(document).ready(function () {
     const estadosPlanificacion = @json($estadosPlanificacion);
     const nextPedidoMaterialNro = @json((string) ($nextPedidoMaterialNro ?? ''));
     const pendingOfCount = Number(@json((int) ($pendingOfCount ?? 0)));
+    const createSingleUrl = @json(route('pedido_cliente_mp.create'));
+    const preselectedOfId = @json($preselectedOf ?? null);
 
     const defaultsCalculo = {
         frenteado: 0.50,
@@ -260,7 +263,13 @@ $(document).ready(function () {
             </td>
             <td><input type="text" class="form-control familia-maquina-readonly" readonly></td>
             <td><input type="text" class="form-control codigo-mp-readonly" readonly></td>
-            <td><input type="text" name="Nro_Ingreso_MP[]" class="form-control input-ingreso-mp" list="ingreso-mp-catalogo-list" placeholder="Buscar ingreso"></td>
+            <td>
+                <div class="ingreso-selector-cell">
+                    <input type="text" name="Nro_Ingreso_MP[]" class="form-control input-ingreso-mp" list="ingreso-mp-catalogo-list" placeholder="Buscar ingreso">
+                    <input type="hidden" class="hidden-longitud-unidad">
+                    <button type="button" class="btn btn-info btn-sm consultar-sugeridos">Consultar ingresos sugeridos</button>
+                </div>
+            </td>
             <td><input type="text" class="form-control pedido-material-readonly" readonly value="${nextPedidoMaterialNro}"></td>
             <td><input type="text" class="form-control certificado-readonly" readonly></td>
             <td><input type="text" class="form-control barras-readonly" readonly></td>
@@ -600,11 +609,259 @@ $(document).ready(function () {
         agregarFilas(10);
     });
 
-    refreshOfCatalog();
-    if (pendingOfCount > 0) {
-        agregarFilas(Math.min(10, pendingOfCount));
-        autocompletarOfCorrelativas();
+    function buildMassiveDraft() {
+        return $('#tablaListadoOF tbody tr').map(function () {
+            const $fila = $(this);
+            return {
+                rowIndex: String($fila.find('.cell-index').text() || '').trim(),
+                nroOf: String($fila.find('.input-of').val() || '').trim(),
+                machineId: String($fila.find('.select-maquina').val() || '').trim(),
+                nroIngreso: String($fila.find('.input-ingreso-mp').val() || '').trim(),
+                pedidoMaterial: String($fila.find('.pedido-material-readonly').val() || '').trim(),
+                certificado: String($fila.find('.certificado-readonly').val() || '').trim(),
+                barras: String($fila.find('.barras-readonly').val() || '').trim(),
+                estadoId: String($fila.find('select[name="Estado_Plani_Id[]"]').val() || '').trim(),
+                longitudUnMp: String($fila.find('.hidden-longitud-unidad').val() || '').trim()
+            };
+        }).get();
     }
+
+    function saveMassiveDraftToStorage() {
+        sessionStorage.setItem('pedidoClienteMpMassiveDraft', JSON.stringify(buildMassiveDraft()));
+    }
+
+    function restoreMassiveDraftFromStorage() {
+        const raw = sessionStorage.getItem('pedidoClienteMpMassiveDraft');
+        if (!raw) {
+            return false;
+        }
+
+        sessionStorage.removeItem('pedidoClienteMpMassiveDraft');
+
+        let draftRows;
+        try {
+            draftRows = JSON.parse(raw);
+        } catch (error) {
+            return false;
+        }
+
+        if (!Array.isArray(draftRows) || !draftRows.length) {
+            return false;
+        }
+
+        $('#tablaListadoOF tbody').empty();
+        filaCounter = 1;
+
+        draftRows.forEach((rowData, index) => {
+            $('#tablaListadoOF tbody').append($(generarFila(index + 1)));
+            filaCounter = index + 2;
+
+            const $fila = $('#tablaListadoOF tbody tr').last();
+            const pedido = findPedidoByOf(rowData.nroOf);
+
+            if (pedido) {
+                completarFilaConPedido($fila, pedido);
+            } else if (rowData.nroOf) {
+                $fila.find('.input-of').val(rowData.nroOf);
+            }
+
+            $fila.find('.select-maquina').val(rowData.machineId || '').trigger('change');
+            $fila.find('.input-ingreso-mp').val(rowData.nroIngreso || '');
+            $fila.find('select[name="Estado_Plani_Id[]"]').val(rowData.estadoId || '11');
+
+            if (rowData.nroIngreso) {
+                actualizarFilaConIngreso($fila);
+            } else {
+                actualizarEstadoFila($fila);
+            }
+
+            if (rowData.pedidoMaterial) {
+                $fila.find('.pedido-material-readonly').val(rowData.pedidoMaterial);
+                $fila.find('.hidden-pedido-material').val(rowData.pedidoMaterial);
+            }
+
+            if (rowData.certificado) {
+                $fila.find('.certificado-readonly').val(rowData.certificado);
+            }
+
+            if (rowData.barras) {
+                $fila.find('.barras-readonly').val(rowData.barras);
+            }
+
+            if (rowData.longitudUnMp) {
+                $fila.find('.hidden-longitud-unidad').val(rowData.longitudUnMp);
+            }
+        });
+
+        renumerarFilas();
+        refreshOfCatalog();
+        return true;
+    }
+
+    $(document).on('click', '.consultar-sugeridos', function () {
+        const $fila = $(this).closest('tr');
+        const pedido = findPedidoByOf($fila.find('.input-of').val());
+        const idMaquina = $fila.find('.select-maquina').val();
+        const rowIndex = $fila.find('.cell-index').text().trim();
+
+        if (!pedido) {
+            SwalUtils.error('Primero selecciona una OF valida en la fila.');
+            return;
+        }
+
+        if (!idMaquina) {
+            SwalUtils.error('Primero selecciona una maquina para poder consultar ingresos sugeridos.');
+            return;
+        }
+
+        saveMassiveDraftToStorage();
+
+        const selectedIngreso = String($fila.find('.input-ingreso-mp').val() || '').trim();
+        const selectedCertificado = String($fila.find('.certificado-readonly').val() || '').trim();
+        const selectedPedidoMaterial = String($fila.find('.pedido-material-readonly').val() || '').trim();
+        const selectedLongitudUnMp = String($fila.find('.hidden-longitud-unidad').val() || '').trim();
+
+        const params = new URLSearchParams({
+            of: pedido.Id_OF,
+            from_massive: '1',
+            machine: idMaquina,
+            row: rowIndex
+        });
+
+        if (selectedIngreso !== '') {
+            params.set('selected_ingreso', selectedIngreso);
+        }
+
+        if (selectedCertificado !== '') {
+            params.set('selected_certificado', selectedCertificado);
+        }
+
+        if (selectedPedidoMaterial !== '') {
+            params.set('selected_pedido_material', selectedPedidoMaterial);
+        }
+
+        if (selectedLongitudUnMp !== '') {
+            params.set('selected_longitud_un_mp', selectedLongitudUnMp);
+        }
+
+        window.location.href = `${createSingleUrl}?${params.toString()}`;
+    });
+
+    function applyMassiveSelectionFromStorage() {
+        const raw = sessionStorage.getItem('pedidoClienteMpMassiveSelection');
+        if (!raw) {
+            return;
+        }
+
+        sessionStorage.removeItem('pedidoClienteMpMassiveSelection');
+
+        let selection;
+        try {
+            selection = JSON.parse(raw);
+        } catch (error) {
+            return;
+        }
+
+        const pedido = pedidosCatalogo.find((item) => String(item.Id_OF) === String(selection.idOf));
+        if (!pedido) {
+            return;
+        }
+
+        let $fila = $();
+        const rowIndex = Number(selection.rowIndex || 0);
+
+        if (rowIndex > 0) {
+            $fila = $('#tablaListadoOF tbody tr').filter(function () {
+                return String($(this).find('.cell-index').text()).trim() === String(rowIndex);
+            }).first();
+        }
+
+        if (!$fila.length) {
+            $fila = $('#tablaListadoOF tbody tr').filter(function () {
+                return String($(this).find('.input-of').val() || '').trim() === String(selection.nroOf || '');
+            }).first();
+        }
+
+        if (!$fila.length) {
+            return;
+        }
+
+        completarFilaConPedido($fila, pedido);
+        $fila.find('.select-maquina').val(selection.machineId || '').trigger('change');
+        $fila.find('.input-ingreso-mp').val(selection.nroIngreso || '');
+        actualizarFilaConIngreso($fila);
+
+        if (selection.certificado) {
+            $fila.find('.certificado-readonly').val(selection.certificado);
+        }
+
+        if (selection.pedidoMaterial) {
+            $fila.find('.pedido-material-readonly').val(selection.pedidoMaterial);
+            $fila.find('.hidden-pedido-material').val(selection.pedidoMaterial);
+        }
+
+        if (selection.longitudUnMp) {
+            $fila.find('.hidden-longitud-unidad').val(selection.longitudUnMp);
+        }
+
+        $fila.addClass('row-active').siblings().removeClass('row-active');
+        $fila.find('select[name="Estado_Plani_Id[]"]').trigger('focus');
+        saveMassiveDraftToStorage();
+        SwalUtils.success('Ingreso sugerido aplicado a la fila de la carga masiva.');
+    }
+
+    $(document).on('change', 'select[name="Estado_Plani_Id[]"]', function () {
+        saveMassiveDraftToStorage();
+    });
+
+    function inicializarConOfPreseleccionada() {
+        if (!preselectedOfId) {
+            return false;
+        }
+
+        const pedidoPreseleccionado = pedidosCatalogo.find((pedido) =>
+            String(pedido.Id_OF) === String(preselectedOfId) ||
+            String(pedido.Nro_OF) === String(preselectedOfId)
+        );
+
+        if (!pedidoPreseleccionado) {
+            return false;
+        }
+
+        const cantidadInicial = Math.min(10, Math.max(1, pendingOfCount || 1));
+        agregarFilas(cantidadInicial);
+
+        const $fila = $('#tablaListadoOF tbody tr').first();
+        if (!$fila.length) {
+            return false;
+        }
+
+        completarFilaConPedido($fila, pedidoPreseleccionado);
+        actualizarEstadoFila($fila);
+        autocompletarOfCorrelativas();
+        $fila.addClass('row-active').siblings().removeClass('row-active');
+        $fila.find('.select-maquina').trigger('focus');
+        saveMassiveDraftToStorage();
+        return true;
+    }
+
+    refreshOfCatalog();
+    const restoredDraft = restoreMassiveDraftFromStorage();
+    if (!restoredDraft) {
+        const initializedWithSelectedOf = inicializarConOfPreseleccionada();
+        if (!initializedWithSelectedOf && pendingOfCount > 0) {
+            agregarFilas(Math.min(10, pendingOfCount));
+            autocompletarOfCorrelativas();
+        }
+    }
+    applyMassiveSelectionFromStorage();
 });
 </script>
 @stop
+
+
+
+
+
+
+
