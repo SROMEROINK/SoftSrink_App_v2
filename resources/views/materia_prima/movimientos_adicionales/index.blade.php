@@ -191,6 +191,8 @@
             const table = $('#tabla_movimientos_adicionales').DataTable({
                 processing: true,
                 serverSide: true,
+                scrollY: '60vh',
+                scrollCollapse: true,
                 ajax: {
                     url: "{{ route('mp_movimientos_adicionales.data') }}",
                     data: function (d) {
@@ -260,3 +262,4 @@
         });
     </script>
 @stop
+

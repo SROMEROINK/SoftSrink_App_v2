@@ -1,0 +1,24 @@
+#tabla_entregas_productos th,
+#tabla_entregas_productos td {
+    white-space: nowrap;
+    vertical-align: middle;
+}
+
+#tabla_entregas_productos td:nth-child(3),
+#tabla_entregas_productos th:nth-child(3) {
+    white-space: normal;
+    min-width: 260px;
+}
+
+#tabla_entregas_productos td:last-child,
+#tabla_entregas_productos th:last-child {
+    min-width: 250px;
+    position: sticky;
+    right: 0;
+    background: #fff;
+    z-index: 2;
+}
+
+#tabla_entregas_productos .btn {
+    margin: 2px;
+}

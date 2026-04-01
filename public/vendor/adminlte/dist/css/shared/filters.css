@@ -3,7 +3,11 @@
 
 .filtro-texto {
     border: 2px solid #1E90FF;
-    padding-right: 24px;
+    padding-right: 10px;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
 }
 
 .filtro-select {
@@ -12,6 +16,10 @@
     color: #212529;
     appearance: auto;
     padding-right: 24px;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
 }
 
 .filtro-select:focus {
@@ -43,10 +51,20 @@
 
 .filtro-select-wrapper {
     position: relative;
+    width: 100%;
+    min-width: 0;
 }
 
 .filtro-select-wrapper .filtro-select {
     padding-right: 24px;
+}
+
+.table.dataTable thead .filter-row .form-control,
+.table.dataTable thead tr:nth-child(2) .form-control {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
 }
 
 .filtro-select-wrapper .filtro-select-clear {

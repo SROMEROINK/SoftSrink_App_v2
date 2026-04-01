@@ -150,6 +150,8 @@ $(document).ready(function () {
         deferRender: true,
         autoWidth: false,
         scrollX: true,
+        scrollY: '60vh',
+        scrollCollapse: true,
         responsive: false,
         orderCellsTop: true,
         pageLength: 25,
@@ -265,3 +267,4 @@ $(document).ready(function () {
 });
 </script>
 @stop
+

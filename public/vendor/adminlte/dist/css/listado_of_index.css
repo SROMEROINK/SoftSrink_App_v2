@@ -1,14 +1,179 @@
-.table-responsive-listado-of .dataTables_scrollHead th.columna-acciones,
-.table-responsive-listado-of .dataTables_scrollBody td.columna-acciones {
-    position: sticky;
-    right: 0;
-    z-index: 3;
-    min-width: 165px;
-    white-space: nowrap !important;
-    background: #fff !important;
-    box-shadow: inset 1px 0 0 #d7dee8, -3px 0 6px rgba(15, 23, 42, 0.08);
+.top-horizontal-scroll {
+    overflow-x: auto;
+    overflow-y: hidden;
+    height: 16px;
+    margin-bottom: 8px;
 }
 
-.table-responsive-listado-of .dataTables_scrollBody tr:nth-child(even) td.columna-acciones {
-    background: #f7f7f7 !important;
+.top-horizontal-scroll > div {
+    height: 1px;
+}
+
+#tabla_listado_of th,
+#tabla_listado_of td {
+    white-space: nowrap;
+    vertical-align: middle;
+}
+
+#tabla_listado_of th:nth-child(1),
+#tabla_listado_of td:nth-child(1) {
+    width: 72px;
+    min-width: 72px;
+    max-width: 72px;
+    position: sticky;
+    left: 0;
+    background: #fff;
+    z-index: 4;
+}
+
+#tabla_listado_of th:nth-child(2),
+#tabla_listado_of td:nth-child(2) {
+    width: 110px;
+    min-width: 110px;
+    max-width: 110px;
+    position: sticky;
+    left: 72px;
+    background: #fff;
+    z-index: 4;
+}
+
+#tabla_listado_of th:nth-child(3),
+#tabla_listado_of td:nth-child(3) {
+    width: 64px;
+    min-width: 64px;
+    max-width: 64px;
+    position: sticky;
+    left: 182px;
+    background: #fff;
+    z-index: 4;
+}
+
+#tabla_listado_of th:nth-child(4),
+#tabla_listado_of td:nth-child(4) {
+    width: 110px;
+    min-width: 110px;
+    max-width: 110px;
+    position: sticky;
+    left: 246px;
+    background: #fff;
+    z-index: 4;
+    box-shadow: inset -2px 0 0 #8fa7c2;
+}
+
+#tabla_listado_of thead th:nth-child(-n+4) {
+    z-index: 6;
+}
+
+#tabla_listado_of thead .filter-row th:nth-child(-n+4) {
+    z-index: 7;
+}
+
+#tabla_listado_of td:nth-child(5),
+#tabla_listado_of th:nth-child(5) {
+    width: 380px;
+    min-width: 380px;
+    max-width: 380px;
+    white-space: normal;
+}
+
+#tabla_listado_of td:last-child,
+#tabla_listado_of th:last-child {
+    width: 210px;
+    min-width: 210px;
+    max-width: 210px;
+    position: sticky;
+    right: 0;
+    background: #fff;
+    z-index: 5;
+}
+
+.table-responsive-listado-of .dataTables_scrollHead {
+    overflow-x: hidden !important;
+}
+
+.table-responsive-listado-of .dataTables_scrollBody {
+    overflow-x: auto !important;
+}
+
+#tabla_listado_of thead .filter-row th {
+    padding: 2px !important;
+    background: #fff;
+    vertical-align: top;
+    overflow: hidden;
+}
+
+#tabla_listado_of thead .filter-row input,
+#tabla_listado_of thead .filter-row select {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    height: 30px;
+    margin: 0 !important;
+    padding: 2px 6px !important;
+    font-size: 0.75rem;
+}
+
+#tabla_listado_of thead .filter-row select {
+    appearance: auto;
+    -webkit-appearance: menulist;
+    -moz-appearance: menulist;
+    padding-right: 18px !important;
+}
+
+#tabla_listado_of .acciones-listado-of {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 4px;
+}
+
+#tabla_listado_of .acciones-listado-of .btn {
+    margin: 2px;
+    padding: 3px 6px;
+    font-size: 11px;
+}
+
+#tabla_listado_of .metric-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 72px;
+    padding: 0.18rem 0.55rem;
+    border-radius: 999px;
+    font-weight: 700;
+    font-size: 0.82rem;
+    line-height: 1.2;
+    border: 1px solid transparent;
+    white-space: nowrap;
+}
+
+#tabla_listado_of .metric-success {
+    color: #0f6b36;
+    background: #e8f7ee;
+    border-color: #b8e2c8;
+}
+
+#tabla_listado_of .metric-danger {
+    color: #b42318;
+    background: #fdecec;
+    border-color: #f5c2c7;
+}
+
+#tabla_listado_of .metric-warning {
+    color: #9a6700;
+    background: #fff4db;
+    border-color: #f6d58e;
+}
+
+#tabla_listado_of .metric-neutral {
+    color: #475467;
+    background: #f2f4f7;
+    border-color: #d0d5dd;
+}
+
+#tabla_listado_of .metric-control {
+    max-width: 88px;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }

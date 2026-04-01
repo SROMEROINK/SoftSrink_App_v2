@@ -117,6 +117,8 @@
         const table = $('#tabla_producto_tipo').DataTable({
             processing: true,
             serverSide: true,
+            scrollY: '60vh',
+            scrollCollapse: true,
             ajax: {
                 url: "{{ route('producto_tipo.data') }}",
                 data: function (d) {
@@ -206,3 +208,4 @@
     });
 </script>
 @stop
+

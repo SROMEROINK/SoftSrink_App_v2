@@ -207,6 +207,8 @@ function cargarFiltros() {
             const table = $('#tabla_marcas_insumos').DataTable({
                 processing: true,
                 serverSide: true,
+                scrollY: '60vh',
+                scrollCollapse: true,
                 ajax: {
                     url: "{{ route('marcas_insumos.data') }}",
                     data: function (d) {
@@ -273,3 +275,4 @@ function cargarFiltros() {
         });
     </script>
 @stop
+

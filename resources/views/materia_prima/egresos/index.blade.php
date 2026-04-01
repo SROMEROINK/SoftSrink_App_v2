@@ -208,6 +208,8 @@ document.addEventListener('DOMContentLoaded', function () {
     const table = $('#tabla_mp_egresos').DataTable({
         processing: true,
         serverSide: true,
+        scrollY: '60vh',
+        scrollCollapse: true,
         ajax: {
             url: "{{ route('mp_egresos.data') }}",
             data: function (d) {
@@ -289,5 +291,6 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 </script>
 @stop
+
 
 

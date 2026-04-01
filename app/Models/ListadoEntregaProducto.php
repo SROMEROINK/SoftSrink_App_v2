@@ -1,55 +1,58 @@
 <?php
 
 namespace App\Models;
-// app\Models\ListadoEntregaProducto.php
+
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes; // Importa la clase SoftDeletes
-use App\Models\Producto;
-use App\Models\Listado_OF;
-use App\Models\Ingreso_mp;
-use App\Models\Proveedor;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class ListadoEntregaProducto extends Model
 {
     use HasFactory;
+    use SoftDeletes;
 
     protected $table = 'listado_entregas_productos';
     protected $primaryKey = 'Id_List_Entreg_Prod';
+    public $timestamps = true;
+
     protected $fillable = [
-        "Id_OF",
-        "Nro_Parcial_Calidad",
-        "Cant_Piezas_Entregadas",
-        "Nro_Remito_Entrega_Calidad",
-        "Fecha_Entrega_Calidad",
-        "Inspector_Calidad"       
+        'Id_OF',
+        'Nro_Parcial_Calidad',
+        'Cant_Piezas_Entregadas',
+        'Nro_Remito_Entrega_Calidad',
+        'Fecha_Entrega_Calidad',
+        'Inspector_Calidad',
+        'reg_Status',
+        'created_by',
+        'updated_by',
+        'deleted_by',
     ];
-    public $timestamps = false;
 
-    public function listado_of()
+    protected $casts = [
+        'Id_OF' => 'integer',
+        'Cant_Piezas_Entregadas' => 'integer',
+        'Nro_Remito_Entrega_Calidad' => 'integer',
+        'Fecha_Entrega_Calidad' => 'date',
+        'reg_Status' => 'boolean',
+    ];
+
+    public function pedido()
     {
-        return $this->belongsTo(Listado_OF::class, 'Id_OF');
+        return $this->belongsTo(PedidoCliente::class, 'Id_OF', 'Nro_OF');
     }
 
-    public function producto()
+    public function creator()
     {
-        return $this->hasOneThrough(Producto::class, Listado_OF::class, 'Nro_OF', 'Id_Producto', 'Id_OF', 'Producto_Id');
+        return $this->belongsTo(User::class, 'created_by');
     }
 
-    public function ingreso_mp()
+    public function updater()
     {
-        return $this->belongsTo(Ingreso_mp::class, 'MP_Id', 'Nro_Ingreso_MP');
+        return $this->belongsTo(User::class, 'updated_by');
     }
 
-    public function proveedor()
+    public function deleter()
     {
-        return $this->hasOneThrough(
-            Proveedor::class, 
-            Ingreso_mp::class, 
-            'Id_OF', 
-            'Prov_Id', 
-            'Id_OF', 
-            'Id_Proveedor'
-        );
+        return $this->belongsTo(User::class, 'deleted_by');
     }
 }

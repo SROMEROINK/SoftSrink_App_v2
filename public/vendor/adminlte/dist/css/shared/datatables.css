@@ -5,26 +5,34 @@
     max-width: 100% !important;
     margin: 0 !important;
     padding: 0 !important;
-    overflow-x: auto;
+    overflow: hidden;
 }
 
 .dataTables_wrapper,
 .dataTables_scroll,
 .dataTables_scrollHead,
-.dataTables_scrollBody {
+.dataTables_scrollBody,
+.dataTables_scrollHeadInner {
     width: 100% !important;
 }
 
-.dataTables_scrollHeadInner {
-    width: auto !important;
+.dataTables_scrollHead {
+    position: relative;
+    z-index: 4;
+    background: #fff;
 }
 
 .dataTables_scrollHeadInner table,
 .dataTables_scrollBody table,
 .table.dataTable {
-    width: auto !important;
+    width: 100% !important;
     min-width: 100%;
+    margin: 0 !important;
     table-layout: auto;
+}
+
+.dataTables_scrollBody {
+    overflow: auto !important;
 }
 
 .table.dataTable th,
@@ -39,6 +47,7 @@
     font-weight: 700;
     line-height: 1.15;
     white-space: nowrap;
+    background: #fff;
 }
 
 .table.dataTable tbody td {
@@ -50,7 +59,8 @@
 .table.dataTable thead .filter-row select,
 .table.dataTable thead tr:nth-child(2) input,
 .table.dataTable thead tr:nth-child(2) select {
-    min-width: 72px;
+    width: 100% !important;
+    min-width: 0 !important;
     max-width: 100%;
     font-size: 0.84rem;
     padding: 0.3rem 0.45rem;
@@ -59,6 +69,7 @@
 .table.dataTable thead .filter-row th,
 .table.dataTable thead tr:nth-child(2) th {
     padding: 0.3rem 0.25rem;
+    background: #fff;
 }
 
 .table.dataTable .btn-sm,

@@ -197,6 +197,10 @@
     $(function () {
         const table = $('#stock-mp-table').DataTable({
             orderCellsTop: true,
+            scrollX: true,
+            scrollY: '60vh',
+            scrollCollapse: true,
+            responsive: false,
             pageLength: 25,
             order: [[0, 'desc']],
             language: {
@@ -208,3 +212,4 @@
     });
 </script>
 @stop
+

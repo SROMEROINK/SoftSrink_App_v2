@@ -123,6 +123,8 @@
             const table = $('#tabla_salidas_iniciales').DataTable({
                 processing: true,
                 serverSide: true,
+                scrollY: '60vh',
+                scrollCollapse: true,
                 ajax: {
                     url: "{{ route('mp_salidas_iniciales.data') }}",
                     data: function (d) {

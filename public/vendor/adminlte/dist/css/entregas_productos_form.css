@@ -1,0 +1,14 @@
+.entrega-of-card .detail-item {
+    min-height: 92px;
+}
+
+.compact-detail .detail-value {
+    font-size: 0.98rem;
+    line-height: 1.35;
+    word-break: break-word;
+}
+
+.highlight-detail {
+    border-color: rgba(40, 167, 69, 0.35);
+    background: #f2fbf5;
+}

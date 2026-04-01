@@ -3,56 +3,98 @@
 @section('title', 'Listado de Entregas de Productos')
 
 @section('content_header')
-<x-header-card 
-    title="Listado de Entregas de Productos" 
-    quantityTitle="Cantidad de piezas Entregadas:" 
-    buttonRoute="{{ route('fabricacion.create') }}" 
-    buttonText="Crear registro" 
+<x-header-card
+    title="Listado de Entregas de Productos"
+    buttonRoute="{{ route('entregas_productos.create') }}"
+    buttonText="Registrar entrega"
 />
 @stop
 
 @section('content')
 <div class="container-fluid">
-    <div class="row">
-        <div class="col-12">
+    <div class="alert alert-info mt-3">
+        <strong>Listado de entregas:</strong> esta vista registra todas las entregas finales al cliente por OF y parcial, usando una vista consolidada optimizada de entregas para producto, maquina y MP.
+    </div>
+
+    <div class="row mt-3">
+        <div class="col-md-4">
+            <div class="small-box bg-info">
+                <div class="inner">
+                    <h3 id="total-entregas">0</h3>
+                    <p>Entregas registradas</p>
+                </div>
+                <div class="icon">
+                    <i class="fas fa-clipboard-check"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="small-box bg-success">
+                <div class="inner">
+                    <h3 id="total-piezas">0</h3>
+                    <p>Piezas entregadas</p>
+                </div>
+                <div class="icon">
+                    <i class="fas fa-boxes"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="small-box bg-danger">
+                <div class="inner">
+                    <h3 id="total-remitos">0</h3>
+                    <p>Remitos emitidos</p>
+                </div>
+                <div class="icon">
+                    <i class="fas fa-truck"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card mt-3">
+        <div class="card-body">
             <div class="table-responsive">
-                <table id="entrega_productos" class="table table-striped table-bordered" style="width:100%">
+                <table id="tabla_entregas_productos" class="table table-bordered table-striped w-100">
                     <thead>
                         <tr>
-                            <th>Id_OF</th>
-                            <th>Nro_OF</th>
-                            <th>Código de Producto</th>
-                            <th>Descripción</th>
-                            <th>Clase Familia</th>
-                            <th>Nro de Máquina</th>
-                            <th>Nro Ingreso_MP</th>
-                            <th>Código MP</th>
-                            <th>Nro Certificado MP</th>
-                            <th>Nombre Proveedor</th>
-                            <th>Nro Parcial OF</th>
-                            <th>Cant. Piezas entregadas</th>
+                            <th>Nro OF</th>
+                            <th>Producto</th>
+                            <th>Descripcion</th>
+                            <th>Categoria</th>
+                            <th>Nro Maquina</th>
+                            <th>Familia Maquina</th>
+                            <th>Nro Ingreso MP</th>
+                            <th>Codigo MP</th>
+                            <th>Certificado MP</th>
+                            <th>Proveedor</th>
+                            <th>Nro Parcial</th>
+                            <th>Cant. Piezas</th>
                             <th>Nro Remito</th>
-                            <th>Fecha de entrega</th>
-                            <th>Nombre Inspector-control</th>
+                            <th>Fecha Entrega</th>
+                            <th>Inspector</th>
+                            <th>Acciones</th>
                         </tr>
                         <tr class="filter-row">
-                            <th><input type="text" id="filtro_id" placeholder="Filtrar ID" class="form-control filtro-texto" /></th>
-                            <th><input type="text" id="filtro_nro_of" placeholder="Filtrar Nro_OF" class="form-control filtro-texto" /></th>
-                            <th><input type="text" id="filtro_codigo_producto" placeholder="Filtrar Código de Producto" class="form-control filtro-texto" /></th>
-                            <th><input type="text" id="filtro_descripcion" placeholder="Filtrar Descripción" class="form-control filtro-texto" /></th>
-                            <th><select id="filtro_clase_familia" class="form-control filtro-select"><option value="">Todos</option></select></th>
-                            <th><input type="text" id="filtro_nro_maquina" placeholder="Filtrar Nro de Máquina" class="form-control filtro-texto" /></th>
-                            <th><input type="text" id="filtro_nro_ingreso_mp" placeholder="Filtrar Nro Ingreso_MP" class="form-control filtro-texto" /></th>
-                            <th><select id="filtro_codigo_mp" class="form-control filtro-select"><option value="">Todos</option></select></th>
-                            <th><input type="text" id="filtro_nro_certificado_mp" placeholder="Filtrar Nro Certificado MP" class="form-control filtro-texto" /></th>
-                            <th><select id="filtro_nombre_proveedor" class="form-control filtro-select"><option value="">Todos</option></select></th>
-                            <th><input type="text" id="filtro_nro_parcial_of" placeholder="Filtrar Nro Parcial OF" class="form-control filtro-texto" /></th>
-                            <th><input type="text" id="filtro_cant_piezas" placeholder="Filtrar Cant. Piezas entregadas" class="form-control filtro-texto" /></th>
-                            <th><input type="text" id="filtro_nro_remito" placeholder="Filtrar Nro Remito" class="form-control filtro-texto" /></th>
-                            <th><input type="text" id="filtro_fecha_entrega" placeholder="Filtrar Fecha de entrega" class="form-control filtro-texto" /></th>
-                            <th><input type="text" id="filtro_nombre_inspector" placeholder="Filtrar Nombre Inspector-control" class="form-control filtro-texto" /></th>
+                            <th><input type="text" id="filtro_nro_of" class="form-control filtro-texto" placeholder="Filtrar OF"></th>
+                            <th><input type="text" id="filtro_producto" class="form-control filtro-texto" placeholder="Filtrar Producto"></th>
+                            <th><input type="text" id="filtro_descripcion" class="form-control filtro-texto" placeholder="Filtrar Descripcion"></th>
+                            <th><select id="filtro_categoria" class="form-control filtro-select"><option value="">Todos</option></select></th>
+                            <th><select id="filtro_nro_maquina" class="form-control filtro-select"><option value="">Todos</option></select></th>
+                            <th><select id="filtro_familia_maquina" class="form-control filtro-select"><option value="">Todos</option></select></th>
+                            <th><input type="text" id="filtro_nro_ingreso_mp" class="form-control filtro-texto" placeholder="Filtrar Ingreso"></th>
+                            <th><input type="text" id="filtro_codigo_mp" class="form-control filtro-texto" placeholder="Filtrar Codigo"></th>
+                            <th><input type="text" id="filtro_certificado_mp" class="form-control filtro-texto" placeholder="Filtrar Certificado"></th>
+                            <th><select id="filtro_proveedor" class="form-control filtro-select"><option value="">Todos</option></select></th>
+                            <th><input type="text" id="filtro_nro_parcial" class="form-control filtro-texto" placeholder="Filtrar Parcial"></th>
+                            <th><input type="text" id="filtro_cant_piezas" class="form-control filtro-texto" placeholder="Filtrar Cantidad"></th>
+                            <th><input type="text" id="filtro_nro_remito" class="form-control filtro-texto" placeholder="Filtrar Remito"></th>
+                            <th><input type="date" id="filtro_fecha_entrega" class="form-control filtro-texto"></th>
+                            <th><input type="text" id="filtro_inspector" class="form-control filtro-texto" placeholder="Filtrar Inspector"></th>
+                            <th></th>
                         </tr>
                     </thead>
+                    <tbody></tbody>
                 </table>
             </div>
         </div>
@@ -61,13 +103,12 @@
 @stop
 
 @section('css')
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/css/bootstrap.min.css">
-<link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap5.min.css">
-<link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.2.9/css/responsive.bootstrap5.min.css">
-<link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.2.2/css/buttons.bootstrap5.min.css">
+<link rel="stylesheet" href="{{ asset('vendor/adminlte/dist/css/shared/cards.css') }}">
 <link rel="stylesheet" href="{{ asset('vendor/adminlte/dist/css/shared/datatables.css') }}">
 <link rel="stylesheet" href="{{ asset('vendor/adminlte/dist/css/shared/filters.css') }}">
-<link rel="stylesheet" href="{{ asset('vendor\adminlte\dist\css\Listado_Entregas.css') }}">
+<link rel="stylesheet" href="{{ asset('vendor/adminlte/dist/css/shared/buttons.css') }}">
+<link rel="stylesheet" href="{{ asset('vendor/adminlte/dist/css/shared/summary-boxes.css') }}">
+<link rel="stylesheet" href="{{ asset('vendor/adminlte/dist/css/entregas_productos_index.css') }}">
 @stop
 
 @section('js')
@@ -75,132 +116,182 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap5.min.js"></script>
-<script src="https://cdn.datatables.net/responsive/2.2.9/js/dataTables.responsive.min.js"></script>
-<script src="https://cdn.datatables.net/responsive/2.2.9/js/responsive.bootstrap5.min.js"></script>
-<script src="https://cdn.datatables.net/buttons/2.2.2/js/dataTables.buttons.min.js"></script>
-<script src="https://cdn.datatables.net/buttons/2.2.2/js/buttons.bootstrap5.min.js"></script>
+<script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="{{ asset('js/swal-utils.js') }}"></script>
 <script>
-$(document).ready(function() {
-    var table = $('#entrega_productos').DataTable({
+function formatearNumeroEntero(valor) {
+    return Number(valor || 0).toLocaleString('es-AR');
+}
+
+function filtrosActuales() {
+    return {
+        filtro_nro_of: $('#filtro_nro_of').val(),
+        filtro_producto: $('#filtro_producto').val(),
+        filtro_descripcion: $('#filtro_descripcion').val(),
+        filtro_categoria: $('#filtro_categoria').val(),
+        filtro_nro_maquina: $('#filtro_nro_maquina').val(),
+        filtro_familia_maquina: $('#filtro_familia_maquina').val(),
+        filtro_nro_ingreso_mp: $('#filtro_nro_ingreso_mp').val(),
+        filtro_codigo_mp: $('#filtro_codigo_mp').val(),
+        filtro_certificado_mp: $('#filtro_certificado_mp').val(),
+        filtro_proveedor: $('#filtro_proveedor').val(),
+        filtro_nro_parcial: $('#filtro_nro_parcial').val(),
+        filtro_cant_piezas: $('#filtro_cant_piezas').val(),
+        filtro_nro_remito: $('#filtro_nro_remito').val(),
+        filtro_fecha_entrega: $('#filtro_fecha_entrega').val(),
+        filtro_inspector: $('#filtro_inspector').val()
+    };
+}
+
+function cargarResumenEntregas() {
+    $.get("{{ route('entregas_productos.resumen') }}", filtrosActuales(), function (data) {
+        $('#total-entregas').text(formatearNumeroEntero(data.total_entregas));
+        $('#total-piezas').text(formatearNumeroEntero(data.total_piezas));
+        $('#total-remitos').text(formatearNumeroEntero(data.total_remitos));
+    });
+}
+
+function cargarFiltrosEntregas() {
+    $.get("{{ route('entregas_productos.filters') }}", filtrosActuales(), function (data) {
+        [
+            ['#filtro_categoria', data.categorias || []],
+            ['#filtro_nro_maquina', data.maquinas || []],
+            ['#filtro_familia_maquina', data.familias || []],
+            ['#filtro_proveedor', data.proveedores || []]
+        ].forEach(function ([selector, values]) {
+            const select = $(selector);
+            const actual = select.val();
+            select.empty().append('<option value="">Todos</option>');
+            values.forEach(function (value) {
+                if (value !== null && value !== '') {
+                    select.append(`<option value="${value}">${value}</option>`);
+                }
+            });
+            if (actual && select.find(`option[value="${actual}"]`).length) {
+                select.val(actual);
+            }
+        });
+    });
+}
+
+let filtroTimer = null;
+
+function recargarTablaEntregas(table, options = {}) {
+    const resetPaging = options.resetPaging ?? true;
+    const refreshFilters = options.refreshFilters ?? false;
+
+    if (resetPaging) {
+        table.page('first');
+    }
+
+    table.ajax.reload(null, !resetPaging);
+    cargarResumenEntregas();
+
+    if (refreshFilters) {
+        cargarFiltrosEntregas();
+    }
+}
+
+function deleteEntrega(id) {
+    SwalUtils.confirmDelete('La entrega sera enviada a eliminados del sistema.').then((result) => {
+        if (!result.isConfirmed) {
+            return;
+        }
+
+        $.ajax({
+            url: `/entregas_productos/${id}`,
+            type: 'DELETE',
+            data: { _token: '{{ csrf_token() }}' },
+            success: function (response) {
+                $('#tabla_entregas_productos').DataTable().ajax.reload(null, false);
+                cargarResumenEntregas();
+                SwalUtils.deleted(response.message || 'Entrega eliminada correctamente.');
+            },
+            error: function (xhr) {
+                SwalUtils.error(xhr.responseJSON?.message || 'No se pudo eliminar la entrega.');
+            }
+        });
+    });
+}
+
+$(document).ready(function () {
+    cargarResumenEntregas();
+    cargarFiltrosEntregas();
+
+    const table = $('#tabla_entregas_productos').DataTable({
         processing: true,
         serverSide: true,
+        deferRender: true,
+        autoWidth: false,
+        scrollX: true,
+        scrollY: '60vh',
+        scrollCollapse: true,
+        responsive: false,
+        orderCellsTop: true,
+        pageLength: 25,
         ajax: {
             url: "{{ route('entregas_productos.data') }}",
-            type: 'GET',
             data: function (d) {
-                d.filtro_clase_familia = $('#filtro_clase_familia').val();
-                d.filtro_codigo_mp = $('#filtro_codigo_mp').val();
-                d.filtro_nombre_proveedor = $('#filtro_nombre_proveedor').val();
-                d.filtro_nombre_inspector = $('#filtro_nombre_inspector').val();
-                d.filtro_id = $('#filtro_id').val();
-                d.filtro_nro_of = $('#filtro_nro_of').val();
-                d.filtro_codigo_producto = $('#filtro_codigo_producto').val();
-                d.filtro_descripcion = $('#filtro_descripcion').val();
-                d.filtro_nro_maquina = $('#filtro_nro_maquina').val();
-                d.filtro_nro_ingreso_mp = $('#filtro_nro_ingreso_mp').val();
-                d.filtro_nro_certificado_mp = $('#filtro_nro_certificado_mp').val();
-                d.filtro_nro_parcial_of = $('#filtro_nro_parcial_of').val();
-                d.filtro_cant_piezas = $('#filtro_cant_piezas').val();
-                d.filtro_nro_remito = $('#filtro_nro_remito').val();
-                d.filtro_fecha_entrega = $('#filtro_fecha_entrega').val();
+                Object.assign(d, filtrosActuales());
             }
         },
         columns: [
-            { data: 'Id_List_Entreg_Prod', name: 'Id_List_Entreg_Prod' },
-            { data: 'Id_OF', name: 'Id_OF' },
-            { data: 'Prod_Codigo', name: 'Prod_Codigo' },
-            { data: 'Prod_Descripcion', name: 'Prod_Descripcion' },
-            { data: 'Nombre_Categoria', name: 'Nombre_Categoria' },
-            { data: 'Nro_Maquina', name: 'Nro_Maquina' },
-            { data: 'Nro_Ingreso_MP', name: 'Nro_Ingreso_MP' },
-            { data: 'Codigo_MP', name: 'Codigo_MP' },
-            { data: 'N_Certificado_MP', name: 'N_Certificado_MP' },
-            { data: 'Nombre_Proveedor', name: 'Nombre_Proveedor' },
-            { data: 'Nro_Parcial_Calidad', name: 'Nro_Parcial_Calidad' },
-            { data: 'Cant_Piezas_Entregadas', name: 'Cant_Piezas_Entregadas' },
-            { data: 'Nro_Remito_Entrega_Calidad', name: 'Nro_Remito_Entrega_Calidad' },
-            { data: 'Fecha_Entrega_Calidad', name: 'Fecha_Entrega_Calidad' },
-            { data: 'Inspector_Calidad', name: 'Inspector_Calidad' },
+            { data: 'Nro_OF', name: 'lep.Nro_OF' },
+            { data: 'Prod_Codigo', name: 'lep.Prod_Codigo', orderable: false, searchable: false },
+            { data: 'Prod_Descripcion', name: 'lep.Prod_Descripcion', orderable: false, searchable: false },
+            { data: 'Nombre_Categoria', name: 'lep.Nombre_Categoria', orderable: false, searchable: false },
+            { data: 'Nro_Maquina', name: 'lep.Nro_Maquina', orderable: false, searchable: false },
+            { data: 'Familia_Maquinas', name: 'lep.Familia_Maquinas', orderable: false, searchable: false },
+            { data: 'Nro_Ingreso_MP', name: 'lep.Nro_Ingreso_MP', orderable: false, searchable: false },
+            { data: 'Codigo_MP', name: 'lep.Codigo_MP', orderable: false, searchable: false },
+            { data: 'Nro_Certificado_MP', name: 'lep.Nro_Certificado_MP', orderable: false, searchable: false },
+            { data: 'Prov_Nombre', name: 'lep.Prov_Nombre', orderable: false, searchable: false },
+            { data: 'Nro_Parcial_Calidad', name: 'lep.Nro_Parcial_Calidad' },
+            {
+                data: 'Cant_Piezas_Entregadas',
+                name: 'lep.Cant_Piezas_Entregadas',
+                render: function (data, type) {
+                    return (type === 'display' || type === 'filter') ? formatearNumeroEntero(data) : data;
+                }
+            },
+            { data: 'Nro_Remito_Entrega_Calidad', name: 'lep.Nro_Remito_Entrega_Calidad' },
+            { data: 'Fecha_Entrega_Calidad', name: 'lep.Fecha_Entrega_Calidad' },
+            { data: 'Inspector_Calidad', name: 'lep.Inspector_Calidad' },
+            { data: 'acciones', name: 'acciones', orderable: false, searchable: false }
         ],
-        scrollY: '60vh',
-        scrollCollapse: true,
-        searching: false,
-        paging: true,
-        fixedHeader: true,
-        responsive: true,
-        orderCellsTop: true,
-        pageLength: 50,
-        lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]],
+        order: [[13, 'desc'], [12, 'desc'], [0, 'desc']],
         language: {
             url: "{{ asset('Spanish.json') }}"
-        },
-        initComplete: function () {
-            var api = this.api();
-            api.columns().every(function () {
-                var column = this;
-                if ($(column.header()).hasClass('filtro-select')) {
-                    var select = $('<select><option value="">Todos</option></select>')
-                        .appendTo($(column.header()).find('input').parent().empty())
-                        .on('change', function () {
-                            var val = $.fn.dataTable.util.escapeRegex($(this).val());
-                            column.search(val ? '^' + val + '$' : '', true, false).draw();
-                        });
-
-                    column.data().unique().sort().each(function (d, j) {
-                        select.append('<option value="' + d + '">' + d + '</option>')
-                    });
-                }
-            });
         }
     });
 
-    // Llenar los selects con valores únicos de las columnas especificadas
-    table.on('xhr', function () {
-        var json = table.ajax.json();
-        var uniqueValues = {
-            'Nombre_Categoria': new Set(),
-            'Codigo_MP': new Set(),
-            'Nombre_Proveedor': new Set()
-        };
-
-        var totalCantPiezas = 0;  // Inicializa la variable para almacenar la suma
-
-        $.each(json.data, function (index, item) {
-            uniqueValues['Nombre_Categoria'].add(item.Nombre_Categoria);
-            uniqueValues['Codigo_MP'].add(item.Codigo_MP);
-            uniqueValues['Nombre_Proveedor'].add(item.Nombre_Proveedor);
-
-            totalCantPiezas += parseFloat(item.Cant_Piezas_Entregadas);  // Suma las piezas entregadas
-        });
-
-        $('#totalCantPiezas').text(totalCantPiezas.toString().replace(/\B(?=(\d{3})+(?!\d))/g, "."));  // Actualiza el total de piezas entregadas
-
-        // Llenar los selectores con los valores únicos
-        fillSelect('#filtro_clase_familia', uniqueValues['Nombre_Categoria']);
-        fillSelect('#filtro_codigo_mp', uniqueValues['Codigo_MP']);
-        fillSelect('#filtro_nombre_proveedor', uniqueValues['Nombre_Proveedor']);
+    $(document).on('click', '.trigger-delete', function () {
+        deleteEntrega($(this).data('id'));
     });
 
-    function fillSelect(selector, data) {
-        var select = $(selector);
-        select.empty();
-        select.append('<option value="">Todos</option>');
-        data.forEach(function (value) {
-            select.append('<option value="' + value + '">' + value + '</option>');
-        });
-    }
-
-    // Recargar la tabla al cambiar los selectores y campos de texto
-    $('.filtro-select, .filtro-texto').on('change keyup', function () {
-        table.ajax.reload();
+    $('.filtro-texto').on('keyup change', function () {
+        clearTimeout(filtroTimer);
+        filtroTimer = setTimeout(function () {
+            recargarTablaEntregas(table, { resetPaging: true, refreshFilters: false });
+        }, 300);
     });
 
-    // Funcionalidad para limpiar filtros
-    $('#clearFilters').click(function() {
-        $('.filtro-select').val('');
+    $('.filtro-select').on('change', function () {
+        recargarTablaEntregas(table, { resetPaging: true, refreshFilters: true });
+    });
+
+    $(document).on('click', '#clearFilters', function (e) {
+        e.preventDefault();
+        clearTimeout(filtroTimer);
         $('.filtro-texto').val('');
-        table.ajax.reload();
+        $('.filtro-select').val('');
+        table.search('');
+        table.order([[13, 'desc'], [12, 'desc'], [0, 'desc']]);
+        recargarTablaEntregas(table, { resetPaging: true, refreshFilters: true });
     });
 });
 </script>
 @stop
+
+
+

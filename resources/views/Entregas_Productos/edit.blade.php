@@ -1,26 +1,29 @@
 @extends('adminlte::page')
 
-@section('title', 'Registrar Entrega de Producto')
+@section('title', 'Editar Entrega de Producto')
 
 @section('content_header')
-    <h1>Registrar Entrega de Producto</h1>
+    <h1>Editar Entrega de Producto</h1>
 @stop
 
 @section('content')
     @include('components.swal-session')
 
     <form method="POST"
-          action="{{ route('entregas_productos.store') }}"
-          id="form-entrega-producto"
-          data-ajax="true">
+          action="{{ route('entregas_productos.update', $entrega->Id_List_Entreg_Prod) }}"
+          id="form-editar-entrega-producto"
+          data-ajax="true"
+          data-edit-check="true"
+          data-exclude-fields="_token,_method">
         @csrf
+        @method('PUT')
 
         @include('entregas_productos.partials.form', ['detalleOf' => $detalleOf ?? null])
 
         <div class="card mt-3">
             <div class="card-body text-right">
-                <a href="{{ route('entregas_productos.index') }}" class="btn btn-secondary">Volver</a>
-                <button type="submit" class="btn btn-primary">Guardar entrega</button>
+                <a href="{{ route('entregas_productos.show', $entrega->Id_List_Entreg_Prod) }}" class="btn btn-secondary">Cancelar</a>
+                <button type="submit" class="btn btn-primary">Actualizar entrega</button>
             </div>
         </div>
     </form>
@@ -37,9 +40,11 @@
 <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="{{ asset('js/swal-utils.js') }}"></script>
 <script src="{{ asset('js/form-ajax-submit.js') }}"></script>
+<script src="{{ asset('js/form-edit-check.js') }}"></script>
 <script>
 (function () {
     const endpointTemplate = @json(route('entregas_productos.ofData', ['nroOf' => '__OF__']));
+    const entregaId = @json($entrega->Id_List_Entreg_Prod);
 
     function formatNumber(value) {
         return Number(value || 0).toLocaleString('es-AR');
@@ -88,7 +93,9 @@
             return;
         }
 
-        $.get(endpointTemplate.replace('__OF__', encodeURIComponent(nroOf)))
+        $.get(endpointTemplate.replace('__OF__', encodeURIComponent(nroOf)), {
+            exclude_entrega_id: entregaId
+        })
             .done(function (response) {
                 paintDetails(response.data || null);
             })
@@ -101,7 +108,7 @@
     }
 
     $(document).ready(function () {
-        fetchOfData(false);
+        paintDetails(@json($detalleOf));
         $('#Id_OF').on('change blur', function () {
             fetchOfData(true);
         });

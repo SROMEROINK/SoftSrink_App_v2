@@ -140,6 +140,8 @@
         const table = $('#tabla_grupo_subcategoria').DataTable({
             processing: true,
             serverSide: true,
+            scrollY: '60vh',
+            scrollCollapse: true,
             ajax: {
                 url: "{{ route('producto_grupo_subcategoria.data') }}",
                 data: function (d) {
@@ -236,3 +238,4 @@
     });
 </script>
 @stop
+

@@ -40,21 +40,25 @@ Route::middleware(['auth', 'verified'])->group(function () {
         return view('home');
     })->name('dashboard');
 
-    // Rutas protegidas por roles especÃƒÆ’Ã‚Â­ficos (Administrador)
+    // Rutas protegidas por roles especÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â­ficos (Administrador)
     Route::middleware(['role:Administrador'])->group(function () {
         Route::resource('users', UserController::class);
         Route::resource('roles', RolePermissionController::class);
         Route::resource('permissions', PermissionController::class);
     });
 
-    // Ruta especÃƒÆ’Ã‚Â­fica para DataTables y otras funcionalidades
+    // Ruta especÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â­fica para DataTables y otras funcionalidades
     Route::get('productos/data', [ProductoController::class, 'getData'])->name('productos.data');
     Route::get('pedido_cliente/data', [PedidoClienteController::class, 'getData'])->name('pedido_cliente.data');
     Route::get('pedido_cliente/resumen', [PedidoClienteController::class, 'resumen'])->name('pedido_cliente.resumen');
     Route::get('pedido_cliente/plain', [PedidoClienteController::class, 'indexPlain'])->name('pedido_cliente.plain');
     Route::get('listado_of', [ListadoOfController::class, 'index'])->name('listado_of.index');
     Route::get('listado_of/data', [ListadoOfController::class, 'getData'])->name('listado_of.data');
+    Route::get('listado_of/filters', [ListadoOfController::class, 'getUniqueFilters'])->name('listado_of.filters');
     Route::get('listado_of/resumen', [ListadoOfController::class, 'resumen'])->name('listado_of.resumen');
+    Route::get('listado_of/plain', [ListadoOfController::class, 'indexPlain'])->name('listado_of.plain');
+    Route::get('listado_of/export/csv', [ListadoOfController::class, 'exportCsv'])->name('listado_of.exportCsv');
+    Route::get('listado_of/export/excel', [ListadoOfController::class, 'exportExcel'])->name('listado_of.exportExcel');
     Route::get('pedido_cliente_mp/data', [PedidoClienteMpController::class, 'getData'])->name('pedido_cliente_mp.data');
     Route::get('pedido_cliente_mp/resumen', [PedidoClienteMpController::class, 'resumen'])->name('pedido_cliente_mp.resumen');
     Route::get('pedido_cliente_mp/planner', [PedidoClienteMpController::class, 'planner'])->name('pedido_cliente_mp.planner');
@@ -71,6 +75,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('fabricacion/resumen', [RegistroDeFabricacionController::class, 'resumen'])->name('fabricacion.resumen');
     Route::get('fechas_of/data', [FechasOfController::class, 'getData'])->name('fechas_of.data');
     Route::get('/entregas_productos/data', [ListadoEntregaProductoController::class, 'getData'])->name('entregas_productos.data');
+    Route::get('/entregas_productos/filters', [ListadoEntregaProductoController::class, 'getUniqueFilters'])->name('entregas_productos.filters');
+    Route::get('/entregas_productos/resumen', [ListadoEntregaProductoController::class, 'resumen'])->name('entregas_productos.resumen');
+    Route::get('/entregas_productos/of-data/{nroOf}', [ListadoEntregaProductoController::class, 'getOfData'])->name('entregas_productos.ofData');
     Route::get('/fabricacion/withFiltro', [RegistroDeFabricacionController::class, 'indexWithFiltro'])->name('fabricacion.withFiltro');
     Route::get('mp_diametro/data', [MpDiametroController::class, 'getData'])->name('mp_diametro.data');
     
@@ -78,7 +85,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     
     Route::get('/productos/codigos', [ProductoController::class, 'getCodigosProducto'])->name('productos.codigos');
     
-    // Rutas para obtener categorÃƒÆ’Ã‚Â­as y subcategorÃƒÆ’Ã‚Â­as
+    // Rutas para obtener categorÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â­as y subcategorÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â­as
     Route::get('/productos/categorias', [ProductoController::class, 'getCategorias'])->name('productos.categorias');
     Route::get('/productos/subcategorias', [ProductoController::class, 'getSubcategorias'])->name('productos.subcategorias');
     Route::get('/productos/codigos', [ProductoController::class, 'getCodigosProducto'])->name('productos.codigos');
@@ -100,7 +107,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/productos/{id}/descripcion', [ProductoController::class, 'getDescripcionProducto']);
     
     // Rutas para las funcionalidades de Materia Prima
-    // Rutas para los controladores de Materia Prima y DiÃƒÆ’Ã‚Â¡metros
+    // Rutas para los controladores de Materia Prima y DiÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡metros
     Route::get('/mp_diametros', [MpDiametroController::class, 'index'])->name('mp_diametros.index');
     Route::get('/mp_materias_primas', [MpMateriaPrimaController::class, 'index'])->name('mp_materias_primas.index');
     Route::get('/mp_ingresos', [MpIngresoController::class, 'index'])->name('mp_ingresos.index');
@@ -127,7 +134,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/entregas_productos', [ListadoEntregaProductoController::class, 'index'])->name('entregas_productos.index');
     Route::get('/pedido-cliente/get-id-producto/{nroOf}', [PedidoClienteController::class, 'getIdProductoPorNroOf']);
     
-    // Rutas para fabricaciÃƒÆ’Ã‚Â³n
+    // Rutas para fabricaciÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³n
     Route::get('fabricacion/show/{nroOF}', [RegistroDeFabricacionController::class, 'showByNroOF'])->name('fabricacion.showByNroOF');
     
     // Rutas para proveedores
@@ -233,7 +240,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('producto_grupo_conjuntos', ProductoGrupoConjuntosController::class);
 
 // 08/03/2026*
-// Rutas para el mÃƒÆ’Ã‚Â³dulo de ejemplo (descomentar si se implementa el controlador y modelo correspondiente)
+// Rutas para el mÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³dulo de ejemplo (descomentar si se implementa el controlador y modelo correspondiente)
 
 Route::get('modulo/data', [ModuloController::class, 'getData'])->name('modulo.data');
 Route::get('modulo/filters', [ModuloController::class, 'getUniqueFilters'])->name('modulo.filters');
@@ -244,8 +251,11 @@ Route::resource('modulo', ModuloController::class);
 
 });
 
-// Incluye las rutas de autenticaciÃƒÆ’Ã‚Â³n (si existe un archivo auth.php)
+// Incluye las rutas de autenticaciÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³n (si existe un archivo auth.php)
 require __DIR__ . '/auth.php';
+
+
+
 
 
 

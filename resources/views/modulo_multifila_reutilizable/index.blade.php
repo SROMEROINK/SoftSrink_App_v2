@@ -126,6 +126,8 @@ $(document).ready(function () {
     const table = $('#tabla_modulo_multifila').DataTable({
         processing: true,
         serverSide: true,
+        scrollY: '60vh',
+        scrollCollapse: true,
         ajax: {
             url: "{{ route('modulo.data') }}",
             type: 'GET',
@@ -179,3 +181,4 @@ $(document).ready(function () {
 });
 </script>
 @stop
+
