@@ -57,6 +57,7 @@
     <div class="dropdown-menu">
         <button class="dropdown-item" onclick="window.location.href='{{ route('pedido_cliente.index') }}'">Pedido del Cliente</button>
         <button class="dropdown-item" onclick="window.location.href='{{ route('listado_of.index') }}'">Listado OF</button>
+        <button class="dropdown-item" onclick="window.location.href='{{ route('listado_of.lifecycle') }}'">Resumen Ciclo OF</button>
     </div>
 </div>
 <button type="button" class="btn btn-primary" onclick="window.location.href='{{ route('fabricacion.index') }}'">Registro de Fabricaci&oacute;n</button>

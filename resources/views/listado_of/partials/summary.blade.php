@@ -1,6 +1,6 @@
 ﻿<div class="row mt-3">
     <div class="col-md-4">
-        <div class="small-box bg-info">
+        <div class="small-box summary-box summary-box--brand">
             <div class="inner">
                 <h3>{{ number_format((int) ($summary['total_of'] ?? 0), 0, ',', '.') }}</h3>
                 <p>OF cargadas</p>
@@ -11,7 +11,7 @@
         </div>
     </div>
     <div class="col-md-4">
-        <div class="small-box bg-success">
+        <div class="small-box summary-box summary-box--success">
             <div class="inner">
                 <h3>{{ number_format((int) ($summary['total_piezas_solicitadas'] ?? 0), 0, ',', '.') }}</h3>
                 <p>Piezas solicitadas</p>
@@ -22,7 +22,7 @@
         </div>
     </div>
     <div class="col-md-4">
-        <div class="small-box bg-danger">
+        <div class="small-box summary-box summary-box--danger">
             <div class="inner">
                 <h3>{{ number_format((int) ($summary['total_piezas_fabricadas'] ?? 0), 0, ',', '.') }}</h3>
                 <p>Piezas fabricadas</p>
@@ -33,3 +33,4 @@
         </div>
     </div>
 </div>
+

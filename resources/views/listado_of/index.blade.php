@@ -114,9 +114,17 @@
             </form>
         </div>
     </div>
+
+    <div class="card mt-4 listado-of-lifecycle-card">
+        <div class="card-body">
+            @include('listado_of.partials.lifecycle_summary', [
+                'ofLifecycle' => $ofLifecycle,
+                'meses' => $meses,
+            ])
+        </div>
+    </div>
 </div>
 @stop
-
 @section('css')
 <link rel="stylesheet" href="{{ asset('vendor/adminlte/dist/css/shared/cards.css') }}">
 <link rel="stylesheet" href="{{ asset('vendor/adminlte/dist/css/shared/filters.css') }}">
@@ -283,4 +291,7 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 </script>
 @stop
+
+
+
 

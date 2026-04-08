@@ -22,6 +22,8 @@ class ListadoEntregaProducto extends Model
         'Nro_Remito_Entrega_Calidad',
         'Fecha_Entrega_Calidad',
         'Inspector_Calidad',
+        'Id_Inspector_Calidad',
+        'Id_Usuario_Libera',
         'reg_Status',
         'created_by',
         'updated_by',
@@ -30,6 +32,8 @@ class ListadoEntregaProducto extends Model
 
     protected $casts = [
         'Id_OF' => 'integer',
+        'Id_Inspector_Calidad' => 'integer',
+        'Id_Usuario_Libera' => 'integer',
         'Cant_Piezas_Entregadas' => 'integer',
         'Nro_Remito_Entrega_Calidad' => 'integer',
         'Fecha_Entrega_Calidad' => 'date',
@@ -39,6 +43,16 @@ class ListadoEntregaProducto extends Model
     public function pedido()
     {
         return $this->belongsTo(PedidoCliente::class, 'Id_OF', 'Nro_OF');
+    }
+
+    public function inspectorCalidad()
+    {
+        return $this->belongsTo(CalidadInspector::class, 'Id_Inspector_Calidad');
+    }
+
+    public function usuarioLibera()
+    {
+        return $this->belongsTo(User::class, 'Id_Usuario_Libera');
     }
 
     public function creator()

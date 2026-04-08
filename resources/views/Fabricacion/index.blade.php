@@ -46,6 +46,12 @@
         <br><strong>CSV historico:</strong> no quedan filas pendientes y el boton quedo bloqueado para evitar duplicados.
     </div>
 
+    <div class="fabricacion-secondary-toolbar">
+        <a href="{{ route('fabricacion.resumenMensual') }}" class="btn btn-outline-primary btn-sm">
+            Resumen OF fabricadas
+        </a>
+    </div>
+
     <div class="row mt-3">
         <div class="col-md-4">
             <div class="small-box bg-info">

@@ -1,0 +1,192 @@
+.entrega-create-form {
+    background: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(15, 23, 42, 0.08);
+}
+
+.entrega-create-alert {
+    background: linear-gradient(90deg, #1c9fb3 0%, #25b5cb 100%);
+    color: #fff;
+    border: 0;
+    border-radius: 8px;
+    padding: 14px 18px;
+    margin-bottom: 18px;
+}
+
+.entrega-create-head {
+    display: grid;
+    grid-template-columns: 1.1fr 1fr 0.8fr;
+    gap: 14px;
+    margin-bottom: 18px;
+}
+
+.entrega-head-card {
+    background: #f8fbfd;
+    border: 1px solid #dce8ee;
+    border-radius: 10px;
+    padding: 16px 18px;
+    min-height: 96px;
+}
+
+.entrega-head-label {
+    display: block;
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: #47617a;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 8px;
+}
+
+.entrega-head-value {
+    font-size: 2rem;
+    font-weight: 800;
+    color: #1f2937;
+    line-height: 1;
+}
+
+.entrega-head-hint {
+    display: block;
+    margin-top: 10px;
+    color: #60758b;
+    font-size: 0.85rem;
+}
+
+.entrega-head-input {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.entrega-head-input label {
+    margin: 0;
+    font-weight: 700;
+    color: #334155;
+}
+
+.entrega-head-user {
+    font-size: 1.35rem;
+    line-height: 1.2;
+}
+
+.entrega-toolbar {
+    display: flex;
+    gap: 10px;
+    margin-top: 16px;
+}
+
+.entrega-grid-wrap {
+    overflow-x: auto;
+    border: 1px solid #d8e3ea;
+    border-radius: 10px;
+    background: #fff;
+}
+
+#tablaListadoOF {
+    width: 100%;
+    min-width: 1800px;
+    margin: 0;
+    table-layout: fixed;
+}
+
+#tablaListadoOF thead th {
+    background: #eef5f8;
+    color: #223243;
+    font-weight: 800;
+    text-align: center;
+    vertical-align: middle;
+    padding: 10px 8px;
+    border-bottom: 2px solid #d8e3ea;
+}
+
+#tablaListadoOF tbody td {
+    vertical-align: middle;
+    text-align: center;
+    padding: 8px;
+    background: #fff;
+}
+
+#tablaListadoOF input,
+#tablaListadoOF select {
+    width: 100%;
+    min-width: 0;
+    border: none;
+    border-bottom: 2px solid #cbd5e1;
+    border-radius: 0;
+    background: transparent;
+    padding: 8px 6px;
+    text-align: center;
+    box-shadow: none;
+}
+
+#tablaListadoOF input:focus,
+#tablaListadoOF select:focus {
+    border-bottom-color: #2563eb;
+    outline: none;
+    box-shadow: none;
+}
+
+#tablaListadoOF .readonly-ref {
+    background: #f8fafc;
+    color: #334155;
+    font-weight: 600;
+    text-align: center;
+}
+
+#tablaListadoOF .partial-output {
+    background: #eef6ff;
+    color: #0f4c81;
+    font-weight: 700;
+    text-align: center;
+}
+
+#tablaListadoOF tbody tr.row-complete td {
+    background: #ebfbef;
+}
+
+#tablaListadoOF tbody tr.row-incomplete td {
+    background: #fff8e6;
+}
+
+#tablaListadoOF tbody tr.row-invalid td {
+    background: #fdeaea;
+}
+
+#tablaListadoOF thead th,
+#tablaListadoOF tbody td,
+#tablaListadoOF input,
+#tablaListadoOF select,
+#tablaListadoOF .readonly-ref,
+#tablaListadoOF .partial-output {
+    text-align: center !important;
+}
+
+.entrega-row-number {
+    font-weight: 800;
+    color: #1e293b;
+}
+
+.entrega-remove-btn {
+    min-width: 110px;
+}
+
+.entrega-col-fila { width: 70px; }
+.entrega-col-of { width: 120px; }
+.entrega-col-cantidad { width: 130px; }
+.entrega-col-inspector { width: 170px; }
+.entrega-col-codigo { width: 145px; }
+.entrega-col-descripcion { width: 360px; }
+.entrega-col-ingreso { width: 135px; }
+.entrega-col-codigomp { width: 150px; }
+.entrega-col-cert { width: 160px; }
+.entrega-col-maquina { width: 120px; }
+.entrega-col-familia { width: 145px; }
+.entrega-col-parcial { width: 150px; }
+.entrega-col-acciones { width: 130px; }
+
+@media (max-width: 1200px) {
+    .entrega-create-head {
+        grid-template-columns: 1fr;
+    }
+}

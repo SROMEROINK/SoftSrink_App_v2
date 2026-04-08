@@ -53,6 +53,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('pedido_cliente/resumen', [PedidoClienteController::class, 'resumen'])->name('pedido_cliente.resumen');
     Route::get('pedido_cliente/plain', [PedidoClienteController::class, 'indexPlain'])->name('pedido_cliente.plain');
     Route::get('listado_of', [ListadoOfController::class, 'index'])->name('listado_of.index');
+    Route::get('listado_of/resumen-ciclo', [ListadoOfController::class, 'indexLifecycle'])->name('listado_of.lifecycle');
     Route::get('listado_of/data', [ListadoOfController::class, 'getData'])->name('listado_of.data');
     Route::get('listado_of/filters', [ListadoOfController::class, 'getUniqueFilters'])->name('listado_of.filters');
     Route::get('listado_of/resumen', [ListadoOfController::class, 'resumen'])->name('listado_of.resumen');
@@ -73,6 +74,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('fabricacion/data', [RegistroDeFabricacionController::class, 'getData'])->name('fabricacion.data');
     Route::post('fabricacion/import-historico', [RegistroDeFabricacionController::class, 'importHistoricCsv'])->name('fabricacion.importHistoricCsv');
     Route::get('fabricacion/resumen', [RegistroDeFabricacionController::class, 'resumen'])->name('fabricacion.resumen');
+    Route::get('fabricacion/resumen-mensual', [RegistroDeFabricacionController::class, 'resumenMensualFamilias'])->name('fabricacion.resumenMensual');
     Route::get('fechas_of/data', [FechasOfController::class, 'getData'])->name('fechas_of.data');
     Route::get('/entregas_productos/data', [ListadoEntregaProductoController::class, 'getData'])->name('entregas_productos.data');
     Route::get('/entregas_productos/filters', [ListadoEntregaProductoController::class, 'getUniqueFilters'])->name('entregas_productos.filters');

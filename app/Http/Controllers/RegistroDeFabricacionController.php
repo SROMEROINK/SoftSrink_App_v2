@@ -6,6 +6,7 @@ use App\Models\RegistroDeFabricacion;
 use App\Services\HistoricalRegistroFabricacionImportService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Yajra\DataTables\Facades\DataTables;
@@ -14,9 +15,52 @@ class RegistroDeFabricacionController extends Controller
 {
     public function __construct()
     {
-        $this->middleware('permission:ver produccion')->only('index', 'showByNroOF', 'show', 'getData', 'resumen');
+        $this->middleware('permission:ver produccion')->only('index', 'showByNroOF', 'show', 'getData', 'resumen', 'resumenMensualFamilias');
         $this->middleware('permission:editar produccion')->only(['create', 'store', 'edit', 'update', 'importHistoricCsv']);
         $this->middleware('permission:eliminar registros')->only('destroy');
+    }
+
+    protected function getFabricacionMonthLabels(): array
+    {
+        return [
+            1 => 'Enero',
+            2 => 'Febrero',
+            3 => 'Marzo',
+            4 => 'Abril',
+            5 => 'Mayo',
+            6 => 'Junio',
+            7 => 'Julio',
+            8 => 'Agosto',
+            9 => 'Septiembre',
+            10 => 'Octubre',
+            11 => 'Noviembre',
+            12 => 'Diciembre',
+        ];
+    }
+
+    protected function buildMonthlyFamilySummaryQuery(Request $request)
+    {
+        $query = DB::table('registro_de_fabricacion as rf')
+            ->leftJoin('pedido_cliente as pc', 'pc.Id_OF', '=', 'rf.Nro_OF')
+            ->leftJoin('pedido_cliente_mp as pm', function ($join) {
+                $join->on('pm.Id_OF', '=', 'pc.Id_OF')
+                    ->whereNull('pm.deleted_at');
+            })
+            ->whereNotNull('rf.Fecha_Fabricacion');
+
+        if ($request->filled('filtro_anio')) {
+            $query->whereYear('rf.Fecha_Fabricacion', (int) $request->input('filtro_anio'));
+        }
+
+        if ($request->filled('filtro_mes')) {
+            $query->whereMonth('rf.Fecha_Fabricacion', (int) $request->input('filtro_mes'));
+        }
+
+        if ($request->filled('filtro_familia')) {
+            $query->where('pm.Familia_Maquina', $request->input('filtro_familia'));
+        }
+
+        return $query;
     }
 
     protected function buildFilteredQuery(Request $request)
@@ -204,6 +248,143 @@ class RegistroDeFabricacionController extends Controller
             'historicoImportado',
             'puedeImportarHistorico'
         ));
+    }
+
+    public function resumenMensualFamilias(Request $request)
+    {
+        $fabRes = DB::table('registro_de_fabricacion as rf')
+            ->selectRaw('rf.Nro_OF')
+            ->selectRaw('MIN(rf.Fecha_Fabricacion) as Fecha_Inicio_Fabricacion')
+            ->selectRaw('MAX(rf.Fecha_Fabricacion) as Fecha_Fin_Fabricacion')
+            ->selectRaw('SUM(rf.Cant_Piezas) as Piezas_Fabricadas')
+            ->selectRaw('COUNT(*) as Parciales_Registrados')
+            ->whereNotNull('rf.Fecha_Fabricacion');
+
+        if ($request->filled('filtro_anio')) {
+            $fabRes->whereYear('rf.Fecha_Fabricacion', (int) $request->input('filtro_anio'));
+        }
+
+        if ($request->filled('filtro_mes')) {
+            $fabRes->whereMonth('rf.Fecha_Fabricacion', (int) $request->input('filtro_mes'));
+        }
+
+        $fabRes->groupBy('rf.Nro_OF');
+
+        $entRes = DB::table('listado_entregas_productos as lep')
+            ->selectRaw('lep.Id_OF')
+            ->selectRaw('SUM(lep.Cant_Piezas_Entregadas) as Piezas_Entregadas_Mes')
+            ->whereNotNull('lep.Fecha_Entrega_Calidad');
+
+        if ($request->filled('filtro_anio')) {
+            $entRes->whereYear('lep.Fecha_Entrega_Calidad', (int) $request->input('filtro_anio'));
+        }
+
+        if ($request->filled('filtro_mes')) {
+            $entRes->whereMonth('lep.Fecha_Entrega_Calidad', (int) $request->input('filtro_mes'));
+        }
+
+        $entRes->groupBy('lep.Id_OF');
+
+        $rowsQuery = DB::table('pedido_cliente as pc')
+            ->joinSub($fabRes, 'fab_res', function ($join) {
+                $join->on('pc.Id_OF', '=', 'fab_res.Nro_OF');
+            })
+            ->leftJoinSub($entRes, 'ent_res', function ($join) {
+                $join->on('pc.Id_OF', '=', 'ent_res.Id_OF');
+            })
+            ->join('productos as p', 'pc.Producto_Id', '=', 'p.Id_Producto')
+            ->leftJoin('producto_categoria as cat', 'p.Id_Prod_Categoria', '=', 'cat.Id_Categoria')
+            ->leftJoin('pedido_cliente_mp as pm', function ($join) {
+                $join->on('pm.Id_OF', '=', 'pc.Id_OF')
+                    ->whereNull('pm.deleted_at');
+            })
+            ->select([
+                'pc.Id_OF',
+                'pc.Nro_OF',
+                'p.Prod_Codigo',
+                'p.Prod_Descripcion',
+                'cat.Nombre_Categoria',
+                'pm.Nro_Maquina',
+                'pm.Familia_Maquina',
+                'pc.Fecha_del_Pedido',
+                DB::raw('pc.Cant_Fabricacion as Cant_Pedido'),
+                'fab_res.Fecha_Inicio_Fabricacion',
+                  'fab_res.Fecha_Fin_Fabricacion',
+                  'fab_res.Piezas_Fabricadas',
+                  'fab_res.Parciales_Registrados',
+                  DB::raw('COALESCE(ent_res.Piezas_Entregadas_Mes, 0) as Piezas_Entregadas_Mes'),
+              ]);
+
+        if ($request->filled('filtro_familia')) {
+            $rowsQuery->where('pm.Familia_Maquina', $request->input('filtro_familia'));
+        }
+
+        if ($request->filled('filtro_nro_of')) {
+            $rowsQuery->where('pc.Nro_OF', (int) $request->input('filtro_nro_of'));
+        }
+
+        if ($request->filled('filtro_categoria')) {
+            $rowsQuery->where('cat.Nombre_Categoria', $request->input('filtro_categoria'));
+        }
+
+        $rows = (clone $rowsQuery)
+            ->orderByDesc('fab_res.Fecha_Fin_Fabricacion')
+            ->orderByDesc('pc.Nro_OF')
+            ->paginate((int) $request->input('per_page', 25))
+            ->withQueryString();
+
+        $summary = [
+            'total_piezas' => (int) ((clone $rowsQuery)->sum('fab_res.Piezas_Fabricadas') ?? 0),
+            'total_parciales' => (int) ((clone $rowsQuery)->sum('fab_res.Parciales_Registrados') ?? 0),
+            'total_of' => (int) ((clone $rowsQuery)->count() ?? 0),
+        ];
+
+        $years = Cache::remember('fabricacion.resumen_mensual.years', now()->addMinutes(30), function () {
+            return DB::table('registro_de_fabricacion')
+                ->whereNotNull('Fecha_Fabricacion')
+                ->selectRaw('YEAR(Fecha_Fabricacion) as anio')
+                ->distinct()
+                ->orderByDesc('anio')
+                ->pluck('anio')
+                ->filter()
+                ->values();
+        });
+
+        $familias = Cache::remember('fabricacion.resumen_mensual.familias', now()->addMinutes(30), function () {
+            return DB::table('registro_de_fabricacion as rf')
+                ->leftJoin('pedido_cliente as pc', 'pc.Id_OF', '=', 'rf.Nro_OF')
+                ->leftJoin('pedido_cliente_mp as pm', function ($join) {
+                    $join->on('pm.Id_OF', '=', 'pc.Id_OF')
+                        ->whereNull('pm.deleted_at');
+                })
+                ->selectRaw("COALESCE(NULLIF(pm.Familia_Maquina, ''), 'Sin familia') as familia")
+                ->distinct()
+                ->orderBy('familia')
+                ->pluck('familia')
+                ->filter()
+                ->values();
+        });
+
+        $categorias = Cache::remember('fabricacion.resumen_mensual.categorias', now()->addMinutes(30), function () {
+            return DB::table('productos as p')
+                ->leftJoin('producto_categoria as cat', 'p.Id_Prod_Categoria', '=', 'cat.Id_Categoria')
+                ->whereNotNull('cat.Nombre_Categoria')
+                ->select('cat.Nombre_Categoria')
+                ->distinct()
+                ->orderBy('cat.Nombre_Categoria')
+                ->pluck('cat.Nombre_Categoria')
+                ->filter()
+                ->values();
+        });
+
+        return view('fabricacion.resumen_mensual', [
+            'rows' => $rows,
+            'summary' => $summary,
+            'years' => $years,
+            'familias' => $familias,
+            'categorias' => $categorias,
+            'months' => $this->getFabricacionMonthLabels(),
+        ]);
     }
 
     public function importHistoricCsv(HistoricalRegistroFabricacionImportService $historicalImportService)

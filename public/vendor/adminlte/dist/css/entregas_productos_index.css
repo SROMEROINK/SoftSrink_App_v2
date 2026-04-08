@@ -22,3 +22,138 @@
 #tabla_entregas_productos .btn {
     margin: 2px;
 }
+
+.familias-entrega-summary {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.familias-entrega-summary__title {
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: #334155;
+    text-align: center;
+}
+
+.familias-entrega-summary__grid {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(140px, 1fr));
+    gap: 10px;
+}
+
+.familias-entrega-summary__item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-height: 74px;
+    padding: 12px 10px;
+    border: 1px solid #d9e1ea;
+    border-radius: 12px;
+    background: linear-gradient(180deg, #ffffff 0%, #f8fbfc 100%);
+    box-shadow: 0 8px 18px rgba(15, 23, 42, 0.04);
+    text-align: center;
+}
+
+.familias-entrega-summary__item strong {
+    font-size: 1.15rem;
+    color: #1f2937;
+}
+
+.familias-entrega-summary__label {
+    font-size: 0.79rem;
+    font-weight: 700;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.familias-entrega-summary__item--total {
+    border-color: #bfe3c8;
+    background: linear-gradient(180deg, #f6fffa 0%, #ecfdf5 100%);
+}
+
+.plain-toolbar--filters {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.plain-filter-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    padding: 10px 12px;
+    border: 1px solid #d9e1ea;
+    border-radius: 12px;
+    background: linear-gradient(180deg, #ffffff 0%, #f8fbfc 100%);
+    box-shadow: 0 8px 18px rgba(15, 23, 42, 0.04);
+}
+
+.plain-filter-group--range {
+    justify-content: space-between;
+    width: 100%;
+}
+
+.plain-filter-group__label {
+    font-weight: 700;
+    color: #334155;
+    font-size: 0.82rem;
+}
+
+.plain-filter-range {
+    display: flex;
+    align-items: flex-end;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.plain-filter-range__block {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.plain-filter-range__title {
+    font-size: 0.74rem;
+    font-weight: 700;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.plain-filter-range__inputs {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.plain-toolbar-select {
+    min-width: 148px;
+}
+
+@media (max-width: 991.98px) {
+    .familias-entrega-summary__grid {
+        grid-template-columns: repeat(2, minmax(140px, 1fr));
+    }
+
+    .plain-filter-group--range {
+        align-items: flex-start;
+    }
+
+    .plain-filter-range {
+        width: 100%;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .familias-entrega-summary__grid {
+        grid-template-columns: 1fr;
+    }
+}

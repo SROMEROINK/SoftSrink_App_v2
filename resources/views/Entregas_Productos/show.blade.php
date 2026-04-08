@@ -78,6 +78,15 @@
             </div>
         </div>
 
+        <div class="row mt-3">
+            <div class="col-md-3">
+                <div class="detail-item">
+                    <span class="detail-label">Libero la entrega</span>
+                    <div class="detail-value">{{ $entrega->liberador_name ?? $entrega->creator_name ?? '-' }}</div>
+                </div>
+            </div>
+        </div>
+
         <div class="detail-divider"></div>
 
         <div class="row">

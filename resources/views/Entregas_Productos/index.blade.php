@@ -11,6 +11,12 @@
 @stop
 
 @section('content')
+@php
+    $meses = [
+        1 => 'Enero', 2 => 'Febrero', 3 => 'Marzo', 4 => 'Abril', 5 => 'Mayo', 6 => 'Junio',
+        7 => 'Julio', 8 => 'Agosto', 9 => 'Septiembre', 10 => 'Octubre', 11 => 'Noviembre', 12 => 'Diciembre',
+    ];
+@endphp
 <div class="container-fluid">
     <div class="alert alert-info mt-3">
         <strong>Listado de entregas:</strong> esta vista registra todas las entregas finales al cliente por OF y parcial, usando una vista consolidada optimizada de entregas para producto, maquina y MP.
@@ -53,7 +59,76 @@
     </div>
 
     <div class="card mt-3">
+        <div class="card-body py-3">
+            <div class="familias-entrega-summary">
+                <div class="familias-entrega-summary__title">Detalle de Entrega: Familia de Piezas</div>
+                <div class="familias-entrega-summary__grid">
+                    <div class="familias-entrega-summary__item">
+                        <span class="familias-entrega-summary__label">Implantes</span>
+                        <strong id="familia-entrega-implantes">0</strong>
+                    </div>
+                    <div class="familias-entrega-summary__item">
+                        <span class="familias-entrega-summary__label">Instrumental</span>
+                        <strong id="familia-entrega-instrumental">0</strong>
+                    </div>
+                    <div class="familias-entrega-summary__item">
+                        <span class="familias-entrega-summary__label">Protésicos</span>
+                        <strong id="familia-entrega-protesicos">0</strong>
+                    </div>
+                    <div class="familias-entrega-summary__item">
+                        <span class="familias-entrega-summary__label">Ins/p/imp.</span>
+                        <strong id="familia-entrega-ins-p-imp">0</strong>
+                    </div>
+                    <div class="familias-entrega-summary__item">
+                        <span class="familias-entrega-summary__label">Dispositivos</span>
+                        <strong id="familia-entrega-dispositivos">0</strong>
+                    </div>
+                    <div class="familias-entrega-summary__item familias-entrega-summary__item--total">
+                        <span class="familias-entrega-summary__label">Total entregado</span>
+                        <strong id="familia-entrega-total">0</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card mt-3">
         <div class="card-body">
+            <div class="plain-toolbar plain-toolbar--filters mb-3">
+                <div class="plain-filter-group plain-filter-group--range">
+                    <span class="plain-filter-group__label">Entrega</span>
+                    <div class="plain-filter-range">
+                        <div class="plain-filter-range__block">
+                            <span class="plain-filter-range__title">Desde</span>
+                            <div class="plain-filter-range__inputs">
+                                <select id="filtro_anio_entrega_desde" class="form-control form-control-sm filtro-select plain-toolbar-select">
+                                    <option value="">Año</option>
+                                </select>
+                                <select id="filtro_mes_entrega_desde" class="form-control form-control-sm filtro-select plain-toolbar-select">
+                                    <option value="">Mes</option>
+                                    @foreach($meses as $numero => $nombre)
+                                        <option value="{{ $numero }}">{{ $nombre }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+                        <div class="plain-filter-range__block">
+                            <span class="plain-filter-range__title">Hasta</span>
+                            <div class="plain-filter-range__inputs">
+                                <select id="filtro_anio_entrega_hasta" class="form-control form-control-sm filtro-select plain-toolbar-select">
+                                    <option value="">Año</option>
+                                </select>
+                                <select id="filtro_mes_entrega_hasta" class="form-control form-control-sm filtro-select plain-toolbar-select">
+                                    <option value="">Mes</option>
+                                    @foreach($meses as $numero => $nombre)
+                                        <option value="{{ $numero }}">{{ $nombre }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
             <div class="table-responsive">
                 <table id="tabla_entregas_productos" class="table table-bordered table-striped w-100">
                     <thead>
@@ -125,6 +200,7 @@ function formatearNumeroEntero(valor) {
 
 function filtrosActuales() {
     return {
+        buscar_global: $('#tabla_entregas_productos_filter input[type="search"]').val() || '',
         filtro_nro_of: $('#filtro_nro_of').val(),
         filtro_producto: $('#filtro_producto').val(),
         filtro_descripcion: $('#filtro_descripcion').val(),
@@ -139,16 +215,28 @@ function filtrosActuales() {
         filtro_cant_piezas: $('#filtro_cant_piezas').val(),
         filtro_nro_remito: $('#filtro_nro_remito').val(),
         filtro_fecha_entrega: $('#filtro_fecha_entrega').val(),
+        filtro_anio_entrega_desde: $('#filtro_anio_entrega_desde').val(),
+        filtro_mes_entrega_desde: $('#filtro_mes_entrega_desde').val(),
+        filtro_anio_entrega_hasta: $('#filtro_anio_entrega_hasta').val(),
+        filtro_mes_entrega_hasta: $('#filtro_mes_entrega_hasta').val(),
         filtro_inspector: $('#filtro_inspector').val()
     };
 }
 
-function cargarResumenEntregas() {
-    $.get("{{ route('entregas_productos.resumen') }}", filtrosActuales(), function (data) {
-        $('#total-entregas').text(formatearNumeroEntero(data.total_entregas));
-        $('#total-piezas').text(formatearNumeroEntero(data.total_piezas));
-        $('#total-remitos').text(formatearNumeroEntero(data.total_remitos));
-    });
+function renderResumenEntregas(data) {
+    data = data || {};
+
+    $('#total-entregas').text(formatearNumeroEntero(data.total_entregas));
+    $('#total-piezas').text(formatearNumeroEntero(data.total_piezas));
+    $('#total-remitos').text(formatearNumeroEntero(data.total_remitos));
+
+    const familias = data.familias_entregadas || {};
+    $('#familia-entrega-implantes').text(formatearNumeroEntero(familias['Implantes'] || 0));
+    $('#familia-entrega-instrumental').text(formatearNumeroEntero(familias['Instrumental'] || 0));
+    $('#familia-entrega-protesicos').text(formatearNumeroEntero(familias['Protésicos'] || familias['ProtÃ©sicos'] || 0));
+    $('#familia-entrega-ins-p-imp').text(formatearNumeroEntero(familias['ins/p/imp.'] || 0));
+    $('#familia-entrega-dispositivos').text(formatearNumeroEntero(familias['Dispositivos'] || 0));
+    $('#familia-entrega-total').text(formatearNumeroEntero(data.total_piezas));
 }
 
 function cargarFiltrosEntregas() {
@@ -157,11 +245,14 @@ function cargarFiltrosEntregas() {
             ['#filtro_categoria', data.categorias || []],
             ['#filtro_nro_maquina', data.maquinas || []],
             ['#filtro_familia_maquina', data.familias || []],
-            ['#filtro_proveedor', data.proveedores || []]
+            ['#filtro_proveedor', data.proveedores || []],
+            ['#filtro_anio_entrega_desde', data.years_entrega || []],
+            ['#filtro_anio_entrega_hasta', data.years_entrega || []]
         ].forEach(function ([selector, values]) {
             const select = $(selector);
             const actual = select.val();
-            select.empty().append('<option value="">Todos</option>');
+            const defaultLabel = selector.includes('filtro_anio_entrega') ? 'Año' : 'Todos';
+            select.empty().append(`<option value="">${defaultLabel}</option>`);
             values.forEach(function (value) {
                 if (value !== null && value !== '') {
                     select.append(`<option value="${value}">${value}</option>`);
@@ -185,7 +276,6 @@ function recargarTablaEntregas(table, options = {}) {
     }
 
     table.ajax.reload(null, !resetPaging);
-    cargarResumenEntregas();
 
     if (refreshFilters) {
         cargarFiltrosEntregas();
@@ -204,7 +294,6 @@ function deleteEntrega(id) {
             data: { _token: '{{ csrf_token() }}' },
             success: function (response) {
                 $('#tabla_entregas_productos').DataTable().ajax.reload(null, false);
-                cargarResumenEntregas();
                 SwalUtils.deleted(response.message || 'Entrega eliminada correctamente.');
             },
             error: function (xhr) {
@@ -215,7 +304,6 @@ function deleteEntrega(id) {
 }
 
 $(document).ready(function () {
-    cargarResumenEntregas();
     cargarFiltrosEntregas();
 
     const table = $('#tabla_entregas_productos').DataTable({
@@ -265,6 +353,12 @@ $(document).ready(function () {
         }
     });
 
+    table.on('xhr.dt', function (e, settings, json) {
+        if (json && json.summary) {
+            renderResumenEntregas(json.summary);
+        }
+    });
+
     $(document).on('click', '.trigger-delete', function () {
         deleteEntrega($(this).data('id'));
     });
@@ -280,11 +374,21 @@ $(document).ready(function () {
         recargarTablaEntregas(table, { resetPaging: true, refreshFilters: true });
     });
 
+    $('#tabla_entregas_productos_filter input[type="search"]').off('.DT').on('input', function () {
+        clearTimeout(filtroTimer);
+        filtroTimer = setTimeout(function () {
+            recargarTablaEntregas(table, { resetPaging: true, refreshFilters: false });
+        }, 300);
+    });
+
     $(document).on('click', '#clearFilters', function (e) {
         e.preventDefault();
         clearTimeout(filtroTimer);
         $('.filtro-texto').val('');
         $('.filtro-select').val('');
+        $('#filtro_mes_entrega_desde').val('');
+        $('#filtro_mes_entrega_hasta').val('');
+        $('#tabla_entregas_productos_filter input[type="search"]').val('');
         table.search('');
         table.order([[13, 'desc'], [12, 'desc'], [0, 'desc']]);
         recargarTablaEntregas(table, { resetPaging: true, refreshFilters: true });
@@ -292,6 +396,3 @@ $(document).ready(function () {
 });
 </script>
 @stop
-
-
-

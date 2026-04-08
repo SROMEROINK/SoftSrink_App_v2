@@ -2,12 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\CalidadInspector;
 use App\Models\ListadoEntregaProducto;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\Rule;
 
 class ListadoEntregaProductoController extends Controller
@@ -33,6 +36,7 @@ class ListadoEntregaProductoController extends Controller
     protected function hasActiveFilters(Request $request): bool
     {
         $filterFields = [
+            'buscar_global',
             'filtro_nro_of',
             'filtro_producto',
             'filtro_descripcion',
@@ -47,6 +51,10 @@ class ListadoEntregaProductoController extends Controller
             'filtro_cant_piezas',
             'filtro_nro_remito',
             'filtro_fecha_entrega',
+            'filtro_anio_entrega_desde',
+            'filtro_mes_entrega_desde',
+            'filtro_anio_entrega_hasta',
+            'filtro_mes_entrega_hasta',
             'filtro_inspector',
         ];
 
@@ -78,6 +86,34 @@ class ListadoEntregaProductoController extends Controller
             ->exists();
 
         return $this->hasEntregaDbView;
+    }
+
+    protected function resolveEntregaDesde(Request $request): ?string
+    {
+        if (!$request->filled('filtro_anio_entrega_desde')) {
+            return null;
+        }
+
+        $year = (int) $request->filtro_anio_entrega_desde;
+        $month = $request->filled('filtro_mes_entrega_desde')
+            ? max(1, min(12, (int) $request->filtro_mes_entrega_desde))
+            : 1;
+
+        return Carbon::create($year, $month, 1)->startOfMonth()->toDateString();
+    }
+
+    protected function resolveEntregaHasta(Request $request): ?string
+    {
+        if (!$request->filled('filtro_anio_entrega_hasta')) {
+            return null;
+        }
+
+        $year = (int) $request->filtro_anio_entrega_hasta;
+        $month = $request->filled('filtro_mes_entrega_hasta')
+            ? max(1, min(12, (int) $request->filtro_mes_entrega_hasta))
+            : 12;
+
+        return Carbon::create($year, $month, 1)->endOfMonth()->toDateString();
     }
 
     protected function baseQuery(Request $request)
@@ -152,6 +188,26 @@ class ListadoEntregaProductoController extends Controller
                 ->whereNull('lep.deleted_at');
         }
 
+        if ($request->filled('buscar_global')) {
+            $search = trim((string) $request->buscar_global);
+
+            $query->where(function ($searchQuery) use ($search) {
+                $searchQuery->where('lep.Nro_OF', 'like', '%' . $search . '%')
+                    ->orWhere('lep.Prod_Codigo', 'like', '%' . $search . '%')
+                    ->orWhere('lep.Prod_Descripcion', 'like', '%' . $search . '%')
+                    ->orWhere('lep.Nombre_Categoria', 'like', '%' . $search . '%')
+                    ->orWhere('lep.Nro_Maquina', 'like', '%' . $search . '%')
+                    ->orWhere('lep.Familia_Maquinas', 'like', '%' . $search . '%')
+                    ->orWhere('lep.Nro_Ingreso_MP', 'like', '%' . $search . '%')
+                    ->orWhere('lep.Codigo_MP', 'like', '%' . $search . '%')
+                    ->orWhere('lep.Nro_Certificado_MP', 'like', '%' . $search . '%')
+                    ->orWhere('lep.Prov_Nombre', 'like', '%' . $search . '%')
+                    ->orWhere('lep.Nro_Parcial_Calidad', 'like', '%' . $search . '%')
+                    ->orWhere('lep.Nro_Remito_Entrega_Calidad', 'like', '%' . $search . '%')
+                    ->orWhere('lep.Inspector_Calidad', 'like', '%' . $search . '%');
+            });
+        }
+
         if ($request->filled('filtro_nro_of')) {
             $query->where('lep.Nro_OF', $request->filtro_nro_of);
         }
@@ -208,6 +264,27 @@ class ListadoEntregaProductoController extends Controller
             $query->whereDate('lep.Fecha_Entrega_Calidad', $request->filtro_fecha_entrega);
         }
 
+        $tieneDesde = $request->filled('filtro_anio_entrega_desde');
+        $tieneHasta = $request->filled('filtro_anio_entrega_hasta');
+
+        if ($tieneDesde && !$tieneHasta) {
+            $query->whereYear('lep.Fecha_Entrega_Calidad', (int) $request->filtro_anio_entrega_desde);
+
+            if ($request->filled('filtro_mes_entrega_desde')) {
+                $query->whereMonth('lep.Fecha_Entrega_Calidad', (int) $request->filtro_mes_entrega_desde);
+            }
+        } else {
+            $fechaEntregaDesde = $this->resolveEntregaDesde($request);
+            if ($fechaEntregaDesde) {
+                $query->whereDate('lep.Fecha_Entrega_Calidad', '>=', $fechaEntregaDesde);
+            }
+
+            $fechaEntregaHasta = $this->resolveEntregaHasta($request);
+            if ($fechaEntregaHasta) {
+                $query->whereDate('lep.Fecha_Entrega_Calidad', '<=', $fechaEntregaHasta);
+            }
+        }
+
         if ($request->filled('filtro_inspector')) {
             $query->where('lep.Inspector_Calidad', 'like', '%' . $request->filtro_inspector . '%');
         }
@@ -229,6 +306,7 @@ class ListadoEntregaProductoController extends Controller
             })
             ->leftJoin('users as uc', 'uc.id', '=', 'lep.created_by')
             ->leftJoin('users as uu', 'uu.id', '=', 'lep.updated_by')
+            ->leftJoin('users as ul', 'ul.id', '=', 'lep.Id_Usuario_Libera')
             ->select([
                 'lep.*',
                 'pc.Id_OF as Pedido_Id',
@@ -253,8 +331,91 @@ class ListadoEntregaProductoController extends Controller
                 'lo.Ultima_Fecha_Fabricacion',
                 'uc.name as creator_name',
                 'uu.name as updater_name',
+                'ul.name as liberador_name',
             ])
             ->whereNull('lep.deleted_at');
+    }
+
+    protected function usesLiberadorFk(): bool
+    {
+        return Schema::hasColumn('listado_entregas_productos', 'Id_Usuario_Libera');
+    }
+
+    protected function getEntregaAggregateQuery($query)
+    {
+        $aggregate = clone $query;
+
+        if (method_exists($aggregate, 'cloneWithout')) {
+            $aggregate = $aggregate->cloneWithout(['columns', 'orders', 'groups', 'havings']);
+        }
+
+        if (method_exists($aggregate, 'cloneWithoutBindings')) {
+            $aggregate = $aggregate->cloneWithoutBindings(['select', 'order']);
+        }
+
+        return $aggregate;
+    }
+
+    protected function getEntregaFamilyLabels(): array
+    {
+        return [
+            'Implantes',
+            'Instrumental',
+            'Protésicos',
+            'ins/p/imp.',
+            'Dispositivos',
+        ];
+    }
+
+    protected function buildEntregaFamilySummary($query, string $categoriaColumn, string $cantidadColumn): array
+    {
+        $rows = $this->getEntregaAggregateQuery($query)
+            ->selectRaw("{$categoriaColumn} as categoria, SUM({$cantidadColumn}) as total")
+            ->whereNotNull($categoriaColumn)
+            ->groupBy($categoriaColumn)
+            ->pluck('total', 'categoria');
+
+        $familias = [];
+
+        foreach ($this->getEntregaFamilyLabels() as $label) {
+            $familias[$label] = (int) ($rows[$label] ?? 0);
+        }
+
+        return $familias;
+    }
+
+    protected function getEntregaSummaryData(Request $request): array
+    {
+        if ($this->hasEntregaDbView() && !$this->hasActiveFilters($request)) {
+            $summary = Cache::remember('entregas_productos.resumen.base', now()->addMinutes(10), function () {
+                return [
+                    'total_entregas' => DB::table('listado_entregas_productos_db')->count(),
+                    'total_piezas' => (int) (DB::table('listado_entregas_productos_db')->sum('Cant_Piezas_Entregadas') ?? 0),
+                    'total_remitos' => DB::table('listado_entregas_productos_db')->distinct()->count('Nro_Remito_Entrega_Calidad'),
+                ];
+            });
+
+            return array_merge($summary, [
+                'familias_entregadas' => $this->buildEntregaFamilySummary(
+                    DB::table('listado_entregas_productos_db'),
+                    'Nombre_Categoria',
+                    'Cant_Piezas_Entregadas'
+                ),
+            ]);
+        }
+
+        $query = $this->baseQuery($request);
+
+        return [
+            'total_entregas' => (clone $query)->distinct('lep.Id_List_Entreg_Prod')->count('lep.Id_List_Entreg_Prod'),
+            'total_piezas' => (int) ((clone $query)->sum('lep.Cant_Piezas_Entregadas') ?? 0),
+            'total_remitos' => (clone $query)->distinct()->count('lep.Nro_Remito_Entrega_Calidad'),
+            'familias_entregadas' => $this->buildEntregaFamilySummary(
+                $query,
+                'lep.Nombre_Categoria',
+                'lep.Cant_Piezas_Entregadas'
+            ),
+        ];
     }
 
     protected function getOfDataPayload(int $nroOf, ?int $excludeEntregaId = null): ?array
@@ -326,6 +487,196 @@ class ListadoEntregaProductoController extends Controller
         ];
     }
 
+    protected function usesQualityInspectorFk(): bool
+    {
+        return Schema::hasTable('calidad_inspectores')
+            && Schema::hasColumn('listado_entregas_productos', 'Id_Inspector_Calidad');
+    }
+
+    protected function getActiveQualityInspectors()
+    {
+        if (Schema::hasTable('calidad_inspectores')) {
+            return CalidadInspector::query()
+                ->where('activo', true)
+                ->orderBy('nombre')
+                ->get(['id', 'nombre']);
+        }
+
+        return DB::table('listado_entregas_productos')
+            ->selectRaw('TRIM(Inspector_Calidad) as nombre')
+            ->whereNotNull('Inspector_Calidad')
+            ->where('Inspector_Calidad', '<>', '')
+            ->where('Inspector_Calidad', '<>', 'Sin registrar')
+            ->groupBy(DB::raw('TRIM(Inspector_Calidad)'))
+            ->orderBy('nombre')
+            ->get()
+            ->map(function ($item) {
+                return (object) [
+                    'id' => $item->nombre,
+                    'nombre' => $item->nombre,
+                ];
+            });
+    }
+
+    protected function formatParcialCalidadCode(int $nroOf, int $nroParcial): string
+    {
+        return str_pad((string) $nroOf, 6, '0', STR_PAD_LEFT) . '/' . $nroParcial;
+    }
+
+    protected function getNextParcialCalidadNumber(int $nroOf, ?int $excludeEntregaId = null): int
+    {
+        $query = DB::table('listado_entregas_productos')
+            ->where('Id_OF', $nroOf)
+            ->whereNull('deleted_at');
+
+        if ($excludeEntregaId) {
+            $query->where('Id_List_Entreg_Prod', '!=', $excludeEntregaId);
+        }
+
+        $maxParcial = (int) ($query
+            ->selectRaw("MAX(CAST(SUBSTRING_INDEX(Nro_Parcial_Calidad, '/', -1) AS UNSIGNED)) as max_parcial")
+            ->value('max_parcial') ?? 0);
+
+        return $maxParcial + 1;
+    }
+
+    protected function buildEntregaRowsFromRequest(Request $request): array
+    {
+        $rows = $request->input('rows', []);
+        if (!is_array($rows)) {
+            return [];
+        }
+
+        $normalized = [];
+        foreach ($rows as $index => $row) {
+            if (!is_array($row)) {
+                continue;
+            }
+
+            $nroOf = trim((string) ($row['Id_OF'] ?? ''));
+            $cantidad = trim((string) ($row['Cant_Piezas_Entregadas'] ?? ''));
+            $inspectorId = trim((string) ($row['Id_Inspector_Calidad'] ?? ''));
+            $parcial = trim((string) ($row['Nro_Parcial_Calidad'] ?? ''));
+
+            if ($nroOf === '' && $cantidad === '' && $inspectorId === '' && $parcial === '') {
+                continue;
+            }
+
+            $normalized[] = [
+                'row_number' => $index + 1,
+                'Id_OF' => $nroOf,
+                'Cant_Piezas_Entregadas' => $cantidad,
+                'Id_Inspector_Calidad' => $inspectorId,
+                'Nro_Parcial_Calidad' => $parcial,
+            ];
+        }
+
+        return $normalized;
+    }
+
+    protected function validateEntregaBatch(Request $request): array
+    {
+        $request->merge([
+            'rows' => $this->buildEntregaRowsFromRequest($request),
+        ]);
+
+        $rules = [
+            'Nro_Remito_Entrega_Calidad' => ['required', 'integer', 'min:1'],
+            'Fecha_Entrega_Calidad' => ['required', 'date'],
+            'rows' => ['required', 'array', 'min:1'],
+            'rows.*.Id_OF' => ['required', 'integer', 'exists:pedido_cliente,Nro_OF'],
+            'rows.*.Cant_Piezas_Entregadas' => ['required', 'integer', 'min:1'],
+            'rows.*.Nro_Parcial_Calidad' => ['required', 'string', 'max:255'],
+        ];
+
+        if ($this->usesQualityInspectorFk()) {
+            $rules['rows.*.Id_Inspector_Calidad'] = [
+                'required',
+                'integer',
+                Rule::exists('calidad_inspectores', 'id')->where(fn ($query) => $query->where('activo', true)),
+            ];
+        } else {
+            $rules['rows.*.Id_Inspector_Calidad'] = ['required'];
+        }
+
+        $validator = validator($request->all(), $rules, [
+            'Nro_Remito_Entrega_Calidad.required' => 'El numero de remito es obligatorio.',
+            'Fecha_Entrega_Calidad.required' => 'La fecha de entrega es obligatoria.',
+            'rows.required' => 'Debe cargar al menos una fila de entrega.',
+            'rows.*.Id_OF.required' => 'Cada fila debe indicar un Nro OF.',
+            'rows.*.Id_OF.exists' => 'Una de las OF ingresadas no existe.',
+            'rows.*.Cant_Piezas_Entregadas.required' => 'Cada fila debe indicar una cantidad entregada.',
+            'rows.*.Cant_Piezas_Entregadas.min' => 'La cantidad entregada debe ser mayor a cero.',
+            'rows.*.Id_Inspector_Calidad.required' => 'Cada fila debe indicar quien controlo el lote.',
+            'rows.*.Nro_Parcial_Calidad.required' => 'Cada fila debe tener un numero de parcial de calidad.',
+        ]);
+
+        $validator->after(function ($validator) use ($request) {
+            $rows = $request->input('rows', []);
+            if (!is_array($rows) || empty($rows)) {
+                return;
+            }
+
+            $seenParciales = [];
+            $localNextParcialByOf = [];
+            $sumByOf = [];
+
+            foreach ($rows as $row) {
+                $rowNumber = (int) ($row['row_number'] ?? 0);
+                $nroOf = (int) ($row['Id_OF'] ?? 0);
+                $cantidad = (int) ($row['Cant_Piezas_Entregadas'] ?? 0);
+                $parcial = trim((string) ($row['Nro_Parcial_Calidad'] ?? ''));
+
+                if (!$nroOf || !$cantidad || $parcial === '') {
+                    continue;
+                }
+
+                if (isset($seenParciales[$parcial])) {
+                    $validator->errors()->add("rows.$rowNumber.Nro_Parcial_Calidad", "El parcial {$parcial} esta duplicado dentro de la carga.");
+                }
+                $seenParciales[$parcial] = true;
+
+                $exists = DB::table('listado_entregas_productos')
+                    ->where('Nro_Parcial_Calidad', $parcial)
+                    ->whereNull('deleted_at')
+                    ->exists();
+
+                if ($exists) {
+                    $validator->errors()->add("rows.$rowNumber.Nro_Parcial_Calidad", "El parcial {$parcial} ya existe en la base de datos.");
+                }
+
+                if (!array_key_exists($nroOf, $localNextParcialByOf)) {
+                    $localNextParcialByOf[$nroOf] = $this->getNextParcialCalidadNumber($nroOf);
+                }
+
+                $expectedCode = $this->formatParcialCalidadCode($nroOf, $localNextParcialByOf[$nroOf]);
+                if ($parcial !== $expectedCode) {
+                    $validator->errors()->add("rows.$rowNumber.Nro_Parcial_Calidad", "Para la OF {$nroOf} el parcial esperado es {$expectedCode}.");
+                }
+                $localNextParcialByOf[$nroOf]++;
+
+                $sumByOf[$nroOf] = ($sumByOf[$nroOf] ?? 0) + $cantidad;
+            }
+
+            foreach ($sumByOf as $nroOf => $totalCantidad) {
+                $ofData = $this->getOfDataPayload((int) $nroOf);
+                if (!$ofData) {
+                    continue;
+                }
+
+                $saldoEntrega = max(0, (int) ($ofData['Saldo_Entrega'] ?? 0));
+                if ($totalCantidad > $saldoEntrega) {
+                    $validator->errors()->add(
+                        'rows',
+                        'La suma de entregas para la OF ' . $nroOf . ' supera el saldo entregable. Disponible actual: ' . number_format($saldoEntrega, 0, ',', '.') . '.'
+                    );
+                }
+            }
+        });
+
+        return $validator->validate();
+    }
+
     protected function validateEntrega(Request $request, ?ListadoEntregaProducto $entrega = null): array
     {
         $entregaId = $entrega?->Id_List_Entreg_Prod;
@@ -346,6 +697,9 @@ class ListadoEntregaProductoController extends Controller
             'Nro_Remito_Entrega_Calidad' => ['required', 'integer', 'min:1'],
             'Fecha_Entrega_Calidad' => ['required', 'date'],
             'Inspector_Calidad' => ['required', 'string', 'max:255'],
+            'Id_Inspector_Calidad' => $this->usesQualityInspectorFk()
+                ? ['nullable', 'integer', Rule::exists('calidad_inspectores', 'id')->where(fn ($query) => $query->where('activo', true))]
+                : ['nullable'],
             'reg_Status' => ['nullable', 'in:0,1'],
         ], [
             'Id_OF.required' => 'Debe indicar una OF.',
@@ -396,6 +750,7 @@ class ListadoEntregaProductoController extends Controller
     {
         try {
             $query = $this->baseQuery($request);
+            $summary = $this->getEntregaSummaryData($request);
             $hasFilters = $this->hasActiveFilters($request);
             $totalRecords = $this->hasEntregaDbView()
                 ? Cache::remember('entregas_productos.total_records', now()->addMinutes(10), function () {
@@ -443,6 +798,7 @@ class ListadoEntregaProductoController extends Controller
                     return trim($botones);
                 })
                 ->rawColumns(['acciones'])
+                ->with(['summary' => $summary])
                 ->toJson();
         } catch (\Throwable $e) {
             Log::error('Error en entregas_productos getData', ['error' => $e->getMessage()]);
@@ -454,6 +810,32 @@ class ListadoEntregaProductoController extends Controller
     public function resumen(Request $request)
     {
         try {
+            return response()->json($this->getEntregaSummaryData($request));
+
+            $familyLabels = [
+                'Implantes',
+                'Instrumental',
+                'Protésicos',
+                'ins/p/imp.',
+                'Dispositivos',
+            ];
+
+            $buildFamilySummary = function ($query, string $categoriaColumn, string $cantidadColumn) use ($familyLabels) {
+                $rows = (clone $query)
+                    ->selectRaw("{$categoriaColumn} as categoria, SUM({$cantidadColumn}) as total")
+                    ->whereNotNull($categoriaColumn)
+                    ->groupBy($categoriaColumn)
+                    ->pluck('total', 'categoria');
+
+                $familias = [];
+
+                foreach ($familyLabels as $label) {
+                    $familias[$label] = (int) ($rows[$label] ?? 0);
+                }
+
+                return $familias;
+            };
+
             if ($this->hasEntregaDbView() && !$this->hasActiveFilters($request)) {
                 $summary = Cache::remember('entregas_productos.resumen.base', now()->addMinutes(10), function () {
                     return [
@@ -463,7 +845,15 @@ class ListadoEntregaProductoController extends Controller
                     ];
                 });
 
-                return response()->json($summary);
+                $familias = $buildFamilySummary(
+                    DB::table('listado_entregas_productos_db'),
+                    'Nombre_Categoria',
+                    'Cant_Piezas_Entregadas'
+                );
+
+                return response()->json(array_merge($summary, [
+                    'familias_entregadas' => $familias,
+                ]));
             }
 
             $query = $this->baseQuery($request);
@@ -472,6 +862,11 @@ class ListadoEntregaProductoController extends Controller
                 'total_entregas' => (clone $query)->count(),
                 'total_piezas' => (int) ((clone $query)->sum('lep.Cant_Piezas_Entregadas') ?? 0),
                 'total_remitos' => (clone $query)->distinct()->count('lep.Nro_Remito_Entrega_Calidad'),
+                'familias_entregadas' => $buildFamilySummary(
+                    $query,
+                    'lep.Nombre_Categoria',
+                    'lep.Cant_Piezas_Entregadas'
+                ),
             ]);
         } catch (\Throwable $e) {
             Log::error('Error en entregas_productos resumen', ['error' => $e->getMessage()]);
@@ -480,6 +875,13 @@ class ListadoEntregaProductoController extends Controller
                 'total_entregas' => 0,
                 'total_piezas' => 0,
                 'total_remitos' => 0,
+                'familias_entregadas' => [
+                    'Implantes' => 0,
+                    'Instrumental' => 0,
+                    'Protésicos' => 0,
+                    'ins/p/imp.' => 0,
+                    'Dispositivos' => 0,
+                ],
             ], 500);
         }
     }
@@ -514,6 +916,12 @@ class ListadoEntregaProductoController extends Controller
                             ->orderBy('Prov_Nombre')
                             ->pluck('Prov_Nombre')
                             ->values(),
+                        'years_entrega' => DB::table('listado_entregas_productos_db')
+                            ->whereNotNull('Fecha_Entrega_Calidad')
+                            ->selectRaw('DISTINCT YEAR(Fecha_Entrega_Calidad) as anio')
+                            ->orderByDesc('anio')
+                            ->pluck('anio')
+                            ->values(),
                     ];
                 });
 
@@ -522,7 +930,7 @@ class ListadoEntregaProductoController extends Controller
 
             $base = $this->baseQuery($request);
 
-            $categorias = (clone $base)
+            $categorias = $this->getEntregaAggregateQuery($base)
                 ->select('lep.Nombre_Categoria')
                 ->whereNotNull('lep.Nombre_Categoria')
                 ->distinct()
@@ -530,7 +938,7 @@ class ListadoEntregaProductoController extends Controller
                 ->pluck('lep.Nombre_Categoria')
                 ->values();
 
-            $maquinas = (clone $base)
+            $maquinas = $this->getEntregaAggregateQuery($base)
                 ->select('lep.Nro_Maquina')
                 ->whereNotNull('lep.Nro_Maquina')
                 ->distinct()
@@ -538,7 +946,7 @@ class ListadoEntregaProductoController extends Controller
                 ->pluck('lep.Nro_Maquina')
                 ->values();
 
-            $familias = (clone $base)
+            $familias = $this->getEntregaAggregateQuery($base)
                 ->select('lep.Familia_Maquinas')
                 ->whereNotNull('lep.Familia_Maquinas')
                 ->distinct()
@@ -546,7 +954,7 @@ class ListadoEntregaProductoController extends Controller
                 ->pluck('lep.Familia_Maquinas')
                 ->values();
 
-            $proveedores = (clone $base)
+            $proveedores = $this->getEntregaAggregateQuery($base)
                 ->select('lep.Prov_Nombre')
                 ->whereNotNull('lep.Prov_Nombre')
                 ->distinct()
@@ -554,11 +962,20 @@ class ListadoEntregaProductoController extends Controller
                 ->pluck('lep.Prov_Nombre')
                 ->values();
 
+            $yearsEntrega = $this->getEntregaAggregateQuery($base)
+                ->whereNotNull('lep.Fecha_Entrega_Calidad')
+                ->selectRaw('YEAR(lep.Fecha_Entrega_Calidad) as anio')
+                ->distinct()
+                ->orderByDesc('anio')
+                ->pluck('anio')
+                ->values();
+
             return response()->json([
                 'categorias' => $categorias,
                 'maquinas' => $maquinas,
                 'familias' => $familias,
                 'proveedores' => $proveedores,
+                'years_entrega' => $yearsEntrega,
             ]);
         } catch (\Throwable $e) {
             Log::error('Error en entregas_productos getUniqueFilters', ['error' => $e->getMessage()]);
@@ -568,6 +985,7 @@ class ListadoEntregaProductoController extends Controller
                 'maquinas' => [],
                 'familias' => [],
                 'proveedores' => [],
+                'years_entrega' => [],
             ], 500);
         }
     }
@@ -586,7 +1004,13 @@ class ListadoEntregaProductoController extends Controller
 
         return response()->json([
             'success' => true,
-            'data' => $data,
+            'data' => array_merge($data, [
+                'Next_Parcial_Numero' => $this->getNextParcialCalidadNumber($nroOf, $excludeEntregaId),
+                'Next_Parcial_Calidad' => $this->formatParcialCalidadCode(
+                    $nroOf,
+                    $this->getNextParcialCalidadNumber($nroOf, $excludeEntregaId)
+                ),
+            ]),
         ]);
     }
 
@@ -595,33 +1019,94 @@ class ListadoEntregaProductoController extends Controller
         $ultimoRemito = (int) (ListadoEntregaProducto::query()->max('Nro_Remito_Entrega_Calidad') ?? 0);
 
         return view('entregas_productos.create', [
+            'ultimoRemito' => $ultimoRemito,
             'proximoRemito' => $ultimoRemito + 1,
+            'fechaEntregaSugerida' => now()->format('Y-m-d'),
+            'inspectoresCalidad' => $this->getActiveQualityInspectors(),
         ]);
     }
 
     public function store(Request $request)
     {
         try {
-            $validated = $this->validateEntrega($request);
+            $isBatch = is_array($request->input('rows'));
 
-            $entrega = ListadoEntregaProducto::create([
-                'Id_OF' => (int) $validated['Id_OF'],
-                'Nro_Parcial_Calidad' => trim($validated['Nro_Parcial_Calidad']),
-                'Cant_Piezas_Entregadas' => (int) $validated['Cant_Piezas_Entregadas'],
-                'Nro_Remito_Entrega_Calidad' => (int) $validated['Nro_Remito_Entrega_Calidad'],
-                'Fecha_Entrega_Calidad' => $validated['Fecha_Entrega_Calidad'],
-                'Inspector_Calidad' => trim($validated['Inspector_Calidad']),
-                'reg_Status' => (int) ($validated['reg_Status'] ?? 1),
-                'created_by' => Auth::id(),
-                'updated_by' => Auth::id(),
-            ]);
+            if (!$isBatch) {
+                $validated = $this->validateEntrega($request);
+
+                $payload = [
+                    'Id_OF' => (int) $validated['Id_OF'],
+                    'Nro_Parcial_Calidad' => trim($validated['Nro_Parcial_Calidad']),
+                    'Cant_Piezas_Entregadas' => (int) $validated['Cant_Piezas_Entregadas'],
+                    'Nro_Remito_Entrega_Calidad' => (int) $validated['Nro_Remito_Entrega_Calidad'],
+                    'Fecha_Entrega_Calidad' => $validated['Fecha_Entrega_Calidad'],
+                    'Inspector_Calidad' => trim($validated['Inspector_Calidad']),
+                    'reg_Status' => (int) ($validated['reg_Status'] ?? 1),
+                    'created_by' => Auth::id(),
+                    'updated_by' => Auth::id(),
+                ];
+
+                if ($this->usesQualityInspectorFk() && !empty($validated['Id_Inspector_Calidad'])) {
+                    $payload['Id_Inspector_Calidad'] = (int) $validated['Id_Inspector_Calidad'];
+                }
+
+                if ($this->usesLiberadorFk()) {
+                    $payload['Id_Usuario_Libera'] = Auth::id();
+                }
+
+                $entrega = ListadoEntregaProducto::create($payload);
+
+                $this->forgetEntregaIndexCache();
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Entrega registrada correctamente.',
+                    'redirect' => route('entregas_productos.show', $entrega->Id_List_Entreg_Prod),
+                ]);
+            }
+
+            $validated = $this->validateEntregaBatch($request);
+            $rows = $validated['rows'] ?? [];
+            $inspectores = $this->usesQualityInspectorFk()
+                ? CalidadInspector::query()->pluck('nombre', 'id')
+                : collect();
+            $createdCount = 0;
+
+            DB::transaction(function () use ($validated, $rows, $inspectores, &$createdCount) {
+                foreach ($rows as $row) {
+                    $payload = [
+                        'Id_OF' => (int) $row['Id_OF'],
+                        'Nro_Parcial_Calidad' => trim($row['Nro_Parcial_Calidad']),
+                        'Cant_Piezas_Entregadas' => (int) $row['Cant_Piezas_Entregadas'],
+                        'Nro_Remito_Entrega_Calidad' => (int) $validated['Nro_Remito_Entrega_Calidad'],
+                        'Fecha_Entrega_Calidad' => $validated['Fecha_Entrega_Calidad'],
+                        'Inspector_Calidad' => $this->usesQualityInspectorFk()
+                            ? (string) ($inspectores[(int) $row['Id_Inspector_Calidad']] ?? '')
+                            : trim((string) $row['Id_Inspector_Calidad']),
+                        'reg_Status' => 1,
+                        'created_by' => Auth::id(),
+                        'updated_by' => Auth::id(),
+                    ];
+
+                    if ($this->usesQualityInspectorFk()) {
+                        $payload['Id_Inspector_Calidad'] = (int) $row['Id_Inspector_Calidad'];
+                    }
+
+                    if ($this->usesLiberadorFk()) {
+                        $payload['Id_Usuario_Libera'] = Auth::id();
+                    }
+
+                    ListadoEntregaProducto::create($payload);
+                    $createdCount++;
+                }
+            });
 
             $this->forgetEntregaIndexCache();
 
             return response()->json([
                 'success' => true,
-                'message' => 'Entrega registrada correctamente.',
-                'redirect' => route('entregas_productos.show', $entrega->Id_List_Entreg_Prod),
+                'message' => 'Entrega registrada correctamente. Filas creadas: ' . $createdCount . '.',
+                'redirect' => route('entregas_productos.index'),
             ]);
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json([
@@ -685,6 +1170,10 @@ class ListadoEntregaProductoController extends Controller
                 'Inspector_Calidad' => trim($validated['Inspector_Calidad']),
                 'reg_Status' => (int) ($validated['reg_Status'] ?? $entrega->reg_Status ?? 1),
             ];
+
+            if ($this->usesQualityInspectorFk() && !empty($validated['Id_Inspector_Calidad'])) {
+                $payload['Id_Inspector_Calidad'] = (int) $validated['Id_Inspector_Calidad'];
+            }
 
             $entrega->fill($payload);
 

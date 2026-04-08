@@ -17,6 +17,7 @@ class ListadoOfController extends Controller
         $this->middleware('permission:ver produccion')->only([
             'index',
             'indexPlain',
+            'indexLifecycle',
             'getData',
             'resumen',
             'getUniqueFilters',
@@ -422,8 +423,180 @@ class ListadoOfController extends Controller
         ];
 
         $filters = $this->baseYearFilters();
+        $ofLifecycle = $this->buildLifecycleViewData($request);
 
-        return compact('rows', 'summary', 'filters', 'pageLength');
+        return compact('rows', 'summary', 'filters', 'pageLength', 'ofLifecycle');
+    }
+
+    protected function lifecycleBaseQuery()
+    {
+        $lofBase = DB::table('listado_of_db')
+            ->selectRaw('Nro_OF')
+            ->selectRaw("MAX(CONVERT(Nro_Maquina USING utf8mb4) COLLATE utf8mb4_spanish_ci) AS Nro_Maquina")
+            ->selectRaw("MAX(CONVERT(Familia_Maquinas USING utf8mb4) COLLATE utf8mb4_spanish_ci) AS Familia_Maquinas")
+            ->groupBy('Nro_OF');
+
+        $fabRes = DB::table('registro_de_fabricacion')
+            ->selectRaw('Nro_OF')
+            ->selectRaw('MIN(Fecha_Fabricacion) AS Fecha_Inicio_Fabricacion')
+            ->selectRaw('MAX(Fecha_Fabricacion) AS Fecha_Fin_Fabricacion')
+            ->selectRaw('SUM(Cant_Piezas) AS Piezas_Fabricadas')
+            ->whereNull('deleted_at')
+            ->groupBy('Nro_OF');
+
+        $entRes = DB::table('listado_entregas_productos')
+            ->selectRaw('Id_OF')
+            ->selectRaw('MIN(Fecha_Entrega_Calidad) AS Fecha_Primera_Entrega')
+            ->selectRaw('MAX(Fecha_Entrega_Calidad) AS Fecha_Ultima_Entrega')
+            ->selectRaw('SUM(Cant_Piezas_Entregadas) AS Piezas_Entregadas')
+            ->whereNull('deleted_at')
+            ->groupBy('Id_OF');
+
+        return DB::table('pedido_cliente as pc')
+            ->join('productos as p', 'pc.Producto_Id', '=', 'p.Id_Producto')
+            ->join('producto_categoria as cat', 'p.Id_Prod_Categoria', '=', 'cat.Id_Categoria')
+            ->leftJoinSub($lofBase, 'lof', function ($join) {
+                $join->on('pc.Nro_OF', '=', 'lof.Nro_OF');
+            })
+            ->joinSub($fabRes, 'fab_res', function ($join) {
+                $join->on('pc.Id_OF', '=', 'fab_res.Nro_OF');
+            })
+            ->leftJoinSub($entRes, 'ent_res', function ($join) {
+                $join->on('pc.Nro_OF', '=', 'ent_res.Id_OF');
+            })
+            ->whereNull('pc.deleted_at')
+            ->select([
+                'pc.Id_OF',
+                'pc.Nro_OF',
+                'p.Prod_Codigo',
+                'p.Prod_Descripcion',
+                'cat.Nombre_Categoria',
+                'lof.Nro_Maquina',
+                'lof.Familia_Maquinas',
+                'pc.Fecha_del_Pedido',
+                DB::raw('YEAR(pc.Fecha_del_Pedido) AS anio_pedido'),
+                DB::raw('MONTH(pc.Fecha_del_Pedido) AS mes_pedido'),
+                DB::raw('pc.Cant_Fabricacion AS Cant_Pedido'),
+                'fab_res.Fecha_Inicio_Fabricacion',
+                'fab_res.Fecha_Fin_Fabricacion',
+                DB::raw('COALESCE(fab_res.Piezas_Fabricadas, 0) AS Piezas_Fabricadas'),
+                'ent_res.Fecha_Primera_Entrega',
+                'ent_res.Fecha_Ultima_Entrega',
+                DB::raw('COALESCE(ent_res.Piezas_Entregadas, 0) AS Piezas_Entregadas'),
+                DB::raw('COALESCE(fab_res.Piezas_Fabricadas, 0) - pc.Cant_Fabricacion AS Saldo_Fabricar'),
+                DB::raw('COALESCE(ent_res.Piezas_Entregadas, 0) - COALESCE(fab_res.Piezas_Fabricadas, 0) AS Saldo_Entregar'),
+            ]);
+    }
+
+    protected function applyLifecycleFilters($query, Request $request, array $except = [])
+    {
+        if (!in_array('resumen_of_anio_pedido', $except, true) && $request->filled('resumen_of_anio_pedido')) {
+            $this->whereYearExpression($query, 'pc.Fecha_del_Pedido', $request->input('resumen_of_anio_pedido'));
+        }
+
+        if (!in_array('resumen_of_mes_pedido', $except, true) && $request->filled('resumen_of_mes_pedido')) {
+            $this->whereMonthExpression($query, 'pc.Fecha_del_Pedido', $request->input('resumen_of_mes_pedido'));
+        }
+
+        if (!in_array('resumen_of_categoria', $except, true) && $request->filled('resumen_of_categoria')) {
+            $this->whereCollatedEquals($query, 'cat.Nombre_Categoria', $request->input('resumen_of_categoria'));
+        }
+
+        if (!in_array('resumen_of_maquina', $except, true) && $request->filled('resumen_of_maquina')) {
+            $this->whereCollatedEquals($query, 'lof.Nro_Maquina', $request->input('resumen_of_maquina'));
+        }
+
+        if (!in_array('resumen_of_familia', $except, true) && $request->filled('resumen_of_familia')) {
+            $this->whereCollatedEquals($query, 'lof.Familia_Maquinas', $request->input('resumen_of_familia'));
+        }
+
+        if (!in_array('resumen_of_nro_of', $except, true) && $request->filled('resumen_of_nro_of')) {
+            $query->where('pc.Nro_OF', (int) $request->input('resumen_of_nro_of'));
+        }
+
+        return $query;
+    }
+
+    protected function buildLifecycleFilterOptions(Request $request): array
+    {
+        $baseYears = $this->applyLifecycleFilters($this->lifecycleBaseQuery(), $request, ['resumen_of_anio_pedido']);
+        $baseMonths = $this->applyLifecycleFilters($this->lifecycleBaseQuery(), $request, ['resumen_of_mes_pedido']);
+        $baseCategorias = $this->applyLifecycleFilters($this->lifecycleBaseQuery(), $request, ['resumen_of_categoria']);
+        $baseMaquinas = $this->applyLifecycleFilters($this->lifecycleBaseQuery(), $request, ['resumen_of_maquina']);
+        $baseFamilias = $this->applyLifecycleFilters($this->lifecycleBaseQuery(), $request, ['resumen_of_familia']);
+
+        $years = DB::query()
+            ->fromSub($baseYears, 'lifecycle')
+            ->select('anio_pedido')
+            ->whereNotNull('anio_pedido')
+            ->orderByDesc('anio_pedido')
+            ->distinct()
+            ->pluck('anio_pedido')
+            ->filter()
+            ->values();
+
+        $months = DB::query()
+            ->fromSub($baseMonths, 'lifecycle')
+            ->select('mes_pedido')
+            ->whereNotNull('mes_pedido')
+            ->orderBy('mes_pedido')
+            ->distinct()
+            ->pluck('mes_pedido')
+            ->filter()
+            ->values();
+
+        $categorias = DB::query()
+            ->fromSub($baseCategorias, 'lifecycle')
+            ->select('Nombre_Categoria')
+            ->whereNotNull('Nombre_Categoria')
+            ->orderBy('Nombre_Categoria')
+            ->distinct()
+            ->pluck('Nombre_Categoria')
+            ->filter()
+            ->values();
+
+        $maquinas = DB::query()
+            ->fromSub($baseMaquinas, 'lifecycle')
+            ->select('Nro_Maquina')
+            ->whereNotNull('Nro_Maquina')
+            ->orderBy('Nro_Maquina')
+            ->distinct()
+            ->pluck('Nro_Maquina')
+            ->filter()
+            ->values();
+
+        $familias = DB::query()
+            ->fromSub($baseFamilias, 'lifecycle')
+            ->select('Familia_Maquinas')
+            ->whereNotNull('Familia_Maquinas')
+            ->orderBy('Familia_Maquinas')
+            ->distinct()
+            ->pluck('Familia_Maquinas')
+            ->filter()
+            ->values();
+
+        return compact('years', 'months', 'categorias', 'maquinas', 'familias');
+    }
+
+    protected function buildLifecycleViewData(Request $request): array
+    {
+        $query = $this->applyLifecycleFilters($this->lifecycleBaseQuery(), $request);
+
+        $rows = (clone $query)
+            ->orderByDesc('pc.Nro_OF')
+            ->paginate(15, ['*'], 'resumen_of_page')
+            ->withQueryString();
+
+        $summary = [
+            'total_of' => (clone $query)->distinct('pc.Nro_OF')->count('pc.Nro_OF'),
+            'total_pedido' => (int) ((clone $query)->sum('pc.Cant_Fabricacion') ?? 0),
+            'total_fabricadas' => (int) ((clone $query)->sum('fab_res.Piezas_Fabricadas') ?? 0),
+            'total_entregadas' => (int) ((clone $query)->sum(DB::raw('COALESCE(ent_res.Piezas_Entregadas, 0)')) ?? 0),
+        ];
+
+        $filters = $this->buildLifecycleFilterOptions($request);
+
+        return compact('rows', 'summary', 'filters');
     }
 
     protected function exportRows(Request $request)
@@ -478,6 +651,39 @@ class ListadoOfController extends Controller
     public function indexPlain(Request $request)
     {
         return view('listado_of.plain', $this->buildIndexViewData($request));
+    }
+
+    public function indexLifecycle(Request $request)
+    {
+        $data = [
+            'ofLifecycle' => $this->buildLifecycleViewData($request),
+            'meses' => [
+                1 => 'Enero',
+                2 => 'Febrero',
+                3 => 'Marzo',
+                4 => 'Abril',
+                5 => 'Mayo',
+                6 => 'Junio',
+                7 => 'Julio',
+                8 => 'Agosto',
+                9 => 'Septiembre',
+                10 => 'Octubre',
+                11 => 'Noviembre',
+                12 => 'Diciembre',
+            ],
+        ];
+
+        if ($request->ajax()) {
+            return response()->json([
+                'content_html' => view('listado_of.partials.lifecycle_summary', [
+                    'ofLifecycle' => $data['ofLifecycle'],
+                    'meses' => $data['meses'],
+                    'routeName' => 'listado_of.lifecycle',
+                ])->render(),
+            ]);
+        }
+
+        return view('listado_of.lifecycle_index', $data);
     }
 
     public function exportCsv(Request $request)
@@ -641,5 +847,6 @@ class ListadoOfController extends Controller
         }
     }
 }
+
 
 

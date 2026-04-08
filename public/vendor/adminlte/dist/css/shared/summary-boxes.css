@@ -1,78 +1,100 @@
-/* public/vendor/adminlte/dist/css/shared/summary-boxes.css */
+﻿/* public/vendor/adminlte/dist/css/shared/summary-boxes.css */
 
-.small-box {
+:root {
+    --ss-brand: #1f5f78;
+    --ss-brand-soft: #eef6f9;
+    --ss-success: #2f7d5a;
+    --ss-success-soft: #edf7f1;
+    --ss-danger: #b55252;
+    --ss-danger-soft: #fbeff0;
+    --ss-text: #223046;
+    --ss-text-muted: #64748b;
+    --ss-border: #d8e1ea;
+    --ss-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+}
+
+.small-box.summary-box {
     position: relative;
     overflow: hidden;
-    border-radius: 10px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-    transition: transform 0.22s ease, box-shadow 0.22s ease;
+    border-radius: 14px;
+    background: #ffffff;
+    color: var(--ss-text);
+    border: 1px solid var(--ss-border);
+    border-top-width: 5px;
+    box-shadow: var(--ss-shadow);
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
 }
 
-.small-box > .inner {
+.small-box.summary-box > .inner {
     position: relative;
     z-index: 1;
+    padding: 1.35rem 1.35rem 1.1rem;
 }
 
-.small-box > .icon {
+.small-box.summary-box > .inner h3 {
+    font-weight: 800;
+    font-size: 2.15rem;
+    color: var(--ss-text);
+    margin-bottom: 0.35rem;
+}
+
+.small-box.summary-box > .inner p {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--ss-text-muted);
+}
+
+.small-box.summary-box > .icon {
     position: absolute;
-    top: 10px;
-    right: 15px;
+    right: 18px;
+    bottom: 12px;
+    top: auto;
     z-index: 0;
     pointer-events: none;
 }
 
-.small-box > .icon > i,
-.small-box > .icon > svg {
-    font-size: 55px;
-    color: rgba(0, 0, 0, 0.22);
-    opacity: 0.42;
-    transition: transform 0.25s ease, opacity 0.25s ease, filter 0.25s ease, color 0.25s ease;
-    transform-origin: center center;
+.small-box.summary-box > .icon > i,
+.small-box.summary-box > .icon > svg {
+    font-size: 64px;
+    opacity: 0.16;
+    transition: transform 0.2s ease, opacity 0.2s ease;
 }
 
-.small-box .inner h3 {
-    font-weight: 700;
-}
-
-.small-box:hover {
+.small-box.summary-box:hover {
     transform: translateY(-2px);
+    box-shadow: 0 14px 28px rgba(15, 23, 42, 0.12);
 }
 
-/* INFO */
-.small-box.bg-info:hover {
-    box-shadow: 0 8px 20px rgba(23, 162, 184, 0.28);
+.small-box.summary-box:hover > .icon > i,
+.small-box.summary-box:hover > .icon > svg {
+    transform: scale(1.04);
+    opacity: 0.2;
 }
 
-.small-box.bg-info:hover > .icon > i,
-.small-box.bg-info:hover > .icon > svg {
-    transform: scale(1.08);
-    opacity: 0.55;
-    color: rgba(0, 0, 0, 0.28);
-    filter: brightness(1.05);
+.small-box.summary-box--brand {
+    border-top-color: var(--ss-brand);
 }
 
-/* SUCCESS */
-.small-box.bg-success:hover {
-    box-shadow: 0 8px 20px rgba(40, 167, 69, 0.28);
+.small-box.summary-box--brand > .icon > i,
+.small-box.summary-box--brand > .icon > svg {
+    color: var(--ss-brand);
 }
 
-.small-box.bg-success:hover > .icon > i,
-.small-box.bg-success:hover > .icon > svg {
-    transform: scale(1.08);
-    opacity: 0.55;
-    color: rgba(0, 0, 0, 0.28);
-    filter: brightness(1.05);
+.small-box.summary-box--success {
+    border-top-color: var(--ss-success);
 }
 
-/* DANGER */
-.small-box.bg-danger:hover {
-    box-shadow: 0 8px 20px rgba(220, 53, 69, 0.28);
+.small-box.summary-box--success > .icon > i,
+.small-box.summary-box--success > .icon > svg {
+    color: var(--ss-success);
 }
 
-.small-box.bg-danger:hover > .icon > i,
-.small-box.bg-danger:hover > .icon > svg {
-    transform: scale(1.08);
-    opacity: 0.55;
-    color: rgba(0, 0, 0, 0.28);
-    filter: brightness(1.05);
+.small-box.summary-box--danger {
+    border-top-color: var(--ss-danger);
+}
+
+.small-box.summary-box--danger > .icon > i,
+.small-box.summary-box--danger > .icon > svg {
+    color: var(--ss-danger);
 }
