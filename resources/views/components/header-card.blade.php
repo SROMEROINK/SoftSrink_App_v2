@@ -9,7 +9,13 @@
 ])
 
 <div class="card card-title-header">
-    <h4 class="text-center">{{ $title }}</h4>  
+    <div class="card-title-header__inner">
+        <a href="{{ route('dashboard') }}" class="btn btn-outline-secondary btn-sm card-title-header__home">
+            <i class="fas fa-home mr-1"></i>Inicio
+        </a>
+        <h4 class="text-center mb-0">{{ $title }}</h4>
+        <div class="card-title-header__spacer"></div>
+    </div>
 </div>
 
 <div class="card">
@@ -39,3 +45,40 @@
 </div>
 
 @include('partials.navigation')
+
+<style>
+    .card-title-header__inner {
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        align-items: center;
+        gap: 12px;
+        padding: 4px 0;
+    }
+
+    .card-title-header__home {
+        justify-self: start;
+        border-radius: 999px;
+        padding: 6px 14px;
+        font-weight: 700;
+        white-space: nowrap;
+    }
+
+    .card-title-header__spacer {
+        width: 78px;
+    }
+
+    .card-title-header h4 {
+        text-align: center;
+    }
+
+    @media (max-width: 767.98px) {
+        .card-title-header__inner {
+            grid-template-columns: 1fr;
+        }
+
+        .card-title-header__home,
+        .card-title-header__spacer {
+            display: none;
+        }
+    }
+</style>

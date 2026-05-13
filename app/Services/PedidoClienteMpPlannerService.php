@@ -12,6 +12,8 @@ use Illuminate\Support\Facades\DB;
 
 class PedidoClienteMpPlannerService
 {
+    protected string $historicalCutoffDate = '2026-03-29';
+
     public function buildForPedido(PedidoCliente $pedido, array $input = []): array
     {
         $producto = $pedido->producto;
@@ -57,6 +59,13 @@ class PedidoClienteMpPlannerService
         $cantPiezasPorBarra = $largoTotalPieza > 0 && $longitudBarraSinScrap > 0
             ? floor(($longitudBarraSinScrap / $largoTotalPieza) * 100) / 100
             : 0.0;
+
+        $ingresos = $this->sortCompatibleIngresos(
+            $ingresos,
+            $cantBarrasRequeridas,
+            $codigoMp,
+            $diametroMp
+        );
 
         $stockSummary = $this->buildStockSummary($ingresos, $mmTotales, $cantBarrasRequeridas, $scrapMaquina, $longitudUnMp);
 
@@ -114,6 +123,16 @@ class PedidoClienteMpPlannerService
         ];
     }
 
+    public function getAvailableStockRows(?int $excludePedidoMpId = null): Collection
+    {
+        return $this->buildNetStockRows($excludePedidoMpId)
+            ->filter(function ($row) {
+                return (int) ($row['Barras_Disponibles'] ?? 0) > 0
+                    && (float) ($row['Mts_Disponibles'] ?? 0) > 0;
+            })
+            ->values();
+    }
+
     protected function resolveMachine($idMaquina): array
     {
         if (!$idMaquina) {
@@ -154,7 +173,7 @@ class PedidoClienteMpPlannerService
         $diametroMaximoPermitido = $this->resolveMaxAllowedDiameter($diametroMp ?? $codigoMp);
         $materiaRequerida = $this->normalizeText($materiaPrima);
 
-        return $this->buildNetStockRows($excludePedidoMpId)
+        return $this->getAvailableStockRows($excludePedidoMpId)
             ->when($materiaRequerida, function (Collection $rows) use ($materiaRequerida) {
                 return $rows->filter(fn ($row) => $this->normalizeText($row['Materia_Prima'] ?? null) === $materiaRequerida);
             })
@@ -222,7 +241,15 @@ class PedidoClienteMpPlannerService
             ->join('pedido_cliente_mp as pm', 'pm.Id_OF', '=', 's.Id_OF_Salidas_MP')
             ->whereNull('s.deleted_at')
             ->whereNull('pm.deleted_at')
-            ->selectRaw('pm.Nro_Ingreso_MP, SUM(s.Total_Salidas_MP) as egresadas, SUM(s.Total_Mtros_Utilizados) as metros_egresados')
+            ->selectRaw('
+                pm.Nro_Ingreso_MP,
+                SUM(s.Cantidad_Unidades_MP) as barras_solicitadas,
+                SUM(s.Cantidad_Unidades_MP_Preparadas) as barras_preparadas,
+                SUM(s.Cantidad_MP_Adicionales) as adicionales_of,
+                SUM(s.Cant_Devoluciones) as devoluciones_of,
+                SUM(s.Total_Salidas_MP) as egresadas,
+                SUM(s.Total_Mtros_Utilizados) as metros_egresados
+            ')
             ->groupBy('pm.Nro_Ingreso_MP')
             ->get()
             ->keyBy('Nro_Ingreso_MP');
@@ -236,44 +263,52 @@ class PedidoClienteMpPlannerService
 
                 $barrasIngreso = (int) ($ingreso->Unidades_MP ?? 0);
                 $devolucionesProveedor = (int) ($salidaInicial->Devoluciones_Proveedor ?? 0);
-                $stockInicial = (int) ($salidaInicial->Stock_Inicial ?? $barrasIngreso);
                 $ajusteStock = (int) ($salidaInicial->Ajuste_Stock ?? 0);
-                $salidasFinalBase = (int) ($stockInicial - $devolucionesProveedor + $ajusteStock);
-                $barrasBaseTeoricas = $barrasIngreso - $salidasFinalBase;
-                $barrasBase = max(0, $barrasBaseTeoricas);
+                // Se omite la lógica de salidas iniciales como base de stock.
+                // El planner parte del ingreso real del proveedor, descuenta devoluciones
+                // al proveedor, aplica el ajuste manual y luego consolida movimientos
+                // operativos posteriores.
                 $longitudUnidad = $this->asFloat($ingreso->Longitud_Unidad_MP ?? 0);
-                $devoluciones = (int) ($movimiento->devoluciones ?? 0);
-                $adicionales = (int) ($movimiento->adicionales ?? 0);
+                $devolucionesStock = (int) ($movimiento->devoluciones ?? 0);
+                $adicionalesStock = (int) ($movimiento->adicionales ?? 0);
                 $reservadas = (int) ($reserva->reservadas ?? 0);
+                $barrasSolicitadasOf = (int) ($egresoPedido->barras_solicitadas ?? 0);
+                $barrasPreparadasOf = (int) ($egresoPedido->barras_preparadas ?? 0);
+                $adicionalesOf = (int) ($egresoPedido->adicionales_of ?? 0);
+                $devolucionesOf = (int) ($egresoPedido->devoluciones_of ?? 0);
                 $egresadasPedidos = (int) ($egresoPedido->egresadas ?? 0);
                 $metrosEgresadosPedidos = $this->asFloat($egresoPedido->metros_egresados ?? 0);
+                $tieneMovimientosOperativos = $barrasPreparadasOf > 0 || $adicionalesOf > 0 || $devolucionesOf > 0 || $egresadasPedidos > 0;
                 $reservadasPendientes = max(0, $reservadas - $egresadasPedidos);
-                $saldoTeorico = $barrasBaseTeoricas + $devoluciones - $adicionales - $egresadasPedidos - $reservadasPendientes;
+                $cantidadTotalOf = max(0, $barrasPreparadasOf + $adicionalesStock - $devolucionesStock);
+                $esIngresoHistoricoSinMovimientos = !$tieneMovimientosOperativos
+                    && $this->isHistoricalIngresoWithoutMovements($ingreso);
+                $barrasIngresosIniciales = $esIngresoHistoricoSinMovimientos
+                    ? max(0, (int) ($salidaInicial->Total_Salidas_MP ?? 0))
+                    : 0;
+                $barrasBaseTeoricas = $barrasIngreso - $devolucionesProveedor - $barrasIngresosIniciales + $ajusteStock;
+                $barrasBase = max(0, $barrasBaseTeoricas);
+                // Fórmula operativa actual:
+                // ingreso proveedor - devoluciones proveedor - barras iniciales historicas
+                // - total OF + ajuste manual.
+                $saldoTeorico = $barrasIngreso - $devolucionesProveedor - $barrasIngresosIniciales - $cantidadTotalOf + $ajusteStock;
                 $barrasDisponibles = max(0, $saldoTeorico);
                 $mtsDisponibles = $saldoTeorico * $longitudUnidad;
-                $tieneMasSalidasQueIngresos = $salidasFinalBase > $barrasIngreso;
-                $tieneIngresosExtra = $salidasFinalBase < 0;
+                $tieneBaseNegativa = $barrasBaseTeoricas < 0;
                 $tieneStockNegativo = $saldoTeorico < 0;
-                $tieneAlertaStock = $tieneMasSalidasQueIngresos || $tieneIngresosExtra || $tieneStockNegativo;
+                $tieneAlertaStock = $tieneBaseNegativa || $tieneStockNegativo;
 
                 $motivosAlerta = [];
                 $tipoAlerta = '';
                 $botonAlertaTexto = '';
                 $botonAlertaClase = 'btn-secondary';
 
-                if ($tieneMasSalidasQueIngresos) {
-                    $motivosAlerta[] = 'Mas salidas que ingresos';
-                    $tipoAlerta = 'mas_salidas';
-                    $botonAlertaTexto = 'Mas salidas que ingresos';
-                    $botonAlertaClase = 'btn-danger';
-                }
-
-                if ($tieneIngresosExtra) {
-                    $motivosAlerta[] = 'Ingresos extra vs original';
+                if ($tieneBaseNegativa) {
+                    $motivosAlerta[] = 'Base negativa';
                     if ($tipoAlerta === '') {
-                        $tipoAlerta = 'ingresos_extra';
-                        $botonAlertaTexto = 'Ingresos extra al original';
-                        $botonAlertaClase = 'btn-warning';
+                        $tipoAlerta = 'base_negativa';
+                        $botonAlertaTexto = 'Base negativa';
+                        $botonAlertaClase = 'btn-danger';
                     }
                 }
 
@@ -287,7 +322,9 @@ class PedidoClienteMpPlannerService
                 }
 
                 $motivoAlerta = empty($motivosAlerta) ? '' : implode(' | ', array_unique($motivosAlerta));
-                $cantidadAlertaBarras = $saldoTeorico < 0 ? abs($saldoTeorico) : abs(min(0, $barrasBaseTeoricas));
+                $cantidadAlertaBarras = $saldoTeorico < 0
+                    ? abs($saldoTeorico)
+                    : abs(min(0, ($barrasIngreso - $devolucionesProveedor - $barrasIngresosIniciales + $ajusteStock)));
                 $cantidadAlertaMetros = abs($mtsDisponibles);
 
                 return [
@@ -302,21 +339,27 @@ class PedidoClienteMpPlannerService
                     'Materia_Prima' => $ingreso->materiaPrima->Nombre_Materia ?? null,
                     'Diametro_MP' => $ingreso->diametro->Valor_Diametro ?? null,
                     'Codigo_MP' => $ingreso->Codigo_MP,
+                    'Barras_Ingresos_Iniciales' => $barrasIngresosIniciales,
                     'Barras_Ingreso' => $barrasIngreso,
-                    'Stock_Inicial' => $stockInicial,
+                    'Stock_Inicial' => $barrasIngreso,
                     'Devoluciones_Proveedor' => $devolucionesProveedor,
                     'Ajuste_Stock' => $ajusteStock,
                     'Barras_Base' => max(0, $barrasBase),
-                    'Salidas_Final_Base' => max(0, $salidasFinalBase),
-                    'Cantidad_Devoluciones_Stock' => $devoluciones,
-                    'Cantidad_Adicionales_Stock' => $adicionales,
+                    'Salidas_Final_Base' => $barrasIngresosIniciales,
+                    'Cantidad_Devoluciones_Stock' => $devolucionesStock,
+                    'Cantidad_Adicionales_Stock' => $adicionalesStock,
                     'Barras_Reservadas' => $reservadas,
+                    'Barras_Solicitadas_OF' => $barrasSolicitadasOf,
+                    'Cant_Barras_Of_Iniciales' => $barrasPreparadasOf,
+                    'Cantidad_Adicionales_OF' => $adicionalesOf,
+                    'Cantidad_Devoluciones_OF' => $devolucionesOf,
+                    'Cantidad_Total_OF' => $cantidadTotalOf,
                     'Barras_Egresadas_Pedidos' => $egresadasPedidos,
                     'Metros_Egresados_Pedidos' => $this->roundValue($metrosEgresadosPedidos) ?? 0.0,
                     'Barras_Reservadas_Pendientes' => $reservadasPendientes,
                     'Saldo_Teorico' => $saldoTeorico,
-                    'Tiene_Inconsistencia_Base' => $tieneMasSalidasQueIngresos,
-                    'Tiene_Ingresos_Extra' => $tieneIngresosExtra,
+                    'Tiene_Inconsistencia_Base' => false,
+                    'Tiene_Ingresos_Extra' => $tieneBaseNegativa,
                     'Tiene_Stock_Negativo' => $tieneStockNegativo,
                     'Tiene_Alerta_Stock' => $tieneAlertaStock,
                     'Tipo_Alerta' => $tipoAlerta,
@@ -331,10 +374,13 @@ class PedidoClienteMpPlannerService
                     'Detalle_Origen_MP' => $ingreso->Detalle_Origen_MP,
                     'Nro_Pedido_Proveedor' => blank($ingreso->Nro_Pedido) ? null : $ingreso->Nro_Pedido,
                     'Tiene_Salida_Inicial' => (bool) $salidaInicial,
-                    'Url_Salida_Inicial' => $salidaInicial
-                        ? route('mp_salidas_iniciales.editMassive', ['id' => $ingreso->Id_MP, 'return_to' => 'stock_mp'])
-                        : route('mp_salidas_iniciales.create', ['ingreso_mp' => $ingreso->Id_MP, 'return_to' => 'stock_mp']),
-                    'Texto_Salida_Inicial' => $salidaInicial ? 'Editar ajuste' : 'Registrar ajuste',
+                    'Url_Salida_Inicial' => route('mp_salidas_iniciales.editMassive', [
+                        'id' => $ingreso->Id_MP,
+                        'return_to' => 'stock_mp',
+                        'return_selected' => $ingreso->Id_MP,
+                        'scope' => $tieneMovimientosOperativos ? 'adjustments' : 'without_movements',
+                    ]),
+                    'Texto_Salida_Inicial' => $tieneMovimientosOperativos ? 'Ajustar stock' : 'Editar historico',
                     'Unidades_MP' => max(0, $barrasDisponibles),
                     'Mts_Totales' => $this->roundValue($mtsDisponibles) ?? 0.0,
                 ];
@@ -399,6 +445,53 @@ class PedidoClienteMpPlannerService
             'longitud_barra_sin_scrap' => $this->roundValue($longitudBarraSinScrap),
             'sugerencia' => $sugerencia,
         ];
+    }
+
+    protected function sortCompatibleIngresos(Collection $ingresos, int $cantBarrasRequeridas, ?string $codigoMp, ?string $diametroMp): Collection
+    {
+        $codigoNormalizado = $this->normalizeText($codigoMp);
+        $diametroRequerido = $this->extractDiameter($diametroMp ?? $codigoMp);
+
+        return $ingresos
+            ->sort(function ($left, $right) use ($cantBarrasRequeridas, $codigoNormalizado, $diametroRequerido) {
+                $leftExacto = $this->normalizeText($left['Codigo_MP'] ?? null) === $codigoNormalizado ? 1 : 0;
+                $rightExacto = $this->normalizeText($right['Codigo_MP'] ?? null) === $codigoNormalizado ? 1 : 0;
+
+                if ($leftExacto !== $rightExacto) {
+                    return $rightExacto <=> $leftExacto;
+                }
+
+                $leftCubre = (int) ($left['Barras_Disponibles'] ?? 0) >= $cantBarrasRequeridas ? 1 : 0;
+                $rightCubre = (int) ($right['Barras_Disponibles'] ?? 0) >= $cantBarrasRequeridas ? 1 : 0;
+
+                if ($leftCubre !== $rightCubre) {
+                    return $rightCubre <=> $leftCubre;
+                }
+
+                $leftDiametro = $this->extractDiameter($left['Diametro_MP'] ?? $left['Codigo_MP'] ?? null);
+                $rightDiametro = $this->extractDiameter($right['Diametro_MP'] ?? $right['Codigo_MP'] ?? null);
+
+                $leftDeltaDiametro = $diametroRequerido !== null && $leftDiametro !== null
+                    ? abs($leftDiametro - $diametroRequerido)
+                    : PHP_FLOAT_MAX;
+                $rightDeltaDiametro = $diametroRequerido !== null && $rightDiametro !== null
+                    ? abs($rightDiametro - $diametroRequerido)
+                    : PHP_FLOAT_MAX;
+
+                if (abs($leftDeltaDiametro - $rightDeltaDiametro) > 0.0001) {
+                    return $leftDeltaDiametro <=> $rightDeltaDiametro;
+                }
+
+                $leftIngreso = (int) ($left['Nro_Ingreso_MP'] ?? 0);
+                $rightIngreso = (int) ($right['Nro_Ingreso_MP'] ?? 0);
+
+                if ($leftIngreso !== $rightIngreso) {
+                    return $rightIngreso <=> $leftIngreso;
+                }
+
+                return ((int) ($right['Barras_Disponibles'] ?? 0)) <=> ((int) ($left['Barras_Disponibles'] ?? 0));
+            })
+            ->values();
     }
 
     protected function buildCompatibilityMessage(?string $codigoMp, ?string $materiaPrima, ?string $productoDiametroMp, ?string $diametroSeleccionado = null): string
@@ -483,6 +576,13 @@ class PedidoClienteMpPlannerService
     {
         $value = is_string($value) ? trim($value) : null;
 
+        if ($value === '') {
+            return null;
+        }
+
+        $value = mb_strtoupper($value, 'UTF-8');
+        $value = preg_replace('/\s+/u', '', $value);
+
         return $value === '' ? null : $value;
     }
 
@@ -515,6 +615,15 @@ class PedidoClienteMpPlannerService
         }
 
         return round((float) $value, 2);
+    }
+
+    protected function isHistoricalIngresoWithoutMovements(MpIngreso $ingreso): bool
+    {
+        $fechaIngreso = $ingreso->Fecha_Ingreso
+            ? $ingreso->Fecha_Ingreso->format('Y-m-d')
+            : null;
+
+        return $fechaIngreso !== null && $fechaIngreso < $this->historicalCutoffDate;
     }
 }
 

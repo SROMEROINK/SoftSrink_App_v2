@@ -1,6 +1,12 @@
 @php
-    $selectedPedidoMpId = old('Id_Pedido_MP', $selectedPedidoMpId ?? optional($egreso->pedidoMp ?? null)->Id_Pedido_MP);
+    $egreso = $egreso ?? null;
+    $selectedPedidoMpId = old('Id_Pedido_MP', $selectedPedidoMpId ?? optional(optional($egreso)->pedidoMp)->Id_Pedido_MP);
     $selectedPedidoMp = collect($pedidosMp)->firstWhere('Id_Pedido_MP', (int) $selectedPedidoMpId);
+    $selectedPedido = optional($selectedPedidoMp)->pedido;
+    $selectedProducto = optional($selectedPedido)->producto;
+    $egresoPedidoMp = optional($egreso)->pedidoMp;
+    $egresoPedido = optional($egresoPedidoMp)->pedido;
+    $egresoProducto = optional($egresoPedido)->producto;
 @endphp
 
 <div class="card">
@@ -54,31 +60,31 @@
             <div class="col-md-3">
                 <div class="form-group">
                     <label>Nro OF</label>
-                    <input type="text" id="meta_nro_of" class="form-control" value="{{ old('meta_nro_of', $selectedPedidoMp->pedido->Nro_OF ?? optional(optional($egreso->pedidoMp)->pedido)->Nro_OF ?? '') }}" readonly>
+                    <input type="text" id="meta_nro_of" class="form-control" value="{{ old('meta_nro_of', $selectedPedido->Nro_OF ?? $egresoPedido->Nro_OF ?? '') }}" readonly>
                 </div>
             </div>
             <div class="col-md-3">
                 <div class="form-group">
                     <label>Producto</label>
-                    <input type="text" id="meta_producto" class="form-control" value="{{ old('meta_producto', $selectedPedidoMp->pedido->producto->Prod_Codigo ?? optional(optional(optional($egreso->pedidoMp)->pedido)->producto)->Prod_Codigo ?? '') }}" readonly>
+                    <input type="text" id="meta_producto" class="form-control" value="{{ old('meta_producto', $selectedProducto->Prod_Codigo ?? $egresoProducto->Prod_Codigo ?? '') }}" readonly>
                 </div>
             </div>
             <div class="col-md-2">
                 <div class="form-group">
                     <label>Ingreso MP</label>
-                    <input type="text" id="meta_ingreso" class="form-control" value="{{ old('meta_ingreso', $selectedPedidoMp->Nro_Ingreso_MP ?? optional($egreso->pedidoMp)->Nro_Ingreso_MP ?? '') }}" readonly>
+                    <input type="text" id="meta_ingreso" class="form-control" value="{{ old('meta_ingreso', optional($selectedPedidoMp)->Nro_Ingreso_MP ?? $egresoPedidoMp->Nro_Ingreso_MP ?? '') }}" readonly>
                 </div>
             </div>
             <div class="col-md-2">
                 <div class="form-group">
                     <label>Maquina</label>
-                    <input type="text" id="meta_maquina" class="form-control" value="{{ old('meta_maquina', $selectedPedidoMp->Nro_Maquina ?? optional($egreso->pedidoMp)->Nro_Maquina ?? '') }}" readonly>
+                    <input type="text" id="meta_maquina" class="form-control" value="{{ old('meta_maquina', optional($selectedPedidoMp)->Nro_Maquina ?? $egresoPedidoMp->Nro_Maquina ?? '') }}" readonly>
                 </div>
             </div>
             <div class="col-md-2">
                 <div class="form-group">
                     <label>Largo x unidad</label>
-                    <input type="text" id="meta_longitud" class="form-control" value="{{ number_format((float) old('meta_longitud', $selectedPedidoMp->Longitud_Un_MP ?? optional($egreso->pedidoMp)->Longitud_Un_MP ?? 0), 2, ',', '.') }}" readonly>
+                    <input type="text" id="meta_longitud" class="form-control" value="{{ number_format((float) old('meta_longitud', optional($selectedPedidoMp)->Longitud_Un_MP ?? $egresoPedidoMp->Longitud_Un_MP ?? 0), 2, ',', '.') }}" readonly>
                 </div>
             </div>
         </div>
@@ -87,19 +93,19 @@
             <div class="col-md-4">
                 <div class="form-group">
                     <label for="Codigo_MP">Codigo MP</label>
-                    <input type="text" id="Codigo_MP" class="form-control" value="{{ old('Codigo_MP', $selectedPedidoMp->Codigo_MP ?? optional($egreso->pedidoMp)->Codigo_MP ?? '') }}" readonly>
+                    <input type="text" id="Codigo_MP" class="form-control" value="{{ old('Codigo_MP', optional($selectedPedidoMp)->Codigo_MP ?? $egresoPedidoMp->Codigo_MP ?? '') }}" readonly>
                 </div>
             </div>
             <div class="col-md-4">
                 <div class="form-group">
                     <label for="Cantidad_Unidades_MP">Barras solicitadas</label>
-                    <input type="number" name="Cantidad_Unidades_MP" id="Cantidad_Unidades_MP" class="form-control" min="0" step="1" value="{{ old('Cantidad_Unidades_MP', $egreso->Cantidad_Unidades_MP ?? ($selectedPedidoMp->Cant_Barras_MP ?? 0)) }}" required readonly>
+                    <input type="number" name="Cantidad_Unidades_MP" id="Cantidad_Unidades_MP" class="form-control" min="0" step="1" value="{{ old('Cantidad_Unidades_MP', optional($egreso)->Cantidad_Unidades_MP ?? (optional($selectedPedidoMp)->Cant_Barras_MP ?? 0)) }}" required readonly>
                 </div>
             </div>
             <div class="col-md-4">
                 <div class="form-group">
                     <label for="Cantidad_Unidades_MP_Preparadas">Barras preparadas</label>
-                    <input type="number" name="Cantidad_Unidades_MP_Preparadas" id="Cantidad_Unidades_MP_Preparadas" class="form-control" min="0" step="1" value="{{ old('Cantidad_Unidades_MP_Preparadas', $egreso->Cantidad_Unidades_MP_Preparadas ?? 0) }}" required>
+                    <input type="number" name="Cantidad_Unidades_MP_Preparadas" id="Cantidad_Unidades_MP_Preparadas" class="form-control" min="0" step="1" value="{{ old('Cantidad_Unidades_MP_Preparadas', optional($egreso)->Cantidad_Unidades_MP_Preparadas ?? 0) }}" required>
                 </div>
             </div>
         </div>
@@ -108,25 +114,25 @@
             <div class="col-md-3">
                 <div class="form-group">
                     <label for="Cantidad_MP_Adicionales">Adicionales</label>
-                    <input type="number" name="Cantidad_MP_Adicionales" id="Cantidad_MP_Adicionales" class="form-control" min="0" step="1" value="{{ old('Cantidad_MP_Adicionales', $egreso->Cantidad_MP_Adicionales ?? 0) }}" readonly>
+                    <input type="number" name="Cantidad_MP_Adicionales" id="Cantidad_MP_Adicionales" class="form-control" min="0" step="1" value="{{ old('Cantidad_MP_Adicionales', optional($egreso)->Cantidad_MP_Adicionales ?? 0) }}" readonly>
                 </div>
             </div>
             <div class="col-md-3">
                 <div class="form-group">
                     <label for="Cant_Devoluciones">Devoluciones</label>
-                    <input type="number" name="Cant_Devoluciones" id="Cant_Devoluciones" class="form-control" min="0" step="1" value="{{ old('Cant_Devoluciones', $egreso->Cant_Devoluciones ?? 0) }}" readonly>
+                    <input type="number" name="Cant_Devoluciones" id="Cant_Devoluciones" class="form-control" min="0" step="1" value="{{ old('Cant_Devoluciones', optional($egreso)->Cant_Devoluciones ?? 0) }}" readonly>
                 </div>
             </div>
             <div class="col-md-3">
                 <div class="form-group">
                     <label for="Total_Salidas_MP">Total salidas</label>
-                    <input type="text" id="Total_Salidas_MP" class="form-control" value="{{ number_format((float) old('Total_Salidas_MP', $egreso->Total_Salidas_MP ?? 0), 0, ',', '.') }}" readonly>
+                    <input type="text" id="Total_Salidas_MP" class="form-control" value="{{ number_format((float) old('Total_Salidas_MP', optional($egreso)->Total_Salidas_MP ?? 0), 0, ',', '.') }}" readonly>
                 </div>
             </div>
             <div class="col-md-3">
                 <div class="form-group">
                     <label for="Total_Mtros_Utilizados">Total metros utilizados</label>
-                    <input type="text" id="Total_Mtros_Utilizados" class="form-control" value="{{ number_format((float) old('Total_Mtros_Utilizados', $egreso->Total_Mtros_Utilizados ?? 0), 2, ',', '.') }}" readonly>
+                    <input type="text" id="Total_Mtros_Utilizados" class="form-control" value="{{ number_format((float) old('Total_Mtros_Utilizados', optional($egreso)->Total_Mtros_Utilizados ?? 0), 2, ',', '.') }}" readonly>
                 </div>
             </div>
         </div>
@@ -138,19 +144,19 @@
             <div class="col-md-4">
                 <div class="form-group">
                     <label for="Fecha_del_Pedido_Produccion">Fecha de planificacion</label>
-                    <input type="date" name="Fecha_del_Pedido_Produccion" id="Fecha_del_Pedido_Produccion" class="form-control" value="{{ old('Fecha_del_Pedido_Produccion', $selectedPedidoMp->Fecha_Planificacion?->format('Y-m-d') ?? (isset($egreso) && $egreso->Fecha_del_Pedido_Produccion ? $egreso->Fecha_del_Pedido_Produccion->format('Y-m-d') : '')) }}" readonly>
+                    <input type="date" name="Fecha_del_Pedido_Produccion" id="Fecha_del_Pedido_Produccion" class="form-control" value="{{ old('Fecha_del_Pedido_Produccion', optional(optional($selectedPedidoMp)->Fecha_Planificacion)->format('Y-m-d') ?? optional(optional($egreso)->Fecha_del_Pedido_Produccion)->format('Y-m-d') ?? '') }}" readonly>
                 </div>
             </div>
             <div class="col-md-4">
                 <div class="form-group">
                     <label for="Responsable_Pedido_Produccion">Resp. de planificacion</label>
-                    <input type="text" name="Responsable_Pedido_Produccion" id="Responsable_Pedido_Produccion" class="form-control" value="{{ old('Responsable_Pedido_Produccion', $selectedPedidoMp->Responsable_Planificacion ?? $egreso->Responsable_Pedido_Produccion ?? '') }}" readonly>
+                    <input type="text" name="Responsable_Pedido_Produccion" id="Responsable_Pedido_Produccion" class="form-control" value="{{ old('Responsable_Pedido_Produccion', optional($selectedPedidoMp)->Responsable_Planificacion ?? optional($egreso)->Responsable_Pedido_Produccion ?? '') }}" readonly>
                 </div>
             </div>
             <div class="col-md-4">
                 <div class="form-group">
                     <label for="Nro_Pedido_MP">Pedido de Material Nro</label>
-                    <input type="number" name="Nro_Pedido_MP" id="Nro_Pedido_MP" class="form-control" min="0" step="1" value="{{ old('Nro_Pedido_MP', $selectedPedidoMp->Pedido_Material_Nro ?? $egreso->Nro_Pedido_MP ?? '') }}" readonly>
+                    <input type="number" name="Nro_Pedido_MP" id="Nro_Pedido_MP" class="form-control" min="0" step="1" value="{{ old('Nro_Pedido_MP', optional($selectedPedidoMp)->Pedido_Material_Nro ?? optional($egreso)->Nro_Pedido_MP ?? '') }}" readonly>
                 </div>
             </div>
         </div>
@@ -174,7 +180,7 @@
             <div class="col-md-4">
                 <div class="form-group">
                     <label for="Responsable_de_entrega_Calidad">Resp. de entrega</label>
-                    <input type="text" name="Responsable_de_entrega_Calidad" id="Responsable_de_entrega_Calidad" class="form-control" value="{{ old('Responsable_de_entrega_Calidad', $egreso->Responsable_de_entrega_Calidad ?? auth()->user()->name ?? '') }}">
+                    <input type="text" name="Responsable_de_entrega_Calidad" id="Responsable_de_entrega_Calidad" class="form-control" value="{{ old('Responsable_de_entrega_Calidad', optional($egreso)->Responsable_de_entrega_Calidad ?? auth()->user()->name ?? '') }}">
                 </div>
             </div>
         </div>

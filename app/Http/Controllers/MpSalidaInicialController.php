@@ -6,6 +6,7 @@ use App\Http\Controllers\Traits\AppliesExactNumericFilters;
 use App\Models\MpIngreso;
 use App\Models\MpSalidaInicial;
 use App\Services\HistoricalMpSalidaInicialImportService;
+use App\Services\PedidoClienteMpPlannerService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -14,6 +15,8 @@ use Illuminate\Support\Facades\Log;
 class MpSalidaInicialController extends Controller
 {
     use AppliesExactNumericFilters;
+    protected string $historicalCutoffDate = '2026-03-29';
+
     public function index()
     {
         $totalAjustes = MpSalidaInicial::count();
@@ -190,14 +193,15 @@ class MpSalidaInicialController extends Controller
         $salidaInicial->fill($data);
 
         $returnTo = $request->input('return_to', 'salidas_iniciales');
+        $returnSelected = $request->input('return_selected');
 
         if (!$salidaInicial->isDirty()) {
-            return redirect()->to($this->resolveReturnUrl($returnTo))->with('warning', 'No se realizaron cambios.');
+            return redirect()->to($this->resolveReturnUrl($returnTo, $returnSelected))->with('warning', 'No se realizaron cambios.');
         }
 
         $salidaInicial->save();
 
-        return redirect()->to($this->resolveReturnUrl($returnTo))->with('success', 'Salida inicial actualizada correctamente.');
+        return redirect()->to($this->resolveReturnUrl($returnTo, $returnSelected))->with('success', 'Salida inicial actualizada correctamente.');
     }
 
     public function destroy($id)
@@ -243,18 +247,42 @@ class MpSalidaInicialController extends Controller
     public function editMassive(Request $request, $id = null)
     {
         $selectedId = $id ? (int) $id : $request->integer('selected');
+        $scope = $request->query('scope', 'without_movements');
 
-        $salidas = MpSalidaInicial::with(['ingresoMp.proveedor', 'ingresoMp.materiaPrima', 'ingresoMp.diametro'])
-            ->whereNull('deleted_at')
-            ->get()
-            ->sortBy(fn (MpSalidaInicial $salidaInicial) => (int) ($salidaInicial->ingresoMp->Nro_Ingreso_MP ?? PHP_INT_MAX))
-            ->values();
+        if ($scope === 'without_movements') {
+            $this->syncHistoricalRowsWithoutMovements();
+            $salidas = MpSalidaInicial::with(['ingresoMp.proveedor', 'ingresoMp.materiaPrima', 'ingresoMp.diametro'])
+                ->whereNull('deleted_at')
+                ->whereIn('Id_Ingreso_MP', $this->getIngresoIdsWithoutOperationalMovements())
+                ->get()
+                ->sortBy(fn (MpSalidaInicial $salidaInicial) => (int) ($salidaInicial->ingresoMp->Nro_Ingreso_MP ?? PHP_INT_MAX))
+                ->values();
+        } elseif ($scope === 'adjustments') {
+            $salidas = $this->buildAdjustmentRows();
+        } else {
+            $salidas = MpSalidaInicial::with(['ingresoMp.proveedor', 'ingresoMp.materiaPrima', 'ingresoMp.diametro'])
+                ->whereNull('deleted_at')
+                ->get()
+                ->sortBy(fn (MpSalidaInicial $salidaInicial) => (int) ($salidaInicial->ingresoMp->Nro_Ingreso_MP ?? PHP_INT_MAX))
+                ->values();
+        }
 
         $salidas->each(fn (MpSalidaInicial $salidaInicial) => $this->hydrateCalculatedFields($salidaInicial));
+        $selectedSalida = $selectedId
+            ? $salidas->firstWhere('Id_Ingreso_MP', $selectedId)
+            : null;
 
         $returnTo = $request->query('return_to', 'salidas_iniciales');
 
-        return view('materia_prima.salidas_iniciales.edit-massive', compact('salidas', 'selectedId', 'returnTo'));
+        return view('materia_prima.salidas_iniciales.edit-massive', [
+            'salidas' => $salidas,
+            'selectedId' => $selectedId,
+            'selectedSalida' => $selectedSalida,
+            'returnTo' => $returnTo,
+            'returnSelected' => $request->query('return_selected'),
+            'scope' => $scope,
+            'filteredCount' => $salidas->count(),
+        ]);
     }
 
     public function updateMassive(Request $request)
@@ -262,9 +290,15 @@ class MpSalidaInicialController extends Controller
         $rows = $request->input('rows', []);
 
         $returnTo = $request->input('return_to', 'salidas_iniciales');
+        $returnSelected = $request->input('return_selected');
+        $scope = $request->input('scope', 'without_movements');
 
         if (empty($rows)) {
-            return redirect()->route('mp_salidas_iniciales.editMassive', ['return_to' => $returnTo])
+            return redirect()->route('mp_salidas_iniciales.editMassive', [
+                'return_to' => $returnTo,
+                'return_selected' => $returnSelected,
+                'scope' => $scope,
+            ])
                 ->with('warning', 'No se recibieron filas para actualizar.');
         }
 
@@ -278,18 +312,31 @@ class MpSalidaInicialController extends Controller
                     ->whereNull('deleted_at')
                     ->first();
 
+                $ingreso = $this->findIngresoOrFail((int) $idIngresoMp);
                 if (!$salidaInicial) {
-                    continue;
+                    if ($scope !== 'adjustments') {
+                        continue;
+                    }
+
+                    $salidaInicial = new MpSalidaInicial([
+                        'Id_Ingreso_MP' => (int) $idIngresoMp,
+                        'Stock_Inicial' => (int) ($ingreso->Unidades_MP ?? 0),
+                        'Devoluciones_Proveedor' => 0,
+                        'Ajuste_Stock' => 0,
+                        'Total_Salidas_MP' => (int) ($ingreso->Unidades_MP ?? 0),
+                        'Total_mm_Utilizados' => round((int) ($ingreso->Unidades_MP ?? 0) * (float) ($ingreso->Longitud_Unidad_MP ?? 0), 2),
+                        'reg_Status' => 1,
+                        'created_by' => Auth::id(),
+                    ]);
                 }
 
-                $ingreso = $this->findIngresoOrFail((int) $idIngresoMp);
                 $payload = $this->buildPayload([
                     'Id_Ingreso_MP' => (int) $idIngresoMp,
-                    'Stock_Inicial' => $row['Stock_Inicial'] ?? $salidaInicial->Stock_Inicial,
+                    'Stock_Inicial' => $row['Stock_Inicial'] ?? $salidaInicial->Stock_Inicial ?? ($ingreso->Unidades_MP ?? 0),
                     'Devoluciones_Proveedor' => $row['Devoluciones_Proveedor'] ?? $salidaInicial->Devoluciones_Proveedor,
                     'Ajuste_Stock' => $row['Ajuste_Stock'] ?? $salidaInicial->Ajuste_Stock,
                     'reg_Status' => $row['reg_Status'] ?? $salidaInicial->reg_Status,
-                ], $ingreso);
+                ], $ingreso, $scope);
                 $payload['updated_by'] = Auth::id();
 
                 $salidaInicial->fill($payload);
@@ -302,7 +349,7 @@ class MpSalidaInicialController extends Controller
 
             DB::commit();
 
-            return redirect()->to($this->resolveReturnUrl($returnTo))
+            return redirect()->to($this->resolveReturnUrl($returnTo, $returnSelected))
                 ->with('success', $actualizados > 0
                     ? 'Ajustes iniciales actualizados correctamente.'
                     : 'No habia cambios para guardar.');
@@ -310,7 +357,7 @@ class MpSalidaInicialController extends Controller
             DB::rollBack();
             Log::error('Error al actualizar masivamente mp_salidas_iniciales', ['error' => $e->getMessage()]);
 
-            return redirect()->to($this->resolveReturnUrl($returnTo))
+            return redirect()->to($this->resolveReturnUrl($returnTo, $returnSelected))
                 ->with('error', 'No se pudieron actualizar los ajustes iniciales.');
         }
     }
@@ -326,13 +373,17 @@ class MpSalidaInicialController extends Controller
         ]);
     }
 
-    protected function buildPayload(array $validated, MpIngreso $ingreso): array
+    protected function buildPayload(array $validated, MpIngreso $ingreso, string $scope = 'default'): array
     {
         $stockInicial = (int) ($validated['Stock_Inicial'] ?? ($ingreso->Unidades_MP ?? 0));
         $devolucionesProveedor = (int) ($validated['Devoluciones_Proveedor'] ?? 0);
-        $ajusteStock = (int) ($validated['Ajuste_Stock'] ?? 0);
+        $ajusteStock = $scope === 'without_movements'
+            ? 0
+            : (int) ($validated['Ajuste_Stock'] ?? 0);
         $longitud = (float) ($ingreso->Longitud_Unidad_MP ?? 0);
-        $totalSalidas = $stockInicial - $devolucionesProveedor + $ajusteStock;
+        $totalSalidas = $scope === 'without_movements'
+            ? max(0, $stockInicial - $devolucionesProveedor)
+            : max(0, $stockInicial - $devolucionesProveedor + $ajusteStock);
         $totalMtsUtilizados = round($totalSalidas * $longitud, 2);
 
         return [
@@ -353,11 +404,19 @@ class MpSalidaInicialController extends Controller
             ->firstOrFail();
     }
 
-    protected function resolveReturnUrl(?string $returnTo): string
+    protected function resolveReturnUrl(?string $returnTo, $returnSelected = null): string
     {
-        return $returnTo === 'stock_mp'
-            ? route('mp_stock.index')
-            : route('mp_salidas_iniciales.index');
+        if ($returnTo === 'stock_mp') {
+            $params = [];
+
+            if (!blank($returnSelected)) {
+                $params['selected'] = (int) $returnSelected;
+            }
+
+            return route('mp_stock.index', $params);
+        }
+
+        return route('mp_salidas_iniciales.index');
     }
 
     protected function getPendientesQuery()
@@ -367,6 +426,142 @@ class MpSalidaInicialController extends Controller
             ->whereNull('deleted_at')
             ->whereDoesntHave('salidaInicial')
             ->orderBy('Nro_Ingreso_MP');
+    }
+
+    protected function getIngresoIdsWithoutOperationalMovements(): array
+    {
+        return DB::table('mp_salidas_iniciales as si')
+            ->join('mp_ingreso as i', function ($join) {
+                $join->on('i.Id_MP', '=', 'si.Id_Ingreso_MP')
+                    ->whereNull('i.deleted_at')
+                    ->where('i.reg_Status', 1);
+            })
+            ->whereNull('si.deleted_at')
+            ->whereDate('i.Fecha_Ingreso', '<', $this->historicalCutoffDate)
+            ->whereNotExists(function ($query) {
+                $query->select(DB::raw(1))
+                    ->from('pedido_cliente_mp as pm')
+                    ->join('mp_salidas as s', function ($join) {
+                        $join->on('s.Id_OF_Salidas_MP', '=', 'pm.Id_OF')
+                            ->whereNull('s.deleted_at');
+                    })
+                    ->whereNull('pm.deleted_at')
+                    ->whereColumn('pm.Nro_Ingreso_MP', 'i.Nro_Ingreso_MP');
+            })
+            ->orderBy('i.Nro_Ingreso_MP')
+            ->pluck('si.Id_Ingreso_MP')
+            ->map(fn ($id) => (int) $id)
+            ->all();
+    }
+
+    protected function getIngresoIdsWithOperationalMovements(): array
+    {
+        return DB::table('mp_ingreso as i')
+            ->whereNull('i.deleted_at')
+            ->where('i.reg_Status', 1)
+            ->whereExists(function ($query) {
+                $query->select(DB::raw(1))
+                    ->from('pedido_cliente_mp as pm')
+                    ->join('mp_salidas as s', function ($join) {
+                        $join->on('s.Id_OF_Salidas_MP', '=', 'pm.Id_OF')
+                            ->whereNull('s.deleted_at');
+                    })
+                    ->whereNull('pm.deleted_at')
+                    ->whereColumn('pm.Nro_Ingreso_MP', 'i.Nro_Ingreso_MP');
+            })
+            ->orderBy('i.Nro_Ingreso_MP')
+            ->pluck('i.Id_MP')
+            ->map(fn ($id) => (int) $id)
+            ->all();
+    }
+
+    protected function syncHistoricalRowsWithoutMovements(): void
+    {
+        $ingresos = MpIngreso::query()
+            ->whereNull('deleted_at')
+            ->where('reg_Status', 1)
+            ->whereIn('Id_MP', $this->getIngresoIdsWithoutOperationalMovementsSource())
+            ->get();
+
+        foreach ($ingresos as $ingreso) {
+            $stockInicial = (int) ($ingreso->Unidades_MP ?? 0);
+            $totalMts = round($stockInicial * (float) ($ingreso->Longitud_Unidad_MP ?? 0), 2);
+
+            MpSalidaInicial::query()->firstOrCreate(
+                ['Id_Ingreso_MP' => $ingreso->Id_MP],
+                [
+                    'Stock_Inicial' => $stockInicial,
+                    'Devoluciones_Proveedor' => 0,
+                    'Ajuste_Stock' => 0,
+                    'Total_Salidas_MP' => $stockInicial,
+                    'Total_mm_Utilizados' => $totalMts,
+                    'reg_Status' => 1,
+                    'created_by' => Auth::id(),
+                    'updated_by' => Auth::id(),
+                ]
+            );
+        }
+    }
+
+    protected function getIngresoIdsWithoutOperationalMovementsSource(): array
+    {
+        return DB::table('mp_ingreso as i')
+            ->whereNull('i.deleted_at')
+            ->where('i.reg_Status', 1)
+            ->whereDate('i.Fecha_Ingreso', '<', $this->historicalCutoffDate)
+            ->whereNotExists(function ($query) {
+                $query->select(DB::raw(1))
+                    ->from('pedido_cliente_mp as pm')
+                    ->join('mp_salidas as s', function ($join) {
+                        $join->on('s.Id_OF_Salidas_MP', '=', 'pm.Id_OF')
+                            ->whereNull('s.deleted_at');
+                    })
+                    ->whereNull('pm.deleted_at')
+                    ->whereColumn('pm.Nro_Ingreso_MP', 'i.Nro_Ingreso_MP');
+            })
+            ->orderBy('i.Nro_Ingreso_MP')
+            ->pluck('i.Id_MP')
+            ->map(fn ($id) => (int) $id)
+            ->all();
+    }
+
+    protected function buildAdjustmentRows()
+    {
+        $stockRowsById = collect(app(PedidoClienteMpPlannerService::class)->buildStockDashboard()['rows'] ?? [])
+            ->keyBy('Id_MP');
+
+        $ingresos = MpIngreso::query()
+            ->with(['proveedor', 'materiaPrima', 'diametro', 'salidaInicial'])
+            ->whereNull('deleted_at')
+            ->where('reg_Status', 1)
+            ->whereIn('Id_MP', $this->getIngresoIdsWithOperationalMovements())
+            ->orderBy('Nro_Ingreso_MP')
+            ->get();
+
+        return $ingresos->map(function (MpIngreso $ingreso) use ($stockRowsById) {
+            $stockRow = $stockRowsById->get((int) $ingreso->Id_MP, []);
+            $salidaInicial = $ingreso->salidaInicial ?: new MpSalidaInicial([
+                'Id_Ingreso_MP' => (int) $ingreso->Id_MP,
+                'Stock_Inicial' => (int) ($ingreso->Unidades_MP ?? 0),
+                'Devoluciones_Proveedor' => 0,
+                'Ajuste_Stock' => 0,
+                'Total_Salidas_MP' => (int) ($ingreso->Unidades_MP ?? 0),
+                'Total_mm_Utilizados' => round((int) ($ingreso->Unidades_MP ?? 0) * (float) ($ingreso->Longitud_Unidad_MP ?? 0), 2),
+                'reg_Status' => 1,
+            ]);
+
+            $salidaInicial->setRelation('ingresoMp', $ingreso);
+            $salidaInicial->setAttribute('Planner_Barras_Solicitadas_OF', (int) ($stockRow['Barras_Solicitadas_OF'] ?? 0));
+            $salidaInicial->setAttribute('Planner_Barras_Preparadas_OF', (int) ($stockRow['Cant_Barras_Of_Iniciales'] ?? 0));
+            $salidaInicial->setAttribute('Planner_Cantidad_Adicionales_Stock', (int) ($stockRow['Cantidad_Adicionales_Stock'] ?? 0));
+            $salidaInicial->setAttribute('Planner_Cantidad_Devoluciones_Stock', (int) ($stockRow['Cantidad_Devoluciones_Stock'] ?? 0));
+            $salidaInicial->setAttribute('Planner_Barras_Ingresos_Iniciales', (int) ($stockRow['Barras_Ingresos_Iniciales'] ?? 0));
+            $salidaInicial->setAttribute('Planner_Cantidad_Total_OF', (int) ($stockRow['Cantidad_Total_OF'] ?? 0));
+            $salidaInicial->setAttribute('Planner_Barras_Disponibles', (int) ($stockRow['Barras_Disponibles'] ?? 0));
+            $salidaInicial->setAttribute('Planner_Mts_Disponibles', (float) ($stockRow['Mts_Disponibles'] ?? 0));
+
+            return $salidaInicial;
+        })->values();
     }
 
     protected function hydrateCalculatedFields(MpSalidaInicial $salidaInicial): void

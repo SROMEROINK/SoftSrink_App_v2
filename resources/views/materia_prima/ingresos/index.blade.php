@@ -67,8 +67,8 @@
                             <th>Nro_OC</th>
                             <th>Proveedor</th>
                             <th>Materia Prima</th> <!-- Campo actualizado -->
-                            <th>Diámetro MP</th> <!-- Campo actualizado -->
-                            <th>Código MP</th>
+                            <th>Diametro MP</th> <!-- Campo actualizado -->
+                            <th>Codigo MP</th>
                             <th>Nro_Certificado_MP</th>
                             <th>Detalle_Origen_MP</th>
                             <th>Unidades_MP</th>
@@ -134,13 +134,13 @@ $.get("{{ route('mp_ingresos.resumen') }}", function (data) {
 
 function deleteIngreso(id) {
     Swal.fire({
-        title: '¿Estás seguro?',
-        text: '¡No podrás revertir esto!',
+        title: 'Estas seguro?',
+        text: 'No podras revertir esto!',
         icon: 'warning',
         showCancelButton: true,
         confirmButtonColor: '#3085d6',
         cancelButtonColor: '#d33',
-        confirmButtonText: 'Sí, eliminarlo'
+        confirmButtonText: 'Si, eliminarlo'
     }).then((result) => {
         if (result.isConfirmed) {
             $.ajax({
@@ -152,7 +152,7 @@ function deleteIngreso(id) {
                 success: function(response) {
                     Swal.fire({
                         icon: 'success',
-                        title: '¡Eliminado!',
+                        title: 'Eliminado!',
                         text: 'El ingreso de materia prima ha sido eliminado.',
                         showConfirmButton: false,
                         timer: 1500
@@ -167,7 +167,7 @@ function deleteIngreso(id) {
                     });
                 },
                 error: function() {
-                    Swal.fire('¡Error!', 'Ha ocurrido un error al intentar eliminar.', 'error');
+                    Swal.fire('Error!', 'Ha ocurrido un error al intentar eliminar.', 'error');
                 }
             });
         }
@@ -239,15 +239,15 @@ $(document).ready(function () {
             }
         ],
         language: {
-            lengthMenu: "Mostrar _MENU_ registros por página",
+            lengthMenu: "Mostrar _MENU_ registros por pagina",
             zeroRecords: "No se encontraron resultados",
-            info: "Mostrando pÃ¡gina _PAGE_ de _PAGES_",
+            info: "Mostrando pagina _PAGE_ de _PAGES_",
             infoEmpty: "No hay registros disponibles",
             infoFiltered: "(filtrado de _MAX_ registros totales)",
             search: "Buscar:",
             paginate: {
                 first: "Primero",
-                last: "Último",
+                last: "Ultimo",
                 next: "Siguiente",
                 previous: "Anterior"
             }

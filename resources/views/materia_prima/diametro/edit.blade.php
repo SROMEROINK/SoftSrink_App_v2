@@ -1,9 +1,9 @@
 @extends('adminlte::page')
 
-@section('title', 'Editar DiÃ¡metro')
+@section('title', 'Editar Diametro')
 {{-- resources\views\materia_prima\diametro\edit.blade.php --}}
 @section('content_header')
-    <h1>Editar DiÃ¡metro</h1>
+    <h1>Editar Di&aacute;metro</h1>
 @stop
 
 @section('content')
@@ -13,17 +13,17 @@
         @csrf
         @method('PUT')
         <div class="form-group">
-            <label for="Valor_Diametro">Valor del DiÃ¡metro:</label>
+            <label for="Valor_Diametro">Valor del Di&aacute;metro:</label>
             <input type="text" class="form-control" id="Valor_Diametro" name="Valor_Diametro" value="{{ $diametro->Valor_Diametro }}" required>
         </div>
         <div class="form-group">
-            <label for="reg_Status">Estado del DiÃ¡metro:</label>
+            <label for="reg_Status">Estado del Di&aacute;metro:</label>
             <select name="reg_Status" id="reg_Status" class="form-control">
                 <option value="1" {{ $diametro->reg_Status == 1 ? 'selected' : '' }}>Activo</option>
                 <option value="0" {{ $diametro->reg_Status == 0 ? 'selected' : '' }}>Inactivo</option>
             </select>
         </div>
-        
+
         <button type="submit" class="btn btn-primary">Actualizar</button>
         <a href="{{ route('mp_diametro.index') }}" class="btn btn-default">Cancelar</a>
     </form>
@@ -38,4 +38,3 @@
 <script src="{{ asset('js/swal-utils.js') }}"></script>
 <script src="{{ asset('js/form-edit-check.js') }}"></script>
 @stop
-

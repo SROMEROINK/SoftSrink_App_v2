@@ -28,16 +28,41 @@ use App\Http\Controllers\ProductoGrupoConjuntosController;
 use App\Http\Controllers\PedidoClienteMpController;
 use App\Http\Controllers\MpMovimientoAdicionalController;
 use App\Http\Controllers\ListadoOfController;
+use App\Models\MpIngreso;
+use App\Models\PedidoCliente;
+use App\Models\PedidoClienteMp;
+use App\Models\Producto;
+use App\Models\RegistroDeFabricacion;
 
 // Ruta por defecto al iniciar la app
 Route::get('/', function () {
     return redirect()->route('login');
 })->name('default_login');
 
+Route::get('/module-favicon.svg', function (\Illuminate\Http\Request $request) {
+    $tabVisual = \App\Support\ModuleTabVisual::forModule((string) $request->query('module', 'default'));
+    $svg = \App\Support\ModuleTabVisual::buildSvgMarkup($tabVisual['label'], $tabVisual['color']);
+
+    return response($svg, 200, [
+        'Content-Type' => 'image/svg+xml',
+        'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
+        'Pragma' => 'no-cache',
+    ]);
+})->name('module-favicon');
+
 // Rutas para usuarios autenticados
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard', function () {
-        return view('home');
+        $metrics = [
+            'pedidos' => PedidoCliente::count(),
+            'piezas' => (int) PedidoCliente::sum('Cant_Fabricacion'),
+            'fabricaciones' => RegistroDeFabricacion::count(),
+            'productos' => Producto::count(),
+            'materia_prima' => MpIngreso::count(),
+            'planificaciones_mp' => PedidoClienteMp::count(),
+        ];
+
+        return view('home', compact('metrics'));
     })->name('dashboard');
 
     // Rutas protegidas por roles especÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â­ficos (Administrador)
@@ -76,6 +101,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('fabricacion/resumen', [RegistroDeFabricacionController::class, 'resumen'])->name('fabricacion.resumen');
     Route::get('fabricacion/resumen-mensual', [RegistroDeFabricacionController::class, 'resumenMensualFamilias'])->name('fabricacion.resumenMensual');
     Route::get('fechas_of/data', [FechasOfController::class, 'getData'])->name('fechas_of.data');
+    Route::post('fechas_of/import-historico', [FechasOfController::class, 'importHistoricCsv'])->name('fechas_of.importHistoricCsv');
     Route::get('/entregas_productos/data', [ListadoEntregaProductoController::class, 'getData'])->name('entregas_productos.data');
     Route::get('/entregas_productos/filters', [ListadoEntregaProductoController::class, 'getUniqueFilters'])->name('entregas_productos.filters');
     Route::get('/entregas_productos/resumen', [ListadoEntregaProductoController::class, 'resumen'])->name('entregas_productos.resumen');

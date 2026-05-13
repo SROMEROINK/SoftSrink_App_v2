@@ -62,6 +62,15 @@ class MpMovimientoAdicionalController extends Controller
             }
         }
 
+        $totals = DB::query()
+            ->fromSub(clone $query, 'movimientos_filtrados')
+            ->selectRaw('
+                COALESCE(SUM(Cantidad_Adicionales), 0) as total_adicionales,
+                COALESCE(SUM(Cantidad_Devoluciones), 0) as total_devoluciones,
+                COALESCE(SUM(Total_Mtros_Movimiento), 0) as total_metros_netos
+            ')
+            ->first();
+
         return datatables()->of($query)
             ->editColumn('Fecha_Movimiento', fn ($row) => $row->Fecha_Movimiento ? optional($row->Fecha_Movimiento)->format('d/m/Y') : '')
             ->editColumn('Cantidad_Adicionales', fn ($row) => number_format((int) $row->Cantidad_Adicionales, 0, ',', '.'))
@@ -88,6 +97,13 @@ class MpMovimientoAdicionalController extends Controller
                 ';
             })
             ->rawColumns(['acciones'])
+            ->with([
+                'totals_filtered' => [
+                    'Cantidad_Adicionales' => (int) ($totals->total_adicionales ?? 0),
+                    'Cantidad_Devoluciones' => (int) ($totals->total_devoluciones ?? 0),
+                    'Total_Mtros_Movimiento' => round((float) ($totals->total_metros_netos ?? 0), 2),
+                ],
+            ])
             ->make(true);
     }
 

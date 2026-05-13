@@ -78,6 +78,9 @@
     <div class="card mt-3">
         <div class="card-body">
             <div class="d-flex justify-content-end mb-3" style="gap:8px;">
+                <button type="button" class="btn btn-outline-success btn-sm" id="agregar_of_grupo_pedido_mp" disabled>
+                    Agregar OF al grupo
+                </button>
                 <button type="button" class="btn btn-outline-info btn-sm" id="editar_grupo_pedido_mp" disabled>
                     Editar grupo filtrado
                 </button>
@@ -108,7 +111,7 @@
                             <th></th>
                             <th></th>
                             <th><select id="filtro_estado" class="form-control filtro-select"><option value="">Todos</option></select></th>
-                            <th></th>
+                            <th><input type="text" id="filtro_ingreso_mp" class="form-control filtro-texto" placeholder="Filtrar ingreso MP" value="{{ $initialIngresoMpFilter ?? '' }}"></th>
                             <th><input type="text" id="filtro_pedido_material" class="form-control filtro-texto" placeholder="Filtrar pedido MP"></th>
                             <th><select id="filtro_codigo_mp" class="form-control filtro-select"><option value="">Todos</option></select></th>
                             <th></th>
@@ -175,7 +178,9 @@ $(document).ready(function () {
     cargarResumenPedidoMp();
 
     const editGroupBaseUrl = @json(route('pedido_cliente_mp.editGroup'));
+    const addOfToGroupBaseUrl = @json(route('pedido_cliente_mp.createMassive'));
     const $editarGrupoPedidoMp = $('#editar_grupo_pedido_mp');
+    const $agregarOfGrupoPedidoMp = $('#agregar_of_grupo_pedido_mp');
 
     const pedidoMpOrderStorageKey = 'pedidoClienteMpOrderDirection';
     let pedidoMpOrderDirection = localStorage.getItem(pedidoMpOrderStorageKey) === 'asc' ? 'asc' : 'desc';
@@ -186,6 +191,7 @@ $(document).ready(function () {
     function updateEditGroupButton() {
         const pedido = String($('#filtro_pedido_material').val() || '').trim();
         $editarGrupoPedidoMp.prop('disabled', pedido === '');
+        $agregarOfGrupoPedidoMp.prop('disabled', pedido === '');
     }
 
     const table = $('#tabla_pedido_cliente_mp').DataTable({
@@ -207,6 +213,7 @@ $(document).ready(function () {
                 d.filtro_producto = $('#filtro_producto').val();
                 d.filtro_categoria = $('#filtro_categoria').val();
                 d.filtro_estado = $('#filtro_estado').val();
+                d.filtro_ingreso_mp = $('#filtro_ingreso_mp').val();
                 d.filtro_codigo_mp = $('#filtro_codigo_mp').val();
                 d.filtro_pedido_material = $('#filtro_pedido_material').val();
             }
@@ -280,7 +287,7 @@ $(document).ready(function () {
         updateEditGroupButton();
     });
 
-    $('#filtro_of, #filtro_producto, #filtro_pedido_material').on('keyup change', function () {
+    $('#filtro_of, #filtro_producto, #filtro_ingreso_mp, #filtro_pedido_material').on('keyup change', function () {
         updateEditGroupButton();
         table.ajax.reload(null, false);
     });
@@ -307,6 +314,15 @@ $(document).ready(function () {
         }
 
         window.location.href = `${editGroupBaseUrl}?pedido_material=${encodeURIComponent(pedido)}`;
+    });
+
+    $agregarOfGrupoPedidoMp.on('click', function () {
+        const pedido = String($('#filtro_pedido_material').val() || '').trim();
+        if (!pedido) {
+            return;
+        }
+
+        window.location.href = `${addOfToGroupBaseUrl}?pedido_material=${encodeURIComponent(pedido)}`;
     });
 
     $(window).on('resize', function () {

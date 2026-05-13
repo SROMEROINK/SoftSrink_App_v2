@@ -8,7 +8,6 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Models\Proveedor;
 use App\Models\MpDiametro;
 use App\Models\MpMateriaPrima;
-use App\Models\MpSalidaInicial;
 
 class MpIngreso extends Model
 {
@@ -52,28 +51,6 @@ class MpIngreso extends Model
         'Mts_Totales' => 'decimal:2',
         'Kilos_Totales' => 'decimal:2',
     ];
-
-    protected static function booted(): void
-    {
-        static::created(function (self $ingreso) {
-            $stockInicial = (int) ($ingreso->Unidades_MP ?? 0);
-            $totalMts = round($stockInicial * (float) ($ingreso->Longitud_Unidad_MP ?? 0), 2);
-
-            MpSalidaInicial::query()->firstOrCreate(
-                ['Id_Ingreso_MP' => $ingreso->Id_MP],
-                [
-                    'Stock_Inicial' => $stockInicial,
-                    'Devoluciones_Proveedor' => 0,
-                    'Ajuste_Stock' => 0,
-                    'Total_Salidas_MP' => $stockInicial,
-                    'Total_mm_Utilizados' => $totalMts,
-                    'reg_Status' => 1,
-                    'created_by' => $ingreso->created_by,
-                    'updated_by' => $ingreso->updated_by,
-                ]
-            );
-        });
-    }
 
     public function proveedor()
     {

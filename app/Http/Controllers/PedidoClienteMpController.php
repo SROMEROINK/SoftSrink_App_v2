@@ -35,22 +35,13 @@ class PedidoClienteMpController extends Controller
     {
         $this->normalizeInternalPedidoMaterialNumbers();
 
-        $query = DB::table('pedido_cliente as p')
+        $query = $this->basePedidoClienteQuery()
             ->leftJoin('pedido_cliente_mp as pm', function ($join) {
                 $join->on('pm.Id_OF', '=', 'p.Id_OF')
                     ->whereNull('pm.deleted_at');
             })
             ->leftJoin('productos as prod', 'prod.Id_Producto', '=', 'p.Producto_Id')
             ->leftJoin('producto_categoria as cat', 'cat.Id_Categoria', '=', 'prod.Id_Prod_Categoria')
-            ->whereNull('p.deleted_at')
-            ->where(function ($sub) {
-                $sub->whereNotNull('pm.Id_Pedido_MP')
-                    ->orWhereNotExists(function ($legacy) {
-                        $legacy->select(DB::raw(1))
-                            ->from('listado_of as legacy_of')
-                            ->whereColumn('legacy_of.Nro_OF', 'p.Nro_OF');
-                    });
-            })
             ->select([
                 'p.Id_OF',
                 'p.Nro_OF',
@@ -87,6 +78,10 @@ class PedidoClienteMpController extends Controller
             $query->where('pm.Codigo_MP', $request->filtro_codigo_mp);
         }
 
+        if ($request->filled('filtro_ingreso_mp')) {
+            $query->where('pm.Nro_Ingreso_MP', (int) $request->filtro_ingreso_mp);
+        }
+
         if ($request->filled('filtro_pedido_material')) {
             $pedidoMaterialFiltro = trim((string) $request->filtro_pedido_material);
 
@@ -115,7 +110,12 @@ class PedidoClienteMpController extends Controller
     {
         $this->normalizeInternalPedidoMaterialNumbers();
 
-        return view('pedido_cliente_mp.index', $this->legacyPendingSummary());
+        return view('pedido_cliente_mp.index', array_merge(
+            $this->legacyPendingSummary(),
+            [
+                'initialIngresoMpFilter' => request()->query('filtro_ingreso_mp', ''),
+            ]
+        ));
     }
 
     public function resumen()
@@ -147,6 +147,7 @@ class PedidoClienteMpController extends Controller
         $selectedIngreso = $request->query('selected_ingreso');
         $selectedCertificado = $request->query('selected_certificado');
         $selectedPedidoMaterial = $request->query('selected_pedido_material');
+        $selectedPedidoProveedor = $request->query('selected_pedido_proveedor');
         $selectedLongitudUnMp = $request->query('selected_longitud_un_mp');
         $selectedMateriaPrima = $request->query('selected_materia_prima');
         $selectedDiametroMp = $request->query('selected_diametro_mp');
@@ -175,6 +176,7 @@ class PedidoClienteMpController extends Controller
                 'selectedIngreso' => $selectedIngreso,
                 'selectedCertificado' => $selectedCertificado,
                 'selectedPedidoMaterial' => $selectedPedidoMaterial,
+                'selectedPedidoProveedor' => $selectedPedidoProveedor,
                 'selectedLongitudUnMp' => $selectedLongitudUnMp,
                 'selectedMateriaPrima' => $selectedMateriaPrima,
                 'selectedDiametroMp' => $selectedDiametroMp,
@@ -186,11 +188,53 @@ class PedidoClienteMpController extends Controller
     public function createMassive(Request $request)
     {
         $this->normalizeInternalPedidoMaterialNumbers();
+        $fixedPedidoMaterial = trim((string) $request->query('pedido_material', ''));
+        $existingGroupRows = collect();
+
+        if ($fixedPedidoMaterial !== '') {
+            $existingGroupRows = PedidoClienteMp::with(['pedido.producto'])
+                ->whereNull('deleted_at')
+                ->when(is_numeric($fixedPedidoMaterial), function ($query) use ($fixedPedidoMaterial) {
+                    $query->whereRaw('CAST(Pedido_Material_Nro AS UNSIGNED) = ?', [(int) $fixedPedidoMaterial]);
+                }, function ($query) use ($fixedPedidoMaterial) {
+                    $query->where('Pedido_Material_Nro', $fixedPedidoMaterial);
+                })
+                ->orderBy('Id_OF')
+                ->get()
+                ->map(function (PedidoClienteMp $registro) {
+                    return [
+                        'Id_Pedido_MP' => $registro->Id_Pedido_MP,
+                        'Id_OF' => $registro->Id_OF,
+                        'Nro_OF' => $registro->pedido->Nro_OF ?? null,
+                        'Prod_Codigo' => $registro->pedido->producto->Prod_Codigo ?? '',
+                        'Cant_Fabricacion' => (int) ($registro->pedido->Cant_Fabricacion ?? 0),
+                        'Largo_Pieza' => $registro->pedido->producto->Prod_Longitud_de_Pieza ?? $registro->Largo_Pieza,
+                        'Prod_Codigo_MP' => $registro->pedido->producto->Prod_Codigo_MP ?? $registro->Codigo_MP,
+                        'Prod_Material_MP' => $registro->pedido->producto->Prod_Material_MP ?? $registro->Materia_Prima,
+                        'Prod_Diametro_de_MP' => $registro->pedido->producto->Prod_Diametro_de_MP ?? $registro->Diametro_MP,
+                        'Id_Maquina' => $registro->Id_Maquina,
+                        'Nro_Maquina' => $registro->Nro_Maquina,
+                        'Familia_Maquina' => $registro->Familia_Maquina,
+                        'Codigo_MP' => $registro->Codigo_MP,
+                        'Nro_Ingreso_MP' => $registro->Nro_Ingreso_MP,
+                        'Pedido_Material_Nro' => $registro->Pedido_Material_Nro,
+                        'Nro_Certificado_MP' => $registro->Nro_Certificado_MP,
+                        'Cant_Barras_MP' => $registro->Cant_Barras_MP,
+                        'Estado_Plani_Id' => $registro->Estado_Plani_Id,
+                        'Estado_MP' => $registro->estadoPlanificacion->Nombre_Estado ?? 'EN ANALISIS DE STOCK',
+                        'Longitud_Un_MP' => $registro->Longitud_Un_MP,
+                    ];
+                })
+                ->values();
+        }
+
         return view('pedido_cliente_mp.mass-create', array_merge(
             $this->legacyPendingSummary(),
             $this->massiveCreateData(),
             [
                 'preselectedOf' => $request->query('of'),
+                'fixedPedidoMaterial' => $fixedPedidoMaterial,
+                'existingGroupRows' => $existingGroupRows,
             ]
         ));
     }
@@ -224,6 +268,7 @@ class PedidoClienteMpController extends Controller
         return view('pedido_cliente_mp.edit-group', [
             'pedidoMaterial' => $pedidoMaterial,
             'registros' => $registros,
+            'addOfUrl' => route('pedido_cliente_mp.createMassive', ['pedido_material' => $pedidoMaterial]),
         ]);
     }
 
@@ -336,15 +381,42 @@ class PedidoClienteMpController extends Controller
         DB::beginTransaction();
 
         try {
+            $createdCount = 0;
+            $updatedCount = 0;
+
             foreach ($rows as $row) {
+                $existingPedidoMpId = $row['existing_pedido_mp_id'] ?? null;
+                unset($row['existing_pedido_mp_id']);
+
+                if ($existingPedidoMpId) {
+                    $pedidoMp = PedidoClienteMp::withTrashed()->findOrFail($existingPedidoMpId);
+                    $pedidoMp->fill($row);
+                    $pedidoMp->updated_by = Auth::id();
+                    if ($pedidoMp->trashed()) {
+                        $pedidoMp->restore();
+                    }
+                    $pedidoMp->save();
+                    $updatedCount++;
+                    continue;
+                }
+
                 PedidoClienteMp::create($row);
+                $createdCount++;
             }
 
             DB::commit();
 
             return response()->json([
                 'success' => true,
-                'message' => 'Definiciones masivas de materia prima creadas correctamente.',
+                'message' => collect([
+                    $createdCount > 0 ? $createdCount . ' definicion(es) creada(s)' : null,
+                    $updatedCount > 0 ? $updatedCount . ' definicion(es) actualizada(s)' : null,
+                ])->filter()->isNotEmpty()
+                    ? 'Carga masiva guardada correctamente: ' . collect([
+                        $createdCount > 0 ? $createdCount . ' definicion(es) creada(s)' : null,
+                        $updatedCount > 0 ? $updatedCount . ' definicion(es) actualizada(s)' : null,
+                    ])->filter()->implode(' y ') . '.'
+                    : 'Carga masiva guardada correctamente.',
                 'redirect' => route('pedido_cliente_mp.index'),
             ]);
         } catch (\Throwable $e) {
@@ -384,12 +456,15 @@ class PedidoClienteMpController extends Controller
         $pedidoMp = PedidoClienteMp::with(['pedido.producto.categoria', 'pedido.producto.subCategoria'])
             ->whereNull('deleted_at')
             ->findOrFail($id);
+        $salidaRegistrada = $pedidoMp->salidaInicial()->whereNull('deleted_at')->first();
 
         return view('pedido_cliente_mp.edit-massive', array_merge(
             $this->legacyPendingSummary(),
             $this->massiveCreateData(),
             [
                 'pedidoMp' => $pedidoMp,
+                'definitionLocked' => (bool) $salidaRegistrada,
+                'egresoId' => $salidaRegistrada?->Id_Egresos_MP,
                 'editMassiveSelectionStorageKey' => "pedidoClienteMpEditMassiveSelection_{$pedidoMp->Id_Pedido_MP}",
                 'editMassiveDraftStorageKey' => "pedidoClienteMpEditMassiveDraft_{$pedidoMp->Id_Pedido_MP}",
             ]
@@ -399,24 +474,44 @@ class PedidoClienteMpController extends Controller
     public function updateMassive(Request $request, $id)
     {
         $pedidoMp = PedidoClienteMp::whereNull('deleted_at')->findOrFail($id);
-        $pedido = PedidoCliente::with('producto')->whereNull('deleted_at')->findOrFail($pedidoMp->Id_OF);
+
+        if ($this->hasSalidaRegistrada($pedidoMp)) {
+            return redirect()
+                ->route('pedido_cliente_mp.editMassive', $pedidoMp->Id_Pedido_MP)
+                ->with('error', $this->mpDefinitionLockedMessage());
+        }
 
         $validated = $request->validate([
+            'Id_OF' => [
+                'required',
+                'exists:pedido_cliente,Id_OF',
+                Rule::unique('pedido_cliente_mp', 'Id_OF')->ignore($pedidoMp->Id_Pedido_MP, 'Id_Pedido_MP')->whereNull('deleted_at'),
+            ],
             'Id_Maquina' => 'required|integer',
             'Nro_Ingreso_MP' => 'required|integer|min:1',
+            'Pedido_Material_Nro' => 'required|string|max:255',
             'Estado_Plani_Id' => 'required|exists:estado_planificacion,Estado_Plani_Id',
             'Observaciones' => 'nullable|string',
         ], [
+            'Id_OF.required' => 'Debes seleccionar una OF.',
+            'Id_OF.unique' => 'Esta OF ya tiene una definicion de materia prima cargada.',
             'Id_Maquina.required' => 'Debes seleccionar una maquina.',
             'Nro_Ingreso_MP.required' => 'Debes seleccionar un ingreso MP.',
+            'Pedido_Material_Nro.required' => 'Debes indicar el Pedido MP Interno.',
             'Estado_Plani_Id.required' => 'Debes indicar el estado de MP.',
         ]);
+
+        $pedido = PedidoCliente::with('producto')->whereNull('deleted_at')->findOrFail($validated['Id_OF']);
 
         $maquina = DB::table('maquinas_produc')
             ->select('id_maquina', 'Nro_maquina', 'familia_maquina', 'scrap_maquina')
             ->where('id_maquina', $validated['Id_Maquina'])
             ->where('Status', 1)
             ->first();
+
+        $ingresosDisponibles = $this->plannerService
+            ->getAvailableStockRows()
+            ->keyBy(fn ($row) => (string) ($row['Nro_Ingreso_MP'] ?? ''));
 
         $ingreso = DB::table('mp_ingreso')
             ->leftJoin('mp_materia_prima', 'mp_ingreso.Id_Materia_Prima', '=', 'mp_materia_prima.Id_Materia_Prima')
@@ -439,6 +534,12 @@ class PedidoClienteMpController extends Controller
             return redirect()
                 ->route('pedido_cliente_mp.editMassive', $pedidoMp->Id_Pedido_MP)
                 ->with('error', 'La maquina o el ingreso MP seleccionado no son validos.');
+        }
+
+        if (!$ingresosDisponibles->has((string) $validated['Nro_Ingreso_MP'])) {
+            return redirect()
+                ->route('pedido_cliente_mp.editMassive', $pedidoMp->Id_Pedido_MP)
+                ->with('error', 'El ingreso seleccionado no tiene stock disponible para esta definicion.');
         }
 
         [$productoMateria, $productoDiametro] = $this->resolveMateriaDiametroForComparison(
@@ -465,6 +566,7 @@ class PedidoClienteMpController extends Controller
         ]);
 
         $payload = [
+            'Id_OF' => $pedido->Id_OF,
             'Estado_Plani_Id' => $validated['Estado_Plani_Id'],
             'Id_Maquina' => (int) $maquina->id_maquina,
             'Nro_Maquina' => $maquina->Nro_maquina,
@@ -474,6 +576,7 @@ class PedidoClienteMpController extends Controller
             'Materia_Prima' => $plannerData['seleccion']['materia_prima'],
             'Diametro_MP' => $plannerData['seleccion']['diametro_mp'],
             'Nro_Ingreso_MP' => (int) $ingreso->Nro_Ingreso_MP,
+            'Pedido_Material_Nro' => trim((string) $validated['Pedido_Material_Nro']),
             'Nro_Certificado_MP' => $ingreso->Nro_Certificado_MP,
             'Longitud_Un_MP' => $plannerData['seleccion']['longitud_un_mp'],
             'Largo_Pieza' => $plannerData['seleccion']['largo_pieza'],
@@ -501,6 +604,13 @@ class PedidoClienteMpController extends Controller
     public function update(Request $request, $id)
     {
         $pedidoMp = PedidoClienteMp::findOrFail($id);
+
+        if ($this->hasSalidaRegistrada($pedidoMp)) {
+            return redirect()
+                ->route('pedido_cliente_mp.editMassive', $pedidoMp->Id_Pedido_MP)
+                ->with('error', $this->mpDefinitionLockedMessage());
+        }
+
         $validated = $this->validateData($request, $id);
         $validated['Codigo_MP'] = $this->buildCodigoMp($validated['Codigo_MP'] ?? null, $validated['Materia_Prima'] ?? null, $validated['Diametro_MP'] ?? null);
 
@@ -518,6 +628,14 @@ class PedidoClienteMpController extends Controller
     {
         try {
             $pedidoMp = PedidoClienteMp::findOrFail($id);
+
+            if ($this->hasSalidaRegistrada($pedidoMp)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $this->mpDefinitionLockedMessage(),
+                ], 422);
+            }
+
             $pedidoMp->deleted_by = Auth::id();
             $pedidoMp->save();
             $pedidoMp->delete();
@@ -571,38 +689,28 @@ class PedidoClienteMpController extends Controller
         $legacySummary = $this->legacyPendingSummary();
         $legacyMaxNroOf = $legacySummary['legacyMaxNroOf'];
 
-        $pedidos = PedidoCliente::with(['producto.categoria', 'producto.subCategoria'])
-            ->whereNull('deleted_at')
-            ->where(function ($query) use ($selectedOf) {
-                if ($selectedOf) {
+        if ($selectedOf) {
+            $pedidos = PedidoCliente::query()
+                ->whereNull('deleted_at')
+                ->with(['producto.categoria', 'producto.subCategoria'])
+                ->where(function ($query) use ($selectedOf) {
                     $query->where('Id_OF', $selectedOf)
-                        ->orWhere(function ($sub) {
-                            $sub->whereDoesntHave('definicionMp')
-                                ->whereNotExists(function ($legacy) {
-                                    $legacy->select(DB::raw(1))
-                                        ->from('listado_of as legacy_of')
-                                        ->whereColumn('legacy_of.Nro_OF', 'pedido_cliente.Nro_OF');
-                                });
-                        });
-
-                    return;
-                }
-
-                $query->whereDoesntHave('definicionMp')
-                    ->whereNotExists(function ($legacy) {
-                        $legacy->select(DB::raw(1))
-                            ->from('listado_of as legacy_of')
-                            ->whereColumn('legacy_of.Nro_OF', 'pedido_cliente.Nro_OF');
-                    });
-            })
-            ->orderByDesc('Nro_OF')
-            ->get();
+                        ->orWhere(fn ($sub) => $this->applyPendingPedidosConstraint($sub));
+                })
+                ->orderByDesc('Nro_OF')
+                ->get();
+        } else {
+            $pedidos = $this->basePendingPedidosQuery()
+                ->with(['producto.categoria', 'producto.subCategoria'])
+                ->orderByDesc('Nro_OF')
+                ->get();
+        }
 
         $estadosPlanificacion = EstadoPlanificacion::where('Status', 1)
             ->orderBy('Estado_Plani_Id')
             ->get(['Estado_Plani_Id', 'Nombre_Estado']);
 
-        $stockRows = collect($this->plannerService->buildStockDashboard()['rows'] ?? []);
+        $stockRows = $this->plannerService->getAvailableStockRows();
 
         $materiasPrimas = $stockRows
             ->pluck('Materia_Prima')
@@ -635,14 +743,8 @@ class PedidoClienteMpController extends Controller
 
     protected function massiveCreateData(): array
     {
-        $pedidos = PedidoCliente::with(['producto.categoria', 'producto.subCategoria'])
-            ->whereNull('deleted_at')
-            ->whereDoesntHave('definicionMp')
-            ->whereNotExists(function ($legacy) {
-                $legacy->select(DB::raw(1))
-                    ->from('listado_of as legacy_of')
-                    ->whereColumn('legacy_of.Nro_OF', 'pedido_cliente.Nro_OF');
-            })
+        $pedidos = $this->basePendingPedidosQuery()
+            ->with(['producto.categoria', 'producto.subCategoria'])
             ->orderBy('Nro_OF')
             ->get();
 
@@ -667,6 +769,39 @@ class PedidoClienteMpController extends Controller
             ];
         })->values();
 
+        $definicionesCatalogo = PedidoClienteMp::with(['pedido.producto', 'estadoPlanificacion'])
+            ->whereNull('deleted_at')
+            ->orderBy('Id_OF')
+            ->get()
+            ->map(function (PedidoClienteMp $registro) {
+                return [
+                    'Id_Pedido_MP' => $registro->Id_Pedido_MP,
+                    'Id_OF' => $registro->Id_OF,
+                    'Nro_OF' => $registro->pedido->Nro_OF ?? null,
+                    'Prod_Codigo' => $registro->pedido->producto->Prod_Codigo ?? '',
+                    'Prod_Descripcion' => $registro->pedido->producto->Prod_Descripcion ?? '',
+                    'Cant_Fabricacion' => (int) ($registro->pedido->Cant_Fabricacion ?? 0),
+                    'Largo_Pieza' => $registro->pedido->producto->Prod_Longitud_de_Pieza ?? $registro->Largo_Pieza,
+                    'Codigo_MP' => $registro->Codigo_MP,
+                    'Materia_Prima' => $registro->Materia_Prima ?: ($registro->pedido->producto->Prod_Material_MP ?? ''),
+                    'Diametro_MP' => $registro->Diametro_MP ?: ($registro->pedido->producto->Prod_Diametro_de_MP ?? ''),
+                    'Prod_Codigo_MP' => $registro->pedido->producto->Prod_Codigo_MP ?? $registro->Codigo_MP,
+                    'Prod_Material_MP' => $registro->pedido->producto->Prod_Material_MP ?? $registro->Materia_Prima,
+                    'Prod_Diametro_de_MP' => $registro->pedido->producto->Prod_Diametro_de_MP ?? $registro->Diametro_MP,
+                    'Id_Maquina' => $registro->Id_Maquina,
+                    'Nro_Maquina' => $registro->Nro_Maquina,
+                    'Familia_Maquina' => $registro->Familia_Maquina,
+                    'Nro_Ingreso_MP' => $registro->Nro_Ingreso_MP,
+                    'Pedido_Material_Nro' => $registro->Pedido_Material_Nro,
+                    'Nro_Certificado_MP' => $registro->Nro_Certificado_MP,
+                    'Cant_Barras_MP' => $registro->Cant_Barras_MP,
+                    'Estado_Plani_Id' => $registro->Estado_Plani_Id,
+                    'Estado_MP' => $registro->estadoPlanificacion->Nombre_Estado ?? 'EN ANALISIS DE STOCK',
+                    'Longitud_Un_MP' => $registro->Longitud_Un_MP,
+                    'DefinitionLocked' => $this->hasSalidaRegistrada($registro),
+                ];
+            })->values();
+
         $maquinasCatalogo = DB::table('maquinas_produc')
             ->select('id_maquina', 'Nro_maquina', 'familia_maquina', 'scrap_maquina')
             ->where('Status', 1)
@@ -679,7 +814,7 @@ class PedidoClienteMpController extends Controller
                 'scrap_maquina' => (float) $maquina->scrap_maquina,
             ])->values();
 
-        $ingresosCatalogo = collect($this->plannerService->buildStockDashboard()['rows'] ?? [])
+        $ingresosCatalogo = $this->plannerService->getAvailableStockRows()
             ->sortBy('Nro_Ingreso_MP')
             ->values()
             ->map(fn ($ingreso) => [
@@ -700,19 +835,12 @@ class PedidoClienteMpController extends Controller
 
         $nextPedidoMaterialNro = $this->nextPedidoMaterialNro();
 
-        return compact('pedidosCatalogo', 'maquinasCatalogo', 'ingresosCatalogo', 'estadosPlanificacion', 'nextPedidoMaterialNro');
+        return compact('pedidosCatalogo', 'definicionesCatalogo', 'maquinasCatalogo', 'ingresosCatalogo', 'estadosPlanificacion', 'nextPedidoMaterialNro');
     }
 
     protected function legacyPendingSummary(): array
     {
-        $baseQuery = PedidoCliente::query()
-            ->whereNull('deleted_at')
-            ->whereDoesntHave('definicionMp')
-            ->whereNotExists(function ($legacy) {
-                $legacy->select(DB::raw(1))
-                    ->from('listado_of as legacy_of')
-                    ->whereColumn('legacy_of.Nro_OF', 'pedido_cliente.Nro_OF');
-            });
+        $baseQuery = $this->basePendingPedidosQuery();
 
         return [
             'legacyMaxNroOf' => (int) (DB::table('listado_of')->max('Nro_OF') ?? 0),
@@ -720,6 +848,33 @@ class PedidoClienteMpController extends Controller
             'pendingMinNroOf' => (clone $baseQuery)->min('Nro_OF'),
             'pendingMaxNroOf' => (clone $baseQuery)->max('Nro_OF'),
         ];
+    }
+
+    protected function hasSalidaRegistrada(PedidoClienteMp $pedidoMp): bool
+    {
+        return $pedidoMp->salidaInicial()->whereNull('deleted_at')->exists();
+    }
+
+    protected function mpDefinitionLockedMessage(): string
+    {
+        return 'La definicion de MP queda bloqueada porque la OF ya tiene una salida registrada. Ajusta la salida desde Egreso de Materia Prima o elimina esa salida antes de redefinir la MP.';
+    }
+
+    protected function basePedidoClienteQuery()
+    {
+        return DB::table('pedido_cliente as p')->whereNull('p.deleted_at');
+    }
+
+    protected function basePendingPedidosQuery()
+    {
+        return PedidoCliente::query()
+            ->whereNull('deleted_at')
+            ->whereDoesntHave('definicionMp');
+    }
+
+    protected function applyPendingPedidosConstraint($query): void
+    {
+        $query->whereDoesntHave('definicionMp');
     }
 
     protected function nextPedidoMaterialNro(): int
@@ -881,6 +1036,7 @@ class PedidoClienteMpController extends Controller
     protected function buildMassiveRows(Request $request): array
     {
         $ofIds = $request->input('Id_OF', []);
+        $existingPedidoMpIds = $request->input('Existing_Pedido_MP_Id', []);
         $machineIds = $request->input('Id_Maquina', []);
         $ingresoNumbers = $request->input('Nro_Ingreso_MP', []);
         $estadoIds = $request->input('Estado_Plani_Id', []);
@@ -900,10 +1056,24 @@ class PedidoClienteMpController extends Controller
         $seenOf = [];
         $pedidoMaterialNros = $request->input('Pedido_Material_Nro', []);
         $pedidoMaterialLote = null;
+        $lockedRows = [];
+        $ingresosDisponibles = $this->plannerService
+            ->getAvailableStockRows()
+            ->keyBy(fn ($row) => (string) ($row['Nro_Ingreso_MP'] ?? ''));
+        $requestedOfIds = collect($ofIds)
+            ->filter(fn ($id) => filled($id))
+            ->map(fn ($id) => (int) $id)
+            ->unique()
+            ->values();
+        $existingDefinitionsByOf = PedidoClienteMp::withTrashed()
+            ->whereIn('Id_OF', $requestedOfIds)
+            ->get()
+            ->keyBy('Id_OF');
 
         for ($index = 0; $index < $maxRows; $index++) {
             $rowNumber = $index + 1;
             $idOf = $ofIds[$index] ?? null;
+            $existingPedidoMpId = $existingPedidoMpIds[$index] ?? null;
             $idMaquina = $machineIds[$index] ?? null;
             $nroIngreso = $ingresoNumbers[$index] ?? null;
             $estadoId = $estadoIds[$index] ?? 11;
@@ -927,12 +1097,23 @@ class PedidoClienteMpController extends Controller
                 continue;
             }
 
+            if (!$ingresosDisponibles->has((string) $nroIngreso)) {
+                $invalidRows[] = $rowNumber;
+                continue;
+            }
+
             if (isset($seenOf[$idOf])) {
                 $duplicatedRows[] = $rowNumber;
                 $duplicatedRows[] = $seenOf[$idOf];
                 continue;
             }
             $seenOf[$idOf] = $rowNumber;
+
+            $existingPedidoMp = $existingDefinitionsByOf->get((int) $idOf);
+            if ($existingPedidoMpId && $existingPedidoMp && (int) $existingPedidoMp->Id_Pedido_MP !== (int) $existingPedidoMpId) {
+                $invalidRows[] = $rowNumber;
+                continue;
+            }
 
             $pedido = PedidoCliente::with('producto')->whereNull('deleted_at')->find($idOf);
             $maquina = DB::table('maquinas_produc')
@@ -978,8 +1159,8 @@ class PedidoClienteMpController extends Controller
                 continue;
             }
 
-            if (PedidoClienteMp::where('Id_OF', $idOf)->whereNull('deleted_at')->exists()) {
-                $duplicatedRows[] = $rowNumber;
+            if ($existingPedidoMp && $this->hasSalidaRegistrada($existingPedidoMp)) {
+                $lockedRows[] = $rowNumber;
                 continue;
             }
 
@@ -989,7 +1170,7 @@ class PedidoClienteMpController extends Controller
                 'Longitud_Un_MP' => $ingreso->Longitud_Unidad_MP,
             ]);
 
-            $preparedRows[] = [
+            $preparedRow = [
                 'Id_OF' => $pedido->Id_OF,
                 'Estado_Plani_Id' => $estadoId,
                 'Id_Maquina' => (int) $maquina->id_maquina,
@@ -1014,19 +1195,34 @@ class PedidoClienteMpController extends Controller
                 'Cant_Piezas_Por_Barra' => $plannerData['seleccion']['cant_piezas_por_barra'],
                 'Observaciones' => blank($observacion) ? null : $observacion,
                 'reg_Status' => (int) $regStatus,
-                'created_by' => Auth::id(),
                 'updated_by' => Auth::id(),
+                'existing_pedido_mp_id' => $existingPedidoMp?->Id_Pedido_MP,
             ];
+
+            if (!$existingPedidoMp) {
+                $preparedRow['created_by'] = Auth::id();
+            }
+
+            $preparedRows[] = $preparedRow;
         }
 
         $duplicatedRows = array_values(array_unique($duplicatedRows));
         $invalidRows = array_values(array_unique($invalidRows));
+        $lockedRows = array_values(array_unique($lockedRows));
 
         if (!empty($duplicatedRows)) {
             abort(response()->json([
                 'success' => false,
-                'message' => 'Hay OF duplicadas en la carga masiva o ya definidas en la base.',
+                'message' => 'Hay OF duplicadas dentro de esta carga masiva.',
                 'duplicatedRows' => $duplicatedRows,
+            ], 400));
+        }
+
+        if (!empty($lockedRows)) {
+            abort(response()->json([
+                'success' => false,
+                'message' => 'Hay OF con salida de MP registrada. Esas definiciones no se pueden reasignar desde esta hoja.',
+                'lockedRows' => $lockedRows,
             ], 400));
         }
 

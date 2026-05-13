@@ -39,8 +39,16 @@
                 <input type="hidden" id="massive_row_index" value="{{ $massiveRowIndex }}">
                 <input type="hidden" id="massive_return_url" value="{{ $massiveReturnUrl }}">
                 <input type="hidden" id="massive_selection_storage_key" value="{{ $massiveSelectionStorageKey ?? 'pedidoClienteMpMassiveSelection' }}">
+                <input type="hidden" id="selected_of_prefill" value="{{ $selectedOf ?? '' }}">
                 <input type="hidden" id="selected_machine_prefill" value="{{ $selectedMachine }}">
                 <input type="hidden" id="selected_ingreso_prefill" value="{{ $selectedIngreso ?? '' }}">
+                <input type="hidden" id="selected_certificado_prefill" value="{{ $selectedCertificado ?? '' }}">
+                <input type="hidden" id="selected_pedido_material_prefill" value="{{ $selectedPedidoMaterial ?? '' }}">
+                <input type="hidden" id="selected_pedido_proveedor_prefill" value="{{ $selectedPedidoProveedor ?? '' }}">
+                <input type="hidden" id="selected_longitud_un_mp_prefill" value="{{ $selectedLongitudUnMp ?? '' }}">
+                <input type="hidden" id="selected_materia_prima_prefill" value="{{ $selectedMateriaPrima ?? '' }}">
+                <input type="hidden" id="selected_diametro_mp_prefill" value="{{ $selectedDiametroMp ?? '' }}">
+                <input type="hidden" id="selected_codigo_mp_prefill" value="{{ $selectedCodigoMp ?? '' }}">
             @endif
             @if(!empty($legacyMaxNroOf))
                 <div class="alert alert-info pedido-mp-legacy-alert {{ $hideHeaderFields }}" role="alert">
@@ -151,6 +159,9 @@
                         <label for="Materia_Prima">Materia Prima</label>
                         <select name="Materia_Prima" id="Materia_Prima" class="form-control filtro-select">
                             <option value="">Sin definir</option>
+                            @if(!empty($selectedMateriaPrima) && !$materiasPrimas->contains($selectedMateriaPrima))
+                                <option value="{{ $selectedMateriaPrima }}" selected>{{ $selectedMateriaPrima }}</option>
+                            @endif
                             @foreach($materiasPrimas as $materiaPrima)
                                 <option value="{{ $materiaPrima }}" {{ old('Materia_Prima', $pedidoMp->Materia_Prima ?? ($selectedMateriaPrima ?? '')) === $materiaPrima ? 'selected' : '' }}>
                                     {{ $materiaPrima }}
@@ -164,6 +175,9 @@
                         <label for="Diametro_MP">Diametro MP</label>
                         <select name="Diametro_MP" id="Diametro_MP" class="form-control filtro-select">
                             <option value="">Sin definir</option>
+                            @if(!empty($selectedDiametroMp) && !$diametros->contains(fn ($value) => (string) $value === (string) $selectedDiametroMp))
+                                <option value="{{ $selectedDiametroMp }}" selected>{{ $selectedDiametroMp }}</option>
+                            @endif
                             @foreach($diametros as $diametro)
                                 <option value="{{ $diametro }}" {{ old('Diametro_MP', $pedidoMp->Diametro_MP ?? ($selectedDiametroMp ?? '')) === $diametro ? 'selected' : '' }}>
                                     {{ $diametro }}
@@ -227,8 +241,8 @@
 
 <div class="row">
                 <div class="col-md-3"><div class="form-group"><label for="Nro_Ingreso_MP">Ingreso MP Seleccionado</label><input type="text" inputmode="numeric" pattern="[0-9]*" list="ingreso-mp-sugeridos-list" name="Nro_Ingreso_MP" id="Nro_Ingreso_MP" class="form-control" value="{{ old('Nro_Ingreso_MP', $pedidoMp->Nro_Ingreso_MP ?? ($selectedIngreso ?? '')) }}" {{ $plannerReadonly }}></div></div>
-                <div class="col-md-3"><div class="form-group"><label for="Pedido_Material_Nro">Pedido MP Interno</label><input type="text" name="Pedido_Material_Nro" id="Pedido_Material_Nro" class="form-control" value="{{ old('Pedido_Material_Nro', $pedidoMp->Pedido_Material_Nro ?? ($selectedPedidoMaterial ?? ($nextPedidoMaterialNro ?? ''))) }}" readonly></div></div>
-                <div class="col-md-3"><div class="form-group"><label for="Nro_Pedido_Proveedor">Pedido Proveedor MP</label><input type="text" id="Nro_Pedido_Proveedor" class="form-control" value="" readonly></div></div>
+                <div class="col-md-3"><div class="form-group"><label for="Pedido_Material_Nro">Pedido MP Interno</label><input type="text" name="Pedido_Material_Nro" id="Pedido_Material_Nro" class="form-control" value="{{ old('Pedido_Material_Nro', $pedidoMp->Pedido_Material_Nro ?? ($selectedPedidoMaterial ?? ($nextPedidoMaterialNro ?? ''))) }}"></div></div>
+                <div class="col-md-3"><div class="form-group"><label for="Nro_Pedido_Proveedor">Pedido Proveedor MP</label><input type="text" id="Nro_Pedido_Proveedor" class="form-control" value="{{ old('Nro_Pedido_Proveedor', $selectedPedidoProveedor ?? '') }}" readonly></div></div>
                 <div class="col-md-3"><div class="form-group"><label for="Nro_Certificado_MP">Nro de Certificado MP</label><input type="text" name="Nro_Certificado_MP" id="Nro_Certificado_MP" class="form-control" value="{{ old('Nro_Certificado_MP', $pedidoMp->Nro_Certificado_MP ?? ($selectedCertificado ?? '')) }}" {{ $plannerReadonly }}></div></div>
             </div>
 

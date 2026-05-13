@@ -79,6 +79,17 @@ class MpEgresoController extends Controller
             }
         }
 
+        $totals = DB::query()
+            ->fromSub(clone $query, 'egresos_filtrados')
+            ->selectRaw('
+                COALESCE(SUM(Cant_Barras_Requeridas), 0) as total_barras_requeridas,
+                COALESCE(SUM(Cantidad_Unidades_MP), 0) as total_barras_solicitadas,
+                COALESCE(SUM(Cantidad_Unidades_MP_Preparadas), 0) as total_barras_preparadas,
+                COALESCE(SUM(Total_Salidas_MP), 0) as total_salidas,
+                COALESCE(SUM(Total_Mtros_Utilizados), 0) as total_metros_utilizados
+            ')
+            ->first();
+
         return datatables()->of($query)
             ->editColumn('Fecha_del_Pedido_Produccion', fn ($row) => $row->Fecha_del_Pedido_Produccion ? date('d/m/Y', strtotime($row->Fecha_del_Pedido_Produccion)) : '')
             ->editColumn('Fecha_de_Entrega_Pedido_Calidad', fn ($row) => $row->Fecha_de_Entrega_Pedido_Calidad ? date('d/m/Y', strtotime($row->Fecha_de_Entrega_Pedido_Calidad)) : '')
@@ -87,19 +98,36 @@ class MpEgresoController extends Controller
             ->editColumn('Total_Salidas_MP', fn ($row) => $row->Total_Salidas_MP !== null ? number_format((int) $row->Total_Salidas_MP, 0, ',', '.') : '')
             ->editColumn('Total_Mtros_Utilizados', fn ($row) => $row->Total_Mtros_Utilizados !== null ? number_format((float) $row->Total_Mtros_Utilizados, 2, ',', '.') : '')
             ->addColumn('acciones', function ($row) {
+                $editMpButton = '<a href="' . route('pedido_cliente_mp.editMassive', $row->Id_Pedido_MP) . '" class="btn btn-outline-primary btn-sm">Editar MP</a>';
+
                 if (!$row->Id_Egresos_MP) {
-                    return '<a href="' . route('mp_egresos.create', ['pedido_mp' => $row->Id_Pedido_MP]) . '" class="btn btn-success btn-sm">Registrar</a>';
+                    return '
+                        <div class="acciones-grupo">
+                            ' . $editMpButton . '
+                            <a href="' . route('mp_egresos.create', ['pedido_mp' => $row->Id_Pedido_MP]) . '" class="btn btn-success btn-sm">Registrar salida</a>
+                        </div>
+                    ';
                 }
 
                 return '
                     <div class="acciones-grupo">
+                        ' . $editMpButton . '
                         <a href="' . route('mp_egresos.show', $row->Id_Egresos_MP) . '" class="btn btn-info btn-sm">Ver</a>
-                        <a href="' . route('mp_egresos.edit', $row->Id_Egresos_MP) . '" class="btn btn-primary btn-sm">Editar</a>
+                        <a href="' . route('mp_egresos.edit', $row->Id_Egresos_MP) . '" class="btn btn-primary btn-sm">Editar salida</a>
                         <button type="button" class="btn btn-danger btn-sm btn-delete-egreso" data-id="' . $row->Id_Egresos_MP . '">Eliminar</button>
                     </div>
                 ';
             })
             ->rawColumns(['acciones'])
+            ->with([
+                'totals_filtered' => [
+                    'Cant_Barras_Requeridas' => (int) ($totals->total_barras_requeridas ?? 0),
+                    'Cantidad_Unidades_MP' => (int) ($totals->total_barras_solicitadas ?? 0),
+                    'Cantidad_Unidades_MP_Preparadas' => (int) ($totals->total_barras_preparadas ?? 0),
+                    'Total_Salidas_MP' => (int) ($totals->total_salidas ?? 0),
+                    'Total_Mtros_Utilizados' => round((float) ($totals->total_metros_utilizados ?? 0), 2),
+                ],
+            ])
             ->make(true);
     }
 

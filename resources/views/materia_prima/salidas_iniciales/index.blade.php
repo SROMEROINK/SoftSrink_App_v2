@@ -67,7 +67,7 @@
                             <th>Stock Inicial</th>
                             <th>Devoluciones al Proveedor</th>
                             <th>Diferencia de Stock</th>
-                            <th>Salidas Final</th>
+                            <th>Stock Final Base</th>
                             <th>Mts. Totales</th>
                             <th>Estado</th>
                             <th>Acciones</th>

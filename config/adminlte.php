@@ -238,7 +238,7 @@
         |
         */
 
-        'right_sidebar' => true,
+        'right_sidebar' => false,
         'right_sidebar_icon' => 'fas fa-cogs',
         'right_sidebar_theme' => 'dark',
         'right_sidebar_slide' => true,
@@ -301,7 +301,7 @@
             // Navbar items:
             [
                 'type' => 'navbar-search',
-                'text' => 'search',
+                'text' => 'Buscar',
                 'topnav_right' => true,
             ],
             [
@@ -312,7 +312,7 @@
             // Sidebar items:
             [
                 'type' => 'sidebar-menu-search',
-                'text' => 'search',
+                'text' => 'Buscar',
             ],
 
             ['header' => 'ADMINISTRADOR', 'can' => 'administrar usuarios'],
@@ -347,8 +347,8 @@
 
             [
                 'text' => 'Tablero',
-                'url' => 'dashboard',
-                'icon' => 'far fa-fw fas fa-tachometer-alt',
+                'route' => 'dashboard',
+                'icon' => 'fas fa-tachometer-alt fa-fw',
                 'label_color' => 'success',
             ],
 
@@ -400,26 +400,26 @@
                         'can' => 'ver solo administrador', // Define el permiso necesario
                     ],
                     [
-                        'text' => 'Categoria',
-                        'route' => 'productos_categoria.index',
-                        'icon' => 'fas fa-fw fa-solid fa-cubes',
-                        'can' => 'ver solo administrador', // Define el permiso necesario
-                    ],
-                    [
-                        'text' => 'Subcategoria',
-                        'url' => '#',
+                        'text' => 'Subcategorias',
+                        'route' => 'producto_subcategoria.index',
                         'icon' => 'fas fa-fw fa-solid fa-cubes',
                         'can' => 'ver solo administrador', // Define el permiso necesario
                     ],
                     [
                         'text' => 'Grupo Subcategorias',
-                        'url' => '#',
+                        'route' => 'producto_grupo_subcategoria.index',
                         'icon' => 'fas fa-fw fa-solid fa-cubes',
                         'can' => 'ver solo administrador', // Define el permiso necesario
                     ],
                     [
-                        'text' => 'Grupo Conjunto',
-                        'url' => '#',
+                        'text' => 'Grupo Conjuntos',
+                        'route' => 'producto_grupo_conjuntos.index',
+                        'icon' => 'fas fa-fw fa-solid fa-cubes',
+                        'can' => 'ver solo administrador', // Define el permiso necesario
+                    ],
+                    [
+                        'text' => 'Estados Planificacion',
+                        'route' => 'estado_planificacion.index',
                         'icon' => 'fas fa-fw fa-solid fa-cubes',
                         'can' => 'ver solo administrador', // Define el permiso necesario
                     ],
@@ -455,20 +455,20 @@
                 'can' => 'ver materia prima', // Define el permiso necesario
                 'submenu' => [
                     [
-                        'text' => 'Ingreso_mp',
+                        'text' => 'Ingresos MP',
                         'route' => 'mp_ingresos.index',
                         'icon' => 'fas fa-fw fa-solid fa-cubes',
                         'can' => 'ver materia prima', // Define el permiso necesario
                     ],
                     [
-                        'text' => 'Salidas_mp',
+                        'text' => 'Salidas MP',
                         'route' => 'mp_egresos.index',
                         'icon' => 'fas fa-fw fa-solid fa-cubes',
                         'can' => 'ver materia prima', // Define el permiso necesario
                     ],
                     [
-                        'text' => 'Stock_mp',
-                        'url' => '#',
+                        'text' => 'Stock MP',
+                        'route' => 'mp_stock.index',
                         'icon' => 'fas fa-fw fa-solid fa-cubes',
                         'can' => 'ver materia prima', // Define el permiso necesario
                     ],
@@ -515,6 +515,18 @@
                         'icon' => 'fas fa-fw fa-solid fa-cubes',
                         'can' => 'ver produccion', // Define el permiso necesario
                     ],
+                    [
+                        'text' => 'Planificacion MP',
+                        'route' => 'pedido_cliente_mp.index',
+                        'icon' => 'fas fa-fw fa-solid fa-cubes',
+                        'can' => 'ver produccion', // Define el permiso necesario
+                    ],
+                    [
+                        'text' => 'Listado OF',
+                        'route' => 'listado_of.index',
+                        'icon' => 'fas fa-fw fa-solid fa-cubes',
+                        'can' => 'ver produccion', // Define el permiso necesario
+                    ],
                 ],
             ],
             [
@@ -548,7 +560,7 @@
                     ],
                     [
                         'text' => 'Carga_Fechas_of',
-                        'route' => 'fabricacion.create',
+                        'route' => 'fechas_of.create',
                         'icon' => 'fas fa-fw fa-solid fa-cubes',
                         'can' => 'ver produccion', // Define el permiso necesario
                     ],
@@ -566,8 +578,8 @@
                         'can' => 'ver produccion', // Define el permiso necesario
                     ],
                     [
-                        'text' => 'Remito de Entregas',
-                        'url' => '#',
+                        'text' => 'Registrar Entrega',
+                        'route' => 'entregas_productos.create',
                         'icon' => 'fas fa-fw fa-solid fa-cubes',
                         'can' => 'ver produccion', // Define el permiso necesario
                     ],

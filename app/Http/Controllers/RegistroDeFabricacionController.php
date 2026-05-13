@@ -409,6 +409,8 @@ class RegistroDeFabricacionController extends Controller
     {
         $messages = [
             'nro_of.*.required' => 'El numero de OF es obligatorio.',
+            'nro_of.*.integer' => 'El numero de OF debe ser un numero entero.',
+            'nro_of.*.min' => 'El numero de OF no puede ser negativo.',
             'nro_parcial.*.required' => 'El numero de parcial es obligatorio.',
             'Nro_OF_Parcial.*.unique' => 'El numero de parcial ya ha sido registrado.',
             'cant_piezas.*.required' => 'La cantidad de piezas es obligatoria.',
@@ -423,7 +425,7 @@ class RegistroDeFabricacionController extends Controller
         ];
 
         $request->validate([
-            'nro_of.*' => 'required',
+            'nro_of.*' => 'required|integer|min:0',
             'Id_Producto.*' => 'required',
             'nro_parcial.*' => 'required',
             'Nro_OF_Parcial.*' => 'required|unique:registro_de_fabricacion,Nro_OF_Parcial',
@@ -435,49 +437,91 @@ class RegistroDeFabricacionController extends Controller
             'cant_horas.*' => 'required|numeric',
         ], $messages);
 
+        if (empty($request->nro_of)) {
+            return response()->json(['success' => false, 'message' => 'El numero de OF es obligatorio.'], 400);
+        }
+
         $duplicatedRows = [];
-        if (!empty($request->nro_of)) {
+        $incompleteRows = [];
+        $savedRows = 0;
+
+        DB::beginTransaction();
+
+        try {
             foreach ($request->nro_of as $index => $nroOf) {
-                if (isset($request->Id_Producto[$index], $request->nro_parcial[$index], $request->cant_piezas[$index], $request->fecha_fabricacion[$index], $request->horario[$index], $request->operario[$index], $request->turno[$index], $request->cant_horas[$index])) {
-                    $nroOfParcial = $nroOf . '/' . $request->nro_parcial[$index];
-
-                    $registroExistente = RegistroDeFabricacion::where('Nro_OF_Parcial', $nroOfParcial)->first();
-                    if ($registroExistente) {
-                        $duplicatedRows[] = $index + 1;
-                    } else {
-                        $registro = new RegistroDeFabricacion();
-                        $registro->Nro_OF = $nroOf;
-                        $registro->Id_Producto = $request->Id_Producto[$index];
-                        $registro->Nro_Parcial = $request->nro_parcial[$index];
-                        $registro->Nro_OF_Parcial = $nroOfParcial;
-                        $registro->Cant_Piezas = $request->cant_piezas[$index];
-                        $registro->Fecha_Fabricacion = $request->fecha_fabricacion[$index];
-                        $registro->Horario = $request->horario[$index];
-                        $registro->Turno = $request->turno[$index];
-                        $registro->Cant_Horas_Extras = $request->cant_horas[$index];
-                        $registro->created_by = Auth::id();
-                        $registro->updated_by = Auth::id();
-                        $registro->Nombre_Operario = $request->horario[$index] === 'H.Normales'
-                            ? ''
-                            : ($request->operario[$index] ?? null);
-
-                        $registro->save();
-                    }
+                if (!isset(
+                    $request->Id_Producto[$index],
+                    $request->nro_parcial[$index],
+                    $request->cant_piezas[$index],
+                    $request->fecha_fabricacion[$index],
+                    $request->horario[$index],
+                    $request->turno[$index],
+                    $request->cant_horas[$index]
+                )) {
+                    $incompleteRows[] = $index + 1;
+                    continue;
                 }
+
+                $nroOfParcial = $nroOf . '/' . $request->nro_parcial[$index];
+
+                if (RegistroDeFabricacion::where('Nro_OF_Parcial', $nroOfParcial)->exists()) {
+                    $duplicatedRows[] = $index + 1;
+                    continue;
+                }
+
+                $registro = new RegistroDeFabricacion();
+                $registro->Nro_OF = $nroOf;
+                $registro->Id_Producto = $request->Id_Producto[$index];
+                $registro->Nro_Parcial = $request->nro_parcial[$index];
+                $registro->Nro_OF_Parcial = $nroOfParcial;
+                $registro->Cant_Piezas = $request->cant_piezas[$index];
+                $registro->Fecha_Fabricacion = $request->fecha_fabricacion[$index];
+                $registro->Horario = $request->horario[$index];
+                $registro->Turno = $request->turno[$index];
+                $registro->Cant_Horas_Extras = $request->cant_horas[$index];
+                $registro->created_by = Auth::id();
+                $registro->updated_by = Auth::id();
+                $registro->Nombre_Operario = $request->horario[$index] === 'H.Normales'
+                    ? null
+                    : ($request->operario[$index] ?? null);
+
+                $registro->save();
+                $savedRows++;
             }
 
-            if (!empty($duplicatedRows)) {
+            if (!empty($duplicatedRows) || !empty($incompleteRows)) {
+                DB::rollBack();
+
                 return response()->json([
                     'success' => false,
-                    'message' => 'Algunas filas tienen errores de validacion.',
+                    'message' => 'Algunas filas no pudieron guardarse.',
                     'duplicatedRows' => $duplicatedRows,
+                    'incompleteRows' => $incompleteRows,
                 ], 400);
             }
 
-            return response()->json(['success' => true, 'message' => 'Datos guardados correctamente.']);
-        }
+            DB::commit();
 
-        return response()->json(['success' => false, 'message' => 'El numero de OF es obligatorio.'], 400);
+            return response()->json([
+                'success' => true,
+                'message' => 'Datos guardados correctamente.',
+                'savedRows' => $savedRows,
+            ]);
+        } catch (\Throwable $e) {
+            DB::rollBack();
+
+            Log::error('Error al guardar fabricacion', [
+                'message' => $e->getMessage(),
+                'line' => $e->getLine(),
+                'file' => $e->getFile(),
+                'user_id' => Auth::id(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Ocurrio un error al guardar la fabricacion. Revisar log.',
+            ], 500);
+        }
     }
 
     public function showByNroOF($nroOF)

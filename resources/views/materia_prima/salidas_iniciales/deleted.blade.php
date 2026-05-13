@@ -18,7 +18,7 @@
                             <th>Stock Inicial</th>
                             <th>Devol. Proveedor</th>
                             <th>Diferencia de Stock</th>
-                            <th>Salidas Final</th>
+                            <th>Stock Final Base</th>
                             <th>Mts. Totales</th>
                             <th>Eliminado</th>
                             <th>Acciones</th>

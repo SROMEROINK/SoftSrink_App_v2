@@ -36,6 +36,10 @@
         Aquí puedes corregir el correlativo por fila sin perder el contexto del pedido.
     </div>
 
+    <div class="d-flex justify-content-end mt-3">
+        <a href="{{ $addOfUrl }}" class="btn btn-success">Agregar OF a este grupo</a>
+    </div>
+
     <div class="card mt-3">
         <div class="card-body">
             <div class="row mb-3 align-items-end">

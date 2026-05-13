@@ -116,7 +116,7 @@
         <div class="row">
             <div class="col-md-6">
                 <div class="form-group">
-                    <label for="Total_Salidas_MP">Salidas Final</label>
+                    <label for="Total_Salidas_MP">Stock Final Base</label>
                     <input type="text" id="Total_Salidas_MP" class="form-control text-center" value="{{ isset($salidaInicial) ? number_format((int) ($salidaInicial->Total_Salidas_Calculadas ?? 0), 0, ',', '.') : '0' }}" readonly>
                 </div>
             </div>

@@ -127,6 +127,21 @@
                             <th></th>
                         </tr>
                     </thead>
+                    <tfoot>
+                        <tr class="mp-movimientos-totals-row">
+                            <th>Totales filtrados</th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                        </tr>
+                    </tfoot>
                 </table>
             </div>
         </div>
@@ -139,6 +154,19 @@
     <link rel="stylesheet" href="https://cdn.datatables.net/fixedheader/3.4.1/css/fixedHeader.bootstrap4.min.css">
     <link rel="stylesheet" href="{{ asset('vendor/adminlte/dist/css/shared/filters.css') }}">
     <link rel="stylesheet" href="{{ asset('vendor/adminlte/dist/css/mp_movimiento_adicional_index.css') }}">
+    <style>
+        #tabla_movimientos_adicionales tfoot th {
+            position: sticky;
+            bottom: 0;
+            z-index: 2;
+            background-color: #e8f4ff;
+            color: #12344d;
+            font-weight: 700;
+            border-top: 2px solid #9fc5e8;
+            white-space: nowrap;
+            text-align: center;
+        }
+    </style>
 @stop
 
 @section('js')
@@ -207,6 +235,20 @@
                 fixedHeader: true,
                 pageLength: 25,
                 scrollX: true,
+                footerCallback: function () {
+                    const api = this.api();
+                    const totals = api.ajax.json()?.totals_filtered || {};
+                    const renderCentered = function (value, decimals = 0) {
+                        return '<div class="text-center w-100">' + new Intl.NumberFormat('es-AR', {
+                            minimumFractionDigits: decimals,
+                            maximumFractionDigits: decimals
+                        }).format(value || 0) + '</div>';
+                    };
+
+                    $(api.column(6).footer()).html(renderCentered(totals.Cantidad_Adicionales, 0));
+                    $(api.column(7).footer()).html(renderCentered(totals.Cantidad_Devoluciones, 0));
+                    $(api.column(9).footer()).html(renderCentered(totals.Total_Mtros_Movimiento, 2));
+                },
                 columns: [
                     { data: 'Fecha_Movimiento', name: 'Fecha_Movimiento' },
                     { data: 'Nro_Ingreso_MP', name: 'Nro_Ingreso_MP' },

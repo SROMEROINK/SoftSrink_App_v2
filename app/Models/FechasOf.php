@@ -2,12 +2,8 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\SoftDeletes; // Importa la clase SoftDeletes
-use App\Models\PedidoCliente;
-use App\Models\Producto;
-use App\Models\ProductoCategoria;
+use Illuminate\Database\Eloquent\Model;
 
 class FechasOf extends Model
 {
@@ -15,8 +11,10 @@ class FechasOf extends Model
 
     protected $table = 'fechas_of';
     protected $primaryKey = 'Id_Fechas';
+    public $timestamps = true;
 
     protected $fillable = [
+        'Id_OF',
         'Nro_OF_fechas',
         'Nro_Programa_H1',
         'Nro_Programa_H2',
@@ -27,28 +25,29 @@ class FechasOf extends Model
         'Inicio_OF',
         'Finalizacion_OF',
         'Tiempo_Pieza',
-        'created_by', // Si tienes los campos de auditoría
-        'updated_by'  // Si tienes los campos de auditoría
+        'Tiempo_Seg',
+        'reg_Status',
+        'created_by',
+        'updated_by',
     ];
 
-public function pedido()
-{
-    return $this->belongsTo(PedidoCliente::class, 'Id_OF', 'Id_OF');
-}
+    protected $casts = [
+        'Id_OF' => 'integer',
+        'Nro_OF_fechas' => 'integer',
+        'Inicio_PAP' => 'date',
+        'Fin_PAP' => 'date',
+        'Inicio_OF' => 'date',
+        'Finalizacion_OF' => 'date',
+        'Tiempo_Pieza' => 'decimal:2',
+        'Tiempo_Seg' => 'integer',
+        'reg_Status' => 'boolean',
+    ];
 
-    // Relación con Producto a través de Listado_OF (hasOneThrough)
-    /*public function producto()
+    public function pedido()
     {
-        return $this->hasOneThrough(Producto::class, Listado_OF::class, 'Nro_OF', 'Id_Producto', 'Nro_OF_fechas', 'Producto_Id');
-    }*/
-
-    // Relación con la Categoría del Producto (similar a RegistroDeFabricacion)
-    public function categoria()
-    {
-        return $this->hasOneThrough(ProductoCategoria::class, Producto::class, 'Id_Producto', 'Id_Categoria', 'Id_Producto', 'Id_Prod_Categoria');
+        return $this->belongsTo(PedidoCliente::class, 'Id_OF', 'Id_OF');
     }
 
-    // Relación con usuarios (si usas los campos de auditoría)
     public function creator()
     {
         return $this->belongsTo(User::class, 'created_by');

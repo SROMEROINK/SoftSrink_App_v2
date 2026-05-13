@@ -57,9 +57,9 @@
                                     <a href="{{ route('pedido_cliente.show', $pedido->Id_OF) }}" class="btn btn-info btn-sm">Ver</a>
                                     <a href="{{ route('pedido_cliente.edit', $pedido->Id_OF) }}" class="btn btn-primary btn-sm">Editar</a>
                                     @if($pedido->definicionMp?->Id_Pedido_MP)
-                                        <a href="{{ route('pedido_cliente_mp.editMassive', $pedido->definicionMp->Id_Pedido_MP) }}" class="btn btn-success btn-sm">Cargar MP</a>
+                                        <a href="{{ route('pedido_cliente_mp.editMassive', $pedido->definicionMp->Id_Pedido_MP) }}" class="btn btn-success btn-sm">Editar MP</a>
                                     @else
-                                        <a href="{{ route('pedido_cliente_mp.createMassive', ['of' => $pedido->Id_OF]) }}" class="btn btn-success btn-sm">Cargar MP</a>
+                                        <a href="{{ route('pedido_cliente_mp.createMassive', ['of' => $pedido->Id_OF]) }}" class="btn btn-success btn-sm">Definir MP</a>
                                     @endif
                                 </td>
                             </tr>

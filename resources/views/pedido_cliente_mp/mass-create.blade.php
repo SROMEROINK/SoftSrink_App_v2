@@ -36,6 +36,21 @@
         </div>
     </div>
 
+    @if(!empty($fixedPedidoMaterial))
+        <div class="alert alert-success pedido-mp-mass-alert">
+            <strong>Modo grupo:</strong>
+            las OF que cargues en esta hoja se guardaran con el <strong>Pedido MP Interno {{ $fixedPedidoMaterial }}</strong>.
+        </div>
+    @endif
+
+    @if(!empty($fixedPedidoMaterial) && !empty($existingGroupRows) && $existingGroupRows->count())
+        <div class="alert alert-secondary pedido-mp-mass-alert">
+            <strong>OF ya cargadas en este grupo:</strong>
+            {{ $existingGroupRows->pluck('Nro_OF')->filter()->implode(', ') }}.
+            Estas filas se muestran como referencia y no se volveran a guardar.
+        </div>
+    @endif
+
     <datalist id="of-catalogo-list">
         @foreach ($pedidosCatalogo as $pedido)
             <option value="{{ $pedido['Nro_OF'] }}">OF #{{ $pedido['Nro_OF'] }} - {{ $pedido['Prod_Codigo'] }}</option>
@@ -86,10 +101,14 @@
 $(document).ready(function () {
     let filaCounter = 1;
     const pedidosCatalogo = @json($pedidosCatalogo);
+    const definicionesCatalogo = @json($definicionesCatalogo ?? []);
     const maquinasCatalogo = @json($maquinasCatalogo);
     const ingresosCatalogo = @json($ingresosCatalogo);
     const estadosPlanificacion = @json($estadosPlanificacion);
     const nextPedidoMaterialNro = @json((string) ($nextPedidoMaterialNro ?? ''));
+    const fixedPedidoMaterialNro = @json((string) ($fixedPedidoMaterial ?? ''));
+    const currentPedidoMaterialNro = fixedPedidoMaterialNro || nextPedidoMaterialNro;
+    const existingGroupRows = @json($existingGroupRows ?? []);
     const pendingOfCount = Number(@json((int) ($pendingOfCount ?? 0)));
     const createSingleUrl = @json(route('pedido_cliente_mp.create'));
     const preselectedOfId = @json($preselectedOf ?? null);
@@ -123,12 +142,55 @@ $(document).ready(function () {
         return selected;
     }
 
+    function getUnifiedOfCatalog() {
+        const merged = new Map();
+
+        pedidosCatalogo.forEach((pedido) => {
+            merged.set(String(pedido.Nro_OF), {
+                ...pedido,
+                source: 'pending'
+            });
+        });
+
+        definicionesCatalogo.forEach((definicion) => {
+            const key = String(definicion.Nro_OF || '');
+            if (!key) {
+                return;
+            }
+
+            if (!merged.has(key)) {
+                merged.set(key, {
+                    Id_Pedido_MP: definicion.Id_Pedido_MP,
+                    Id_OF: definicion.Id_OF,
+                    Nro_OF: definicion.Nro_OF,
+                    Prod_Codigo: definicion.Prod_Codigo || '',
+                    Prod_Descripcion: definicion.Prod_Descripcion || '',
+                    Cant_Fabricacion: definicion.Cant_Fabricacion || '',
+                    Largo_Pieza: definicion.Largo_Pieza || '',
+                    Codigo_MP: definicion.Prod_Codigo_MP || definicion.Codigo_MP || '',
+                    Materia_Prima: definicion.Prod_Material_MP || definicion.Materia_Prima || '',
+                    Diametro_MP: definicion.Prod_Diametro_de_MP || definicion.Diametro_MP || '',
+                    DefinitionPedidoMaterial: definicion.Pedido_Material_Nro || '',
+                    DefinitionLocked: Boolean(definicion.DefinitionLocked),
+                    source: 'existing'
+                });
+            }
+        });
+
+        return Array.from(merged.values()).sort((a, b) => Number(a.Nro_OF) - Number(b.Nro_OF));
+    }
+
     function refreshOfCatalog(excludeRow = null) {
         const selectedOfs = getSelectedOfs(excludeRow);
         const currentValue = excludeRow ? String(excludeRow.find('.input-of').val() || '').trim() : '';
-        const options = pedidosCatalogo
+        const options = getUnifiedOfCatalog()
             .filter((pedido) => !selectedOfs.has(String(pedido.Nro_OF)) || String(pedido.Nro_OF) === currentValue)
-            .map((pedido) => `<option value="${pedido.Nro_OF}">OF #${pedido.Nro_OF} - ${pedido.Prod_Codigo}</option>`)
+            .map((pedido) => {
+                const suffix = pedido.source === 'existing' && pedido.DefinitionPedidoMaterial
+                    ? ` - ya asignada al Pedido MP ${pedido.DefinitionPedidoMaterial}`
+                    : '';
+                return `<option value="${pedido.Nro_OF}">OF #${pedido.Nro_OF} - ${pedido.Prod_Codigo}${suffix}</option>`;
+            })
             .join('');
 
         $('#of-catalogo-list').html(options);
@@ -213,7 +275,9 @@ $(document).ready(function () {
     }
 
     function findPedidoByOf(nroOf) {
-        return pedidosCatalogo.find((pedido) => String(pedido.Nro_OF) === String(nroOf).trim());
+        const normalized = String(nroOf).trim();
+        return pedidosCatalogo.find((pedido) => String(pedido.Nro_OF) === normalized)
+            || getUnifiedOfCatalog().find((pedido) => String(pedido.Nro_OF) === normalized);
     }
 
     function findMachineById(idMaquina) {
@@ -243,21 +307,36 @@ $(document).ready(function () {
     }
 
 
-    function generarFila(numeroFila) {
-        return `<tr>
+    function generarFila(numeroFila, existing = false) {
+        const idOfName = 'name="Id_OF[]"';
+        const existingPedidoMpIdName = 'name="Existing_Pedido_MP_Id[]"';
+        const idMaquinaName = 'name="Id_Maquina[]"';
+        const nroIngresoName = 'name="Nro_Ingreso_MP[]"';
+        const pedidoMaterialName = 'name="Pedido_Material_Nro[]"';
+        const regStatusName = 'name="reg_Status[]"';
+        const estadoName = 'name="Estado_Plani_Id[]"';
+        const rowStateClass = existing ? 'row-complete row-existing' : 'row-incomplete';
+        const actionCell = existing
+            ? '<span class="text-muted font-weight-bold">Asignada</span>'
+            : '<button type="button" class="btn btn-danger eliminarFila">Eliminar</button>';
+
+        return `<tr class="${rowStateClass}" data-existing-row="${existing ? '1' : '0'}">
             <td class="cell-index">${numeroFila}</td>
             <td>
                 <input type="text" class="form-control input-of" list="of-catalogo-list" placeholder="Buscar OF">
-                <input type="hidden" name="Id_OF[]" class="hidden-id-of">
+                <input type="hidden" ${idOfName} class="hidden-id-of">
+                <input type="hidden" ${existingPedidoMpIdName} class="hidden-existing-pedido-mp-id">
                 <input type="hidden" class="hidden-cantidad-fabricacion">
                 <input type="hidden" class="hidden-largo-pieza">
                 <input type="hidden" class="hidden-codigo-mp-producto">
-                <input type="hidden" name="Pedido_Material_Nro[]" class="hidden-pedido-material" value="${nextPedidoMaterialNro}">
-                <input type="hidden" name="reg_Status[]" value="1">
+                <input type="hidden" class="hidden-producto-materia">
+                <input type="hidden" class="hidden-producto-diametro">
+                <input type="hidden" ${pedidoMaterialName} class="hidden-pedido-material" value="${currentPedidoMaterialNro}">
+                <input type="hidden" ${regStatusName} value="1">
             </td>
             <td><input type="text" class="form-control producto-readonly" readonly></td>
             <td>
-                <select name="Id_Maquina[]" class="form-control filtro-select select-maquina" required>
+                <select ${idMaquinaName} class="form-control filtro-select select-maquina" required>
                     ${maquinasOptions}
                 </select>
             </td>
@@ -265,20 +344,20 @@ $(document).ready(function () {
             <td><input type="text" class="form-control codigo-mp-readonly" readonly></td>
             <td>
                 <div class="ingreso-selector-cell">
-                    <input type="text" name="Nro_Ingreso_MP[]" class="form-control input-ingreso-mp" list="ingreso-mp-catalogo-list" placeholder="Buscar ingreso">
+                    <input type="text" ${nroIngresoName} class="form-control input-ingreso-mp" list="ingreso-mp-catalogo-list" placeholder="Buscar ingreso">
                     <input type="hidden" class="hidden-longitud-unidad">
                     <button type="button" class="btn btn-info btn-sm consultar-sugeridos">Consultar ingresos sugeridos</button>
                 </div>
             </td>
-            <td><input type="text" class="form-control pedido-material-readonly" readonly value="${nextPedidoMaterialNro}"></td>
+            <td><input type="text" class="form-control pedido-material-readonly" readonly value="${currentPedidoMaterialNro}"></td>
             <td><input type="text" class="form-control certificado-readonly" readonly></td>
             <td><input type="text" class="form-control barras-readonly" readonly></td>
             <td>
-                <select name="Estado_Plani_Id[]" class="form-control filtro-select" required>
+                <select ${estadoName} class="form-control filtro-select" required>
                     ${estadosOptions}
                 </select>
             </td>
-            <td><button type="button" class="btn btn-danger eliminarFila">Eliminar</button></td>
+            <td>${actionCell}</td>
         </tr>`;
     }
 
@@ -307,14 +386,17 @@ $(document).ready(function () {
 
     function limpiarFila($fila) {
         $fila.find('.hidden-id-of').val('');
+        $fila.find('.hidden-existing-pedido-mp-id').val('');
         $fila.find('.hidden-cantidad-fabricacion').val('');
         $fila.find('.hidden-largo-pieza').val('');
         $fila.find('.hidden-codigo-mp-producto').val('');
+        $fila.find('.hidden-producto-materia').val('');
+        $fila.find('.hidden-producto-diametro').val('');
         $fila.find('.producto-readonly').val('');
         $fila.find('.codigo-mp-readonly').val('');
         $fila.find('.input-ingreso-mp').val('');
-        $fila.find('.pedido-material-readonly').val(nextPedidoMaterialNro);
-        $fila.find('.hidden-pedido-material').val(nextPedidoMaterialNro);
+        $fila.find('.pedido-material-readonly').val(currentPedidoMaterialNro);
+        $fila.find('.hidden-pedido-material').val(currentPedidoMaterialNro);
         $fila.find('.certificado-readonly').val('');
         $fila.find('.barras-readonly').val('');
         $fila.find('.select-maquina').val('');
@@ -330,11 +412,58 @@ $(document).ready(function () {
 
         $fila.find('.input-of').val(pedido.Nro_OF);
         $fila.find('.hidden-id-of').val(pedido.Id_OF);
+        $fila.find('.hidden-existing-pedido-mp-id').val(pedido.Id_Pedido_MP || '');
         $fila.find('.hidden-cantidad-fabricacion').val(pedido.Cant_Fabricacion);
         $fila.find('.hidden-largo-pieza').val(pedido.Largo_Pieza || '');
         $fila.find('.hidden-codigo-mp-producto').val(pedido.Codigo_MP || '');
+        $fila.find('.hidden-producto-materia').val(pedido.Materia_Prima || '');
+        $fila.find('.hidden-producto-diametro').val(pedido.Diametro_MP || '');
         $fila.find('.producto-readonly').val(pedido.Prod_Codigo || '');
         $fila.find('.codigo-mp-readonly').val(pedido.Codigo_MP || '');
+
+        if (pedido.Id_Maquina) {
+            $fila.find('.select-maquina').val(pedido.Id_Maquina).trigger('change');
+        }
+
+        if (pedido.Nro_Ingreso_MP) {
+            $fila.find('.input-ingreso-mp').val(pedido.Nro_Ingreso_MP);
+            $fila.find('.hidden-longitud-unidad').val(pedido.Longitud_Un_MP || '');
+            $fila.find('.certificado-readonly').val(pedido.Nro_Certificado_MP || '');
+        }
+
+        if (pedido.Cant_Barras_MP) {
+            $fila.find('.barras-readonly').val(pedido.Cant_Barras_MP);
+        }
+
+        if (pedido.Estado_Plani_Id) {
+            $fila.find('select[name="Estado_Plani_Id[]"]').val(String(pedido.Estado_Plani_Id));
+        }
+    }
+
+    function completarFilaConDatosExistentes($fila, rowData) {
+        $fila.find('.input-of').val(rowData.Nro_OF || '');
+        $fila.find('.hidden-id-of').val(rowData.Id_OF || '');
+        $fila.find('.hidden-existing-pedido-mp-id').val(rowData.Id_Pedido_MP || '');
+        $fila.find('.hidden-cantidad-fabricacion').val(rowData.Cant_Fabricacion || '');
+        $fila.find('.hidden-largo-pieza').val(rowData.Largo_Pieza || '');
+        $fila.find('.hidden-codigo-mp-producto').val(rowData.Prod_Codigo_MP || rowData.Codigo_MP || '');
+        $fila.find('.hidden-producto-materia').val(rowData.Prod_Material_MP || '');
+        $fila.find('.hidden-producto-diametro').val(rowData.Prod_Diametro_de_MP || '');
+        $fila.find('.producto-readonly').val(rowData.Prod_Codigo || '');
+        $fila.find('.codigo-mp-readonly').val(rowData.Codigo_MP || rowData.Prod_Codigo_MP || '');
+    }
+
+    function getPedidoDataForRow($fila) {
+        return {
+            Id_OF: String($fila.find('.hidden-id-of').val() || '').trim(),
+            Nro_OF: String($fila.find('.input-of').val() || '').trim(),
+            Prod_Codigo: String($fila.find('.producto-readonly').val() || '').trim(),
+            Cant_Fabricacion: parseNumber($fila.find('.hidden-cantidad-fabricacion').val()),
+            Largo_Pieza: $fila.find('.hidden-largo-pieza').val(),
+            Codigo_MP: String($fila.find('.hidden-codigo-mp-producto').val() || '').trim() || String($fila.find('.codigo-mp-readonly').val() || '').trim(),
+            Materia_Prima: String($fila.find('.hidden-producto-materia').val() || '').trim(),
+            Diametro_MP: String($fila.find('.hidden-producto-diametro').val() || '').trim(),
+        };
     }
 
     function actualizarFilaConMaquina($fila) {
@@ -345,10 +474,10 @@ $(document).ready(function () {
 
     function actualizarFilaConIngreso($fila) {
         const ingreso = findIngresoByNumber($fila.find('.input-ingreso-mp').val());
-        const pedido = findPedidoByOf($fila.find('.input-of').val());
+        const pedido = getPedidoDataForRow($fila);
 
-        $fila.find('.pedido-material-readonly').val(nextPedidoMaterialNro);
-        $fila.find('.hidden-pedido-material').val(nextPedidoMaterialNro);
+        $fila.find('.pedido-material-readonly').val(currentPedidoMaterialNro);
+        $fila.find('.hidden-pedido-material').val(currentPedidoMaterialNro);
         $fila.find('.certificado-readonly').val('');
 
         if (!ingreso) {
@@ -360,8 +489,8 @@ $(document).ready(function () {
 
         if (!isCompatibleIngresoWithPedido(pedido, ingreso)) {
             $fila.find('.input-ingreso-mp').addClass('input-invalid');
-            $fila.find('.pedido-material-readonly').val(nextPedidoMaterialNro);
-        $fila.find('.hidden-pedido-material').val(nextPedidoMaterialNro);
+            $fila.find('.pedido-material-readonly').val(currentPedidoMaterialNro);
+            $fila.find('.hidden-pedido-material').val(currentPedidoMaterialNro);
             $fila.find('.certificado-readonly').val('');
             $fila.find('.barras-readonly').val('');
             actualizarEstadoFila($fila);
@@ -370,16 +499,17 @@ $(document).ready(function () {
 
         $fila.find('.input-ingreso-mp').removeClass('input-invalid');
         $fila.find('.codigo-mp-readonly').val(ingreso.Codigo_MP || pedido?.Codigo_MP || '');
-        $fila.find('.pedido-material-readonly').val(nextPedidoMaterialNro);
-        $fila.find('.hidden-pedido-material').val(nextPedidoMaterialNro);
+        $fila.find('.pedido-material-readonly').val(currentPedidoMaterialNro);
+        $fila.find('.hidden-pedido-material').val(currentPedidoMaterialNro);
         $fila.find('.certificado-readonly').val(ingreso.Nro_Certificado_MP || '');
+        $fila.find('.hidden-longitud-unidad').val(ingreso.Longitud_Unidad_MP || '');
         recalcularBarrasFila($fila);
         actualizarEstadoFila($fila);
         return true;
     }
 
     function recalcularBarrasFila($fila) {
-        const pedido = findPedidoByOf($fila.find('.input-of').val());
+        const pedido = getPedidoDataForRow($fila);
         const maquina = findMachineById($fila.find('.select-maquina').val());
         const ingreso = findIngresoByNumber($fila.find('.input-ingreso-mp').val());
         $fila.find('.barras-readonly').val(calcularBarras(pedido, maquina, ingreso));
@@ -613,6 +743,8 @@ $(document).ready(function () {
         return $('#tablaListadoOF tbody tr').map(function () {
             const $fila = $(this);
             return {
+                existing: $fila.attr('data-existing-row') === '1',
+                existingPedidoMpId: String($fila.find('.hidden-existing-pedido-mp-id').val() || '').trim(),
                 rowIndex: String($fila.find('.cell-index').text() || '').trim(),
                 nroOf: String($fila.find('.input-of').val() || '').trim(),
                 machineId: String($fila.find('.select-maquina').val() || '').trim(),
@@ -628,6 +760,11 @@ $(document).ready(function () {
 
     function saveMassiveDraftToStorage() {
         sessionStorage.setItem('pedidoClienteMpMassiveDraft', JSON.stringify(buildMassiveDraft()));
+    }
+
+    function clearMassiveStorage() {
+        sessionStorage.removeItem('pedidoClienteMpMassiveDraft');
+        sessionStorage.removeItem('pedidoClienteMpMassiveSelection');
     }
 
     function restoreMassiveDraftFromStorage() {
@@ -653,7 +790,7 @@ $(document).ready(function () {
         filaCounter = 1;
 
         draftRows.forEach((rowData, index) => {
-            $('#tablaListadoOF tbody').append($(generarFila(index + 1)));
+            $('#tablaListadoOF tbody').append($(generarFila(index + 1, Boolean(rowData.existing))));
             filaCounter = index + 2;
 
             const $fila = $('#tablaListadoOF tbody tr').last();
@@ -667,13 +804,17 @@ $(document).ready(function () {
 
             $fila.find('.select-maquina').val(rowData.machineId || '').trigger('change');
             $fila.find('.input-ingreso-mp').val(rowData.nroIngreso || '');
-            $fila.find('select[name="Estado_Plani_Id[]"]').val(rowData.estadoId || '11');
+            $fila.find('select[name="Estado_Plani_Id[]"], select.filtro-select').last().val(rowData.estadoId || '11');
 
-            if (rowData.nroIngreso) {
-                actualizarFilaConIngreso($fila);
-            } else {
-                actualizarEstadoFila($fila);
-            }
+        if (rowData.nroIngreso) {
+            actualizarFilaConIngreso($fila);
+        } else {
+            actualizarEstadoFila($fila);
+        }
+
+        if (rowData.existingPedidoMpId) {
+            $fila.find('.hidden-existing-pedido-mp-id').val(rowData.existingPedidoMpId);
+        }
 
             if (rowData.pedidoMaterial) {
                 $fila.find('.pedido-material-readonly').val(rowData.pedidoMaterial);
@@ -690,6 +831,64 @@ $(document).ready(function () {
 
             if (rowData.longitudUnMp) {
                 $fila.find('.hidden-longitud-unidad').val(rowData.longitudUnMp);
+            }
+        });
+
+        renumerarFilas();
+        refreshOfCatalog();
+        return true;
+    }
+
+    function inicializarFilasExistentesDelGrupo() {
+        if (!Array.isArray(existingGroupRows) || !existingGroupRows.length) {
+            return false;
+        }
+
+        $('#tablaListadoOF tbody').empty();
+        filaCounter = 1;
+
+        existingGroupRows.forEach((rowData, index) => {
+            $('#tablaListadoOF tbody').append($(generarFila(index + 1, true)));
+            filaCounter = index + 2;
+
+            const $fila = $('#tablaListadoOF tbody tr').last();
+            const pedido = findPedidoByOf(rowData.Nro_OF);
+
+            if (pedido) {
+                completarFilaConPedido($fila, pedido);
+            } else {
+                completarFilaConDatosExistentes($fila, rowData);
+            }
+
+            $fila.find('.select-maquina').val(rowData.Id_Maquina || '').trigger('change');
+            $fila.find('.input-ingreso-mp').val(rowData.Nro_Ingreso_MP || '');
+            $fila.find('select').last().val(rowData.Estado_Plani_Id || '11');
+
+            if (rowData.Nro_Ingreso_MP) {
+                actualizarFilaConIngreso($fila);
+            } else {
+                actualizarEstadoFila($fila);
+            }
+
+            if (rowData.Pedido_Material_Nro) {
+                $fila.find('.pedido-material-readonly').val(rowData.Pedido_Material_Nro);
+                $fila.find('.hidden-pedido-material').val(rowData.Pedido_Material_Nro);
+            }
+
+            if (rowData.Nro_Certificado_MP) {
+                $fila.find('.certificado-readonly').val(rowData.Nro_Certificado_MP);
+            }
+
+            if (rowData.Cant_Barras_MP) {
+                $fila.find('.barras-readonly').val(rowData.Cant_Barras_MP);
+            }
+
+            if (rowData.Longitud_Un_MP) {
+                $fila.find('.hidden-longitud-unidad').val(rowData.Longitud_Un_MP);
+            }
+
+            if (rowData.Id_Pedido_MP) {
+                $fila.find('.hidden-existing-pedido-mp-id').val(rowData.Id_Pedido_MP);
             }
         });
 
@@ -762,7 +961,7 @@ $(document).ready(function () {
             return;
         }
 
-        const pedido = pedidosCatalogo.find((item) => String(item.Id_OF) === String(selection.idOf));
+        const pedido = findPedidoByOf(selection.nroOf || selection.idOf);
         if (!pedido) {
             return;
         }
@@ -822,14 +1021,16 @@ $(document).ready(function () {
         const pedidoPreseleccionado = pedidosCatalogo.find((pedido) =>
             String(pedido.Id_OF) === String(preselectedOfId) ||
             String(pedido.Nro_OF) === String(preselectedOfId)
-        );
+        ) || findPedidoByOf(preselectedOfId);
 
         if (!pedidoPreseleccionado) {
             return false;
         }
 
-        const cantidadInicial = Math.min(10, Math.max(1, pendingOfCount || 1));
-        agregarFilas(cantidadInicial);
+        clearMassiveStorage();
+        $('#tablaListadoOF tbody').empty();
+        filaCounter = 1;
+        agregarFilas(1);
 
         const $fila = $('#tablaListadoOF tbody tr').first();
         if (!$fila.length) {
@@ -838,7 +1039,6 @@ $(document).ready(function () {
 
         completarFilaConPedido($fila, pedidoPreseleccionado);
         actualizarEstadoFila($fila);
-        autocompletarOfCorrelativas();
         $fila.addClass('row-active').siblings().removeClass('row-active');
         $fila.find('.select-maquina').trigger('focus');
         saveMassiveDraftToStorage();
@@ -846,13 +1046,11 @@ $(document).ready(function () {
     }
 
     refreshOfCatalog();
-    const restoredDraft = restoreMassiveDraftFromStorage();
-    if (!restoredDraft) {
-        const initializedWithSelectedOf = inicializarConOfPreseleccionada();
-        if (!initializedWithSelectedOf && pendingOfCount > 0) {
-            agregarFilas(Math.min(10, pendingOfCount));
-            autocompletarOfCorrelativas();
-        }
+    const initializedWithSelectedOf = inicializarConOfPreseleccionada();
+    const restoredDraft = initializedWithSelectedOf ? false : restoreMassiveDraftFromStorage();
+    const initializedWithExistingGroup = (initializedWithSelectedOf || restoredDraft) ? false : inicializarFilasExistentesDelGrupo();
+    if (!initializedWithSelectedOf && !restoredDraft && !initializedWithExistingGroup) {
+        agregarFilas(1);
     }
     applyMassiveSelectionFromStorage();
 });

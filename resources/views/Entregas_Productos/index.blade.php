@@ -72,7 +72,7 @@
                         <strong id="familia-entrega-instrumental">0</strong>
                     </div>
                     <div class="familias-entrega-summary__item">
-                        <span class="familias-entrega-summary__label">Protésicos</span>
+                        <span class="familias-entrega-summary__label">Protesicos</span>
                         <strong id="familia-entrega-protesicos">0</strong>
                     </div>
                     <div class="familias-entrega-summary__item">
@@ -102,7 +102,7 @@
                             <span class="plain-filter-range__title">Desde</span>
                             <div class="plain-filter-range__inputs">
                                 <select id="filtro_anio_entrega_desde" class="form-control form-control-sm filtro-select plain-toolbar-select">
-                                    <option value="">Año</option>
+                                    <option value="">Anio</option>
                                 </select>
                                 <select id="filtro_mes_entrega_desde" class="form-control form-control-sm filtro-select plain-toolbar-select">
                                     <option value="">Mes</option>
@@ -116,7 +116,7 @@
                             <span class="plain-filter-range__title">Hasta</span>
                             <div class="plain-filter-range__inputs">
                                 <select id="filtro_anio_entrega_hasta" class="form-control form-control-sm filtro-select plain-toolbar-select">
-                                    <option value="">Año</option>
+                                    <option value="">Anio</option>
                                 </select>
                                 <select id="filtro_mes_entrega_hasta" class="form-control form-control-sm filtro-select plain-toolbar-select">
                                     <option value="">Mes</option>
@@ -233,7 +233,7 @@ function renderResumenEntregas(data) {
     const familias = data.familias_entregadas || {};
     $('#familia-entrega-implantes').text(formatearNumeroEntero(familias['Implantes'] || 0));
     $('#familia-entrega-instrumental').text(formatearNumeroEntero(familias['Instrumental'] || 0));
-    $('#familia-entrega-protesicos').text(formatearNumeroEntero(familias['Protésicos'] || familias['ProtÃ©sicos'] || 0));
+    $('#familia-entrega-protesicos').text(formatearNumeroEntero(familias['Protesicos'] || familias['Protesicos'] || 0));
     $('#familia-entrega-ins-p-imp').text(formatearNumeroEntero(familias['ins/p/imp.'] || 0));
     $('#familia-entrega-dispositivos').text(formatearNumeroEntero(familias['Dispositivos'] || 0));
     $('#familia-entrega-total').text(formatearNumeroEntero(data.total_piezas));
@@ -251,7 +251,7 @@ function cargarFiltrosEntregas() {
         ].forEach(function ([selector, values]) {
             const select = $(selector);
             const actual = select.val();
-            const defaultLabel = selector.includes('filtro_anio_entrega') ? 'Año' : 'Todos';
+            const defaultLabel = selector.includes('filtro_anio_entrega') ? 'Anio' : 'Todos';
             select.empty().append(`<option value="">${defaultLabel}</option>`);
             values.forEach(function (value) {
                 if (value !== null && value !== '') {

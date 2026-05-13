@@ -1,9 +1,9 @@
 @extends('adminlte::page')
 <!-- resources\views\Fabricacion\create.blade.php -->
-@section('title', 'Carga de Producción')
+@section('title', 'Carga de Produccion')
 
 @section('content_header')
-    <h1>Carga de Producción</h1>
+    <h1>Carga de Producci&oacute;n</h1>
 @stop
 
 @section('css')
@@ -16,13 +16,13 @@
         <table class="table table-bordered custom-font centered-form" id="tablaProduccion">
             <thead>
                 <tr>
-                    <th class="col-nro-fila">N° Fila</th>
-                    <th class="col-nro-of">N° OF</th>
+                    <th class="col-nro-fila">N&deg; Fila</th>
+                    <th class="col-nro-of">N&deg; OF</th>
                     <th class="col-id-producto">Id_Producto</th>
-                    <th class="col-nro-parcial">N° de Parcial</th>
+                    <th class="col-nro-parcial">N&deg; de Parcial</th>
                     <th class="col-nro-of-parcial">Nro_OF_Parcial</th>
                     <th class="col-cant-piezas">Cant.Piezas</th>
-                    <th class="col-fecha-fabricacion">Fecha de Fabricación</th>
+                    <th class="col-fecha-fabricacion">Fecha de Fabricaci&oacute;n</th>
                     <th class="col-horario">Horario</th>
                     <th class="col-operario">Operario</th>
                     <th class="col-turno">Turno</th>
@@ -44,7 +44,7 @@
 <script>
 $(document).ready(function() {
     Swal.fire(
-        '¡Bienvenido a la carga de datos!',
+        '\u00a1Bienvenido a la carga de datos!',
         'Tenga cuidado al duplicar los parciales de las OF.',
         'success'
     );
@@ -120,7 +120,7 @@ function actualizarOpcionesOperario($fila, horarioValue) {
             { value: 'G.Silva', text: 'G.Silva' },
             { value: 'T.Berraz', text: 'T.Berraz' }
         ],
-        'H.Extras/Sábados': [
+        'H.Extras/S\u00e1bados': [
             { value: 'B.Abtt', text: 'B.Abtt' },
             { value: 'G.Silva', text: 'G.Silva' },
             { value: 'T.Berraz', text: 'T.Berraz' }
@@ -130,7 +130,7 @@ function actualizarOpcionesOperario($fila, horarioValue) {
     $operarioSelect.empty().prop('disabled', false);
 
     if (horarioValue === 'H.Normales') {
-        $turnoInput.val('Mañana');
+        $turnoInput.val('Ma\u00f1ana');
         $cantHorasInput.val(8);
         $operarioSelect.append(new Option('', ''));
         $operarioSelect.val('');
@@ -146,7 +146,7 @@ function actualizarOpcionesOperario($fila, horarioValue) {
             $turnoInput.val('Tarde');
             $cantHorasInput.val(3);
         } else {
-            $turnoInput.val('Mañana');
+            $turnoInput.val('Ma\u00f1ana');
             $cantHorasInput.val(6);
         }
 
@@ -164,7 +164,7 @@ function generarFila() {
 
     return `<tr>
                 <td class="nro-fila"></td>
-                <td><input type="number" class="nro_of_input" name="nro_of[]" autocomplete="off"></td>
+                <td><input type="number" class="nro_of_input" name="nro_of[]" min="0" step="1" autocomplete="off"></td>
                 <td><input type="number" name="Id_Producto[]" autocomplete="off"></td>
                 <td><input type="number" name="nro_parcial[]" autocomplete="off"></td>
                 <td><input type="text" name="Nro_OF_Parcial[]" readonly></td>
@@ -175,7 +175,7 @@ function generarFila() {
                         <option value="">Seleccione</option>
                         <option value="H.Normales" selected>H.Normales</option>
                         <option value="H.Extras">H.Extras</option>
-                        <option value="H.Extras/Sábados">H.Extras/Sábados</option>
+                        <option value="H.Extras/S\u00e1bados">H.Extras/S&aacute;bados</option>
                     </select>
                 </td>
                 <td>
@@ -208,7 +208,7 @@ $('#tablaProduccion').on('click', '#edit_of', function() {
     if (!nroOF) {
         Swal.fire({
             title: 'Error',
-            text: 'Debe completar el campo N° OF antes de editar.',
+            text: 'Debe completar el campo N\u00b0 OF antes de editar.',
             icon: 'error',
             confirmButtonColor: '#d33',
             confirmButtonText: 'Entendido'
@@ -267,8 +267,8 @@ $('form').submit(function(event) {
 
     if (fechaInvalida) {
         Swal.fire({
-            title: 'Fecha inválida',
-            text: 'Use el formato dd/mm/aaaa para la fecha de fabricación.',
+            title: 'Fecha invalida',
+            text: 'Use el formato dd/mm/aaaa para la fecha de fabricacion.',
             icon: 'warning',
             confirmButtonColor: '#3085d6',
             confirmButtonText: 'Entendido'
@@ -285,7 +285,7 @@ $('form').submit(function(event) {
         dataType: 'json',
         success: function(response) {
             Swal.fire({
-                title: response.success ? 'Éxito' : 'Error',
+                title: response.success ? 'Exito' : 'Error',
                 text: response.message,
                 icon: response.success ? 'success' : 'error',
                 confirmButtonColor: response.success ? '#3085d6' : '#d33',
@@ -310,7 +310,7 @@ $('form').submit(function(event) {
             var nroOF = $('input[name="nro_of[]"]').first().val();
 
             Swal.fire({
-                title: 'Error de Validación',
+                title: 'Error de Validacion',
                 html: errorString + '<br/>Parciales duplicados: ' + duplicatedFilaNumbers.join(', '),
                 icon: 'error',
                 confirmButtonColor: '#d33',
@@ -368,6 +368,23 @@ function buscarIdProducto(nroOf, $fila) {
 
 $(document).on('change', 'input[name="nro_of[]"]', function() {
     var $fila = $(this).closest('tr');
+    var valorActual = parseInt($(this).val(), 10);
+
+    if (!isNaN(valorActual) && valorActual < 0) {
+        $(this).val('');
+        $fila.find('input[name="Id_Producto[]"]').val('');
+        $fila.find('input[name="Nro_OF_Parcial[]"]').val('');
+
+        Swal.fire({
+            title: 'Valor invalido',
+            text: 'El N° OF no puede ser negativo.',
+            icon: 'warning',
+            confirmButtonColor: '#3085d6',
+            confirmButtonText: 'Entendido'
+        });
+        return;
+    }
+
     buscarIdProducto($(this).val(), $fila);
     actualizarNroOfParcial($fila);
 });

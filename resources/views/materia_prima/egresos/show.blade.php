@@ -47,7 +47,10 @@
         </div>
         <div class="card-footer text-right">
             <a href="{{ route('mp_egresos.index') }}" class="btn btn-secondary">Volver</a>
-            <a href="{{ route('mp_egresos.edit', $mp_egreso->Id_Egresos_MP) }}" class="btn btn-primary">Editar</a>
+            @if(optional($mp_egreso->pedidoMp)->Id_Pedido_MP)
+                <a href="{{ route('pedido_cliente_mp.editMassive', $mp_egreso->pedidoMp->Id_Pedido_MP) }}" class="btn btn-outline-primary">Editar MP</a>
+            @endif
+            <a href="{{ route('mp_egresos.edit', $mp_egreso->Id_Egresos_MP) }}" class="btn btn-primary">Editar salida</a>
         </div>
     </div>
 </div>

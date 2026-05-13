@@ -47,8 +47,8 @@
                     <button type="button" class="btn btn-warning" disabled>CSV historico importado</button>
                 @endif
             @endif
-            <a href="{{ route('mp_egresos.create') }}" class="btn btn-success">Registrar salida</a>
-            <a href="{{ route('mp_egresos.createMassive') }}" class="btn btn-primary">Carga masiva MP</a>
+            <a href="{{ route('mp_egresos.create') }}" class="btn btn-success">Registrar salida MP</a>
+            <a href="{{ route('mp_egresos.createMassive') }}" class="btn btn-primary">Carga masiva salidas MP</a>
             <a href="{{ route('mp_egresos.deleted') }}" class="btn btn-secondary">Ver eliminados</a>
         </div>
     </div>
@@ -57,7 +57,9 @@
 
     <div class="alert alert-info">
         <strong>Egreso de materia prima:</strong>
-        esta vista registra la entrega operativa de calidad hacia produccion para cada OF definida en pedido de materia prima.
+        esta vista registra la salida operativa de materia prima para produccion y calidad.
+        La <strong>definicion tecnica</strong> de la MP se realiza en <strong>Definicion de Materia Prima por Pedido</strong>;
+        desde aqui solo se registra la <strong>salida</strong> de una definicion ya existente.
         @if($historicoImportado ?? false)
             <br><strong>CSV historico:</strong> la importacion ya fue ejecutada y el boton quedo bloqueado para evitar duplicados.
         @endif
@@ -142,6 +144,28 @@
                             <th></th>
                         </tr>
                     </thead>
+                    <tfoot>
+                        <tr class="mp-egresos-totals-row">
+                            <th>Totales filtrados</th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                        </tr>
+                    </tfoot>
                 </table>
             </div>
         </div>
@@ -154,6 +178,19 @@
 <link rel="stylesheet" href="https://cdn.datatables.net/fixedheader/3.4.1/css/fixedHeader.bootstrap4.min.css">
 <link rel="stylesheet" href="{{ asset('vendor/adminlte/dist/css/shared/filters.css') }}">
 <link rel="stylesheet" href="{{ asset('vendor/adminlte/dist/css/mp_egreso_index.css') }}">
+<style>
+    #tabla_mp_egresos tfoot th {
+        position: sticky;
+        bottom: 0;
+        z-index: 2;
+        background-color: #e8f4ff;
+        color: #12344d;
+        font-weight: 700;
+        border-top: 2px solid #9fc5e8;
+        white-space: nowrap;
+        text-align: center;
+    }
+</style>
 @stop
 
 @section('js')
@@ -223,6 +260,22 @@ document.addEventListener('DOMContentLoaded', function () {
         fixedHeader: true,
         pageLength: 25,
         scrollX: true,
+        footerCallback: function () {
+            const api = this.api();
+            const totals = api.ajax.json()?.totals_filtered || {};
+            const renderCentered = function (value, decimals = 0) {
+                return '<div class="text-center w-100">' + new Intl.NumberFormat('es-AR', {
+                    minimumFractionDigits: decimals,
+                    maximumFractionDigits: decimals
+                }).format(value || 0) + '</div>';
+            };
+
+            $(api.column(5).footer()).html(renderCentered(totals.Cant_Barras_Requeridas, 0));
+            $(api.column(6).footer()).html(renderCentered(totals.Cantidad_Unidades_MP, 0));
+            $(api.column(7).footer()).html(renderCentered(totals.Cantidad_Unidades_MP_Preparadas, 0));
+            $(api.column(8).footer()).html(renderCentered(totals.Total_Salidas_MP, 0));
+            $(api.column(9).footer()).html(renderCentered(totals.Total_Mtros_Utilizados, 2));
+        },
         columns: [
             { data: 'Nro_OF', name: 'p.Nro_OF' },
             { data: 'Prod_Codigo', name: 'prod.Prod_Codigo' },

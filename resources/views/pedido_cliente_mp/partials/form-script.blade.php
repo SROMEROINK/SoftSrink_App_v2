@@ -36,8 +36,16 @@ $(document).ready(function () {
     const $massiveRowIndex = $('#massive_row_index');
     const $massiveReturnUrl = $('#massive_return_url');
     const $massiveSelectionStorageKey = $('#massive_selection_storage_key');
+    const $selectedOfPrefill = $('#selected_of_prefill');
     const $selectedMachinePrefill = $('#selected_machine_prefill');
     const $selectedIngresoPrefill = $('#selected_ingreso_prefill');
+    const $selectedCertificadoPrefill = $('#selected_certificado_prefill');
+    const $selectedPedidoMaterialPrefill = $('#selected_pedido_material_prefill');
+    const $selectedPedidoProveedorPrefill = $('#selected_pedido_proveedor_prefill');
+    const $selectedLongitudUnMpPrefill = $('#selected_longitud_un_mp_prefill');
+    const $selectedMateriaPrimaPrefill = $('#selected_materia_prima_prefill');
+    const $selectedDiametroMpPrefill = $('#selected_diametro_mp_prefill');
+    const $selectedCodigoMpPrefill = $('#selected_codigo_mp_prefill');
     const $volverACargaMasiva = $('#volver_a_carga_masiva');
     const plannerEditMode = $('#planner_edit_mode').length > 0;
     const $plannerSelectionSnapshot = $('#planner_selection_snapshot');
@@ -85,6 +93,86 @@ $(document).ready(function () {
 
     function getSelectedOption() {
         return $of.find('option:selected');
+    }
+
+    function getEffectiveOfValue() {
+        const currentValue = String($of.val() || '').trim();
+        if (currentValue !== '') {
+            return currentValue;
+        }
+
+        return String($selectedOfPrefill.val() || '').trim();
+    }
+
+    function getEffectiveSelectedOption() {
+        const $selected = getSelectedOption();
+        if ($selected.length && String($selected.val() || '').trim() !== '') {
+            return $selected;
+        }
+
+        const selectedOfPrefill = String($selectedOfPrefill.val() || '').trim();
+        if (selectedOfPrefill === '') {
+            return $selected;
+        }
+
+        return $of.find('option').filter(function () {
+            return String($(this).val() || '').trim() === selectedOfPrefill
+                || String($(this).data('nro-of') || '').trim() === selectedOfPrefill;
+        }).first();
+    }
+
+    function ensureCompactPrefillSelection() {
+        if (!$compactSelectorMode.length) {
+            return;
+        }
+
+        const selectedOfPrefill = String($selectedOfPrefill.val() || '').trim();
+        if (selectedOfPrefill !== '' && !$of.val()) {
+            const $prefillOption = $of.find('option').filter(function () {
+                return String($(this).val() || '').trim() === selectedOfPrefill
+                    || String($(this).data('nro-of') || '').trim() === selectedOfPrefill;
+            }).first();
+
+            if ($prefillOption.length) {
+                $of.val(String($prefillOption.val() || '').trim());
+            }
+        }
+
+        if (String($selectedMachinePrefill.val() || '').trim() !== '' && !$maquina.val()) {
+            $maquina.val(String($selectedMachinePrefill.val() || '').trim());
+        }
+
+        if (String($selectedMateriaPrimaPrefill.val() || '').trim() !== '' && !$materia.val()) {
+            $materia.val(String($selectedMateriaPrimaPrefill.val() || '').trim());
+        }
+
+        if (String($selectedDiametroMpPrefill.val() || '').trim() !== '' && !$diametro.val()) {
+            $diametro.val(String($selectedDiametroMpPrefill.val() || '').trim());
+        }
+
+        if (String($selectedCodigoMpPrefill.val() || '').trim() !== '' && !$codigo.val()) {
+            $codigo.val(String($selectedCodigoMpPrefill.val() || '').trim());
+        }
+
+        if (String($selectedIngresoPrefill.val() || '').trim() !== '' && !$nroIngresoMp.val()) {
+            $nroIngresoMp.val(String($selectedIngresoPrefill.val() || '').trim());
+        }
+
+        if (String($selectedCertificadoPrefill.val() || '').trim() !== '' && !$nroCertificadoMp.val()) {
+            $nroCertificadoMp.val(String($selectedCertificadoPrefill.val() || '').trim());
+        }
+
+        if (String($selectedPedidoMaterialPrefill.val() || '').trim() !== '' && !$pedidoMaterialNro.val()) {
+            $pedidoMaterialNro.val(String($selectedPedidoMaterialPrefill.val() || '').trim());
+        }
+
+        if (String($selectedPedidoProveedorPrefill.val() || '').trim() !== '' && !$nroPedidoProveedor.val()) {
+            $nroPedidoProveedor.val(String($selectedPedidoProveedorPrefill.val() || '').trim());
+        }
+
+        if (String($selectedLongitudUnMpPrefill.val() || '').trim() !== '' && !$longitudUnMp.val()) {
+            $longitudUnMp.val(String($selectedLongitudUnMpPrefill.val() || '').trim().replace(',', '.'));
+        }
     }
 
     function getSelectedMachineOption() {
@@ -164,7 +252,7 @@ $(document).ready(function () {
     }
 
     function updatePedidoResumen() {
-        const option = getSelectedOption();
+        const option = getEffectiveSelectedOption();
         const cantidad = parseNumber(option.data('cantidad'));
         $('#detalle_nro_of').text(option.data('nro-of') || '-');
         $('#detalle_producto').text(option.data('producto') || '-');
@@ -187,7 +275,7 @@ $(document).ready(function () {
         updateCodigoMp();
         updateMachineSummary();
 
-        const cantidadPedido = parseNumber(getSelectedOption().data('cantidad'));
+        const cantidadPedido = parseNumber(getEffectiveSelectedOption().data('cantidad'));
         const largoTotalPieza = parseNumber($largoPieza.val()) + parseNumber($frenteado.val()) + parseNumber($anchoCutOff.val()) + parseNumber($sobrematerial.val());
         const mmTotales = cantidadPedido > 0 && largoTotalPieza > 0 ? cantidadPedido * largoTotalPieza : 0;
         const longitudBarraSinScrap = Math.max(0, (parseNumber($longitudUnMp.val()) * 1000) - parseNumber($scrapMaquina.val()));
@@ -354,7 +442,7 @@ $(document).ready(function () {
     });
 
     function consultarStock() {
-        const idOf = $of.val();
+        const idOf = getEffectiveOfValue();
         if (!idOf) {
             updateIngresoSuggestionsList([]);
             resetStockPanel('Selecciona una OF antes de consultar ingresos compatibles.');
@@ -387,7 +475,7 @@ $(document).ready(function () {
     }
 
     function shouldAutoRefreshStock() {
-        return ($compactSelectorMode.length || plannerEditMode) && $of.val() && $maquina.val();
+        return ($compactSelectorMode.length || plannerEditMode) && getEffectiveOfValue() && $maquina.val();
     }
 
     function refreshOrResetStock(message) {
@@ -409,7 +497,10 @@ $(document).ready(function () {
     }
 
     function guardarSeleccionParaCargaMasiva(preserveWithoutIngreso = false) {
-        if (!$of.val()) {
+        const idOf = getEffectiveOfValue();
+        const $selectedOption = getEffectiveSelectedOption();
+
+        if (!idOf) {
             SwalUtils.error('Primero selecciona una OF valida.');
             return;
         }
@@ -425,13 +516,17 @@ $(document).ready(function () {
         }
 
         const payload = {
-            idOf: $of.val(),
-            nroOf: getSelectedOption().data('nro-of') || '',
+            idOf,
+            nroOf: $selectedOption.data('nro-of') || idOf,
             rowIndex: $massiveRowIndex.val() || '',
             machineId: $maquina.val(),
             nroIngreso: $nroIngresoMp.val(),
             certificado: $nroCertificadoMp.val() || '',
             pedidoMaterial: $pedidoMaterialNro.val() || '',
+            pedidoProveedor: $nroPedidoProveedor.val() || '',
+            codigoMp: $codigo.val() || '',
+            materiaPrima: $materia.val() || '',
+            diametroMp: $diametro.val() || '',
             longitudUnMp: $longitudUnMp.val() || ''
         };
 
@@ -457,11 +552,12 @@ $(document).ready(function () {
         $maquina.val($selectedMachinePrefill.val());
     }
 
+    ensureCompactPrefillSelection();
     updateMachineSummary();
     updatePedidoResumen();
     syncPlannerSelectionSnapshot();
 
-    if (($compactSelectorMode.length || plannerEditMode) && $of.val() && $maquina.val()) {
+    if (($compactSelectorMode.length || plannerEditMode) && getEffectiveOfValue() && $maquina.val()) {
         consultarStock();
     }
 });
